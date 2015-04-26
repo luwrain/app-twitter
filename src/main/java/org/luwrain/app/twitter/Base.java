@@ -6,6 +6,7 @@ import twitter4j.TwitterException;
 import twitter4j.Twitter;
 import twitter4j.TwitterFactory;
 import twitter4j.Status;
+import twitter4j.conf.ConfigurationLuwrain;
 
 class Base
 {
@@ -23,7 +24,7 @@ class Base
 	    throw new NullPointerException("OAuth access token may not be null");
 	if (accessTokenSecret == null)
 	    throw new NullPointerException("OAuth access token secret may not be null");
-	Configuration conf = new Configuration(consumerKey, consumerSecret, accessToken, accessTokenSecret);
+	ConfigurationLuwrain conf = new ConfigurationLuwrain(consumerKey, consumerSecret, accessToken, accessTokenSecret);
 	Twitter twitter = new TwitterFactory(conf).getInstance();
 	if (twitter == null)
 	    return null;

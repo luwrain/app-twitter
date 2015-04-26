@@ -1,9 +1,9 @@
 
-package org.luwrain.app.twitter;
+package twitter4j.conf;
 
-class Configuration extends ConfigurationBase
+public class ConfigurationLuwrain extends ConfigurationBase
 {
-    public Configuration(String consumerKey,
+    public ConfigurationLuwrain(String consumerKey,
 			 String consumerSecret,
 			 String accessToken,
 String accessTokenSecret)
