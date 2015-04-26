@@ -32,7 +32,9 @@ class TwitterApp implements Application, Actions
     Twitter twitter = null;
 
     private SectionsModel sectionsModel;
+    private TweetsModel tweetsModel;
     private ListArea sectionsArea;
+    private ListArea tweetsArea;
 
     @Override public boolean onLaunch(Luwrain luwrain)
     {
@@ -52,14 +54,15 @@ class TwitterApp implements Application, Actions
 				     account.accessToken,
 				     account.accessTokenSecret);
 
-	System.out.println(account.consumerKey);
-	System.out.println(account.consumerSecret);
-	System.out.println(account.accessToken);
-	System.out.println(account.accessTokenSecret);
 
-	if (twitter != null)
-	    luwrain.message("Победа", Luwrain.MESSAGE_OK); else
+	if (twitter == null)
+	{
 	    luwrain.message("Проблемка", Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	TweetWrapper[] wrappers = base.search(twitter, "", 10);
+	tweetsModel.setTweets(wrappers);
+	tweetsArea.refresh();
     }
 
     private void createAreas()
@@ -68,6 +71,7 @@ class TwitterApp implements Application, Actions
 	final Strings s = strings;
 
 	sectionsModel = new SectionsModel(luwrain);
+	tweetsModel = new TweetsModel(luwrain);
 
 	final ListClickHandler sectionsClickHandler = new ListClickHandler(){
 		private Actions actions = a;
@@ -86,6 +90,16 @@ class TwitterApp implements Application, Actions
 		}
 	    };
 
+	final ListClickHandler tweetsClickHandler = new ListClickHandler(){
+		private Actions actions = a;
+		@Override public boolean onListClick(ListArea area,
+						     int index,
+						     Object item)
+		{
+		    return false;
+		}
+	    };
+
 	sectionsArea = new ListArea(new DefaultControlEnvironment(luwrain), 
 				    sectionsModel,
 				    new DefaultListItemAppearance(new DefaultControlEnvironment(luwrain)),
@@ -93,7 +107,58 @@ class TwitterApp implements Application, Actions
 				    strings.appName()) {
 		private Strings strings = s;
 		private Actions actions = a;
+		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		{
+		    if (event == null)
+			throw new NullPointerException("event may not be null");
+		    if (event.isCommand() &&! event.isModified())
+			switch(event.getCommand())
+			{
+			case KeyboardEvent.TAB:
+			    actions.gotoTweets();
+			    return super.onKeyboardEvent(event);
+			default:
+			    return super.onKeyboardEvent(event);
+			}
+		    return false;
+		}
+		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		{
+		    if (event == null)
+			throw new NullPointerException("event may not be null");
+		    switch (event.getCode())
+		    {
+		    case EnvironmentEvent.CLOSE:
+			actions.closeApp();
+			return true;
+		    default:
+			return false;
+		    }
+		}
+	    };
 
+	tweetsArea = new ListArea(new DefaultControlEnvironment(luwrain), 
+				    tweetsModel,
+				    new DefaultListItemAppearance(new DefaultControlEnvironment(luwrain)),
+				  tweetsClickHandler,
+				  "Твиты") { //FIXME:
+		private Strings strings = s;
+		private Actions actions = a;
+		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		{
+		    if (event == null)
+			throw new NullPointerException("event may not be null");
+		    if (event.isCommand() &&! event.isModified())
+			switch(event.getCommand())
+			{
+			case KeyboardEvent.TAB:
+			    actions.gotoSections();
+			    return true;
+			default:
+			    return super.onKeyboardEvent(event);
+			}
+		    return super.onKeyboardEvent(event);
+		}
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    if (event == null)
@@ -115,9 +180,19 @@ class TwitterApp implements Application, Actions
 	return strings.appName();
     }
 
+    @Override public void gotoSections()
+    {
+	luwrain.setActiveArea(sectionsArea);
+    }
+
+    @Override public void gotoTweets()
+    {
+	luwrain.setActiveArea(tweetsArea);
+    }
+
     @Override public AreaLayout getAreasToShow()
     {
-	return new AreaLayout(sectionsArea);
+	return new AreaLayout(AreaLayout.LEFT_RIGHT, sectionsArea, tweetsArea);
     }
 
     @Override public void closeApp()

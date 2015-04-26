@@ -16,10 +16,21 @@
 
 package org.luwrain.app.twitter;
 
-interface Actions
+import twitter4j.*;
+
+class TweetWrapper
 {
-    void closeApp();
-    void gotoSections();
-    void gotoTweets();
-    void activateAccount(Account account);
+    private Status tweet;
+
+    public TweetWrapper(Status tweet)
+    {
+	this.tweet = tweet;
+	if (tweet == null)
+	    throw new NullPointerException("tweet may not be null");
+    }
+
+    @Override public String toString()
+    {
+	return "@" + tweet.getUser().getScreenName() + " - " + tweet.getText();
+    }
 }
