@@ -15,15 +15,6 @@ class Base
 				 String accessToken,
 				 String accessTokenSecret)
     {
-	if (consumerKey == null)
-	    throw new NullPointerException("OAuth consumer key may not be null");
-
-	if (consumerSecret == null)
-	    throw new NullPointerException("OAuth consumer secret may not be null");
-	if (accessToken == null)
-	    throw new NullPointerException("OAuth access token may not be null");
-	if (accessTokenSecret == null)
-	    throw new NullPointerException("OAuth access token secret may not be null");
 	ConfigurationLuwrain conf = new ConfigurationLuwrain(consumerKey, consumerSecret, accessToken, accessTokenSecret);
 	Twitter twitter = new TwitterFactory(conf).getInstance();
 	if (twitter == null)
@@ -35,8 +26,6 @@ class Base
 
     public boolean updateStatus(Twitter twitter, String text)
     {
-	if (text == null)
-	    throw new NullPointerException("Text may not be null");
 	try {
 	    Status status = twitter.updateStatus(text);
 	}
