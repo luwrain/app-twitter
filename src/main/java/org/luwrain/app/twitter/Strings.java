@@ -19,4 +19,23 @@ package org.luwrain.app.twitter;
 public interface Strings
 {
     String appName();
+    String searchSectionsItem();
+    String postSectionsItem();
+    String homeTweetsSectionsItem();
+    String userTweetsSectionsItem();
+    String noConnection();
+    String problemConnecting();
+    String searchPopupName();
+    String searchPopupPrefix();
+    String problemSearching();
+    String nothingFound();
+    String postPopupName();
+    String postPopupPrefix();
+    String postingSuccess();
+    String problemPosting();
+    String problemHomeTweets();
+    String userTweetsPopupName();
+    String userTweetsPopupPrefix();
+    String problemUserTweets();
+    String noUserTweets();
 }

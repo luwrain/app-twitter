@@ -25,24 +25,42 @@ import org.luwrain.util.RegistryAutoCheck;
 class SectionsModel implements ListModel
 {
     private Luwrain luwrain;
+    private Strings strings;
+
     private Account[] accounts = new Account[0];
 
-    public SectionsModel(Luwrain luwrain)
+    public SectionsModel(Luwrain luwrain, Strings strings)
     {
 	this.luwrain = luwrain;
+	this.strings = strings;
 	if (luwrain == null)
 	    throw new NullPointerException("luwrain may not be null");
+	if (strings == null)
+	    throw new NullPointerException("strings may not be null");
 	refreshAccounts();
     }
 
     @Override public int getItemCount()
     {
-	return accounts.length;
+	final int accountCount = accounts != null?accounts.length:0;
+	return accountCount + 4;
     }
 
     @Override public Object getItem(int index)
     {
-	return accounts[index];
+	switch(index)
+	{
+	case 0:
+	    return strings.searchSectionsItem();
+	case 1:
+	    return strings.userTweetsSectionsItem();
+	case 2:
+	    return strings.homeTweetsSectionsItem(); 
+	case 3:
+	    return strings.postSectionsItem();
+	default:
+	    return accounts[index - 4];
+	}
     }
 
     @Override public void refresh()

@@ -19,6 +19,7 @@ package org.luwrain.app.twitter;
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
+import org.luwrain.popups.*;
 
 import twitter4j.*;
 
@@ -47,22 +48,109 @@ class TwitterApp implements Application, Actions
 	return true;
     }
 
+    @Override public void search()
+    {
+	if (twitter == null)
+	{
+	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	final String query = Popups.simple(luwrain, strings.searchPopupName(), strings.searchPopupPrefix(), "");
+	if (query == null || query.trim().isEmpty())
+	    return;
+	TweetWrapper[] wrappers = base.search(twitter, query, 10);
+	if (wrappers == null)
+	{
+	    luwrain.message(strings.problemSearching(), Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	if (wrappers.length < 0)
+	{
+	    luwrain.message(strings.nothingFound(), Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	tweetsModel.setTweets(wrappers);
+	tweetsArea.refresh();
+	luwrain.setActiveArea(tweetsArea);
+    }
+
+    @Override public void userTweets()
+    {
+	if (twitter == null)
+	{
+	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	final String user = Popups.simple(luwrain, strings.userTweetsPopupName(), strings.userTweetsPopupPrefix(), "");
+	if (user == null || user.trim().isEmpty())
+	    return;
+	TweetWrapper[] wrappers = base.userTweets(twitter, user);
+	if (wrappers == null)
+	{
+	    luwrain.message(strings.problemUserTweets(), Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	if (wrappers.length < 0)
+	{
+	    luwrain.message(strings.noUserTweets(), Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	tweetsModel.setTweets(wrappers);
+	tweetsArea.refresh();
+	luwrain.setActiveArea(tweetsArea);
+    }
+
+
+    @Override public void post()
+    {
+	if (twitter == null)
+	{
+	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	final String text = Popups.simple(luwrain, strings.postPopupName(), strings.postPopupPrefix(), "");
+	if (text == null || text.trim().isEmpty())
+	    return;
+	if (base.postTweet(twitter, text))
+	{
+	    luwrain.message(strings.postingSuccess(), Luwrain.MESSAGE_OK);
+	} else 
+	{
+	    luwrain.message(strings.problemPosting(), Luwrain.MESSAGE_ERROR);
+	}
+    }
+
+    @Override public void homeTweets()
+    {
+	if (twitter == null)
+	{
+	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	TweetWrapper[] wrappers = base.homeTweets(twitter);
+	if (wrappers == null)
+	{
+	    luwrain.message(strings.problemHomeTweets(), Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	tweetsModel.setTweets(wrappers);
+	tweetsArea.refresh();
+	luwrain.setActiveArea(tweetsArea);
+    }
+
     @Override public void activateAccount(Account account)
     {
 	twitter = base.createTwitter(account.consumerKey,
 				     account.consumerSecret,
 				     account.accessToken,
 				     account.accessTokenSecret);
-
-
-	if (twitter == null)
+	if (twitter != null)
 	{
-	    luwrain.message("Проблемка", Luwrain.MESSAGE_ERROR);
-	    return;
+	    luwrain.playSound(Sounds.GENERAL_OK);
+	} else
+	{
+	    luwrain.message(strings.problemConnecting(), Luwrain.MESSAGE_ERROR);
 	}
-	TweetWrapper[] wrappers = base.search(twitter, "", 10);
-	tweetsModel.setTweets(wrappers);
-	tweetsArea.refresh();
     }
 
     private void createAreas()
@@ -70,7 +158,7 @@ class TwitterApp implements Application, Actions
 	final Actions a = this;
 	final Strings s = strings;
 
-	sectionsModel = new SectionsModel(luwrain);
+	sectionsModel = new SectionsModel(luwrain, strings);
 	tweetsModel = new TweetsModel(luwrain);
 
 	final ListClickHandler sectionsClickHandler = new ListClickHandler(){
@@ -81,12 +169,28 @@ class TwitterApp implements Application, Actions
 		{
 		    if (index < 0 || item == null)
 			return false;
-		    if (item instanceof Account)
+		    switch (index)
 		    {
-			actions.activateAccount((Account)item);
+		    case 0:
+			actions.search();
 			return true;
+		    case 1:
+			actions.userTweets();
+			return true;
+		    case 2:
+			actions.homeTweets();
+			return true;
+		    case 3:
+			actions.post();
+			return true;
+		    default:
+			if (item instanceof Account)
+			{
+			    actions.activateAccount((Account)item);
+			    return true;
+			}
+			return false;
 		    }
-		    return false;
 		}
 	    };
 

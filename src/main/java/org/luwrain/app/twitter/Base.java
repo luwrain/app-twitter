@@ -52,14 +52,14 @@ class Base
 
     public TweetWrapper[] search(Twitter twitter,
 				 String text,
-int numPages)
+				 int numPages)
     {
 	if (twitter == null)
 	    throw new NullPointerException("twitter may not be null");
 	if (text == null)
 	    throw new NullPointerException("text may not be null");
 	if (text.trim().isEmpty())
-	    throw new IllegalArgumentException("text may not be null");
+	    throw new IllegalArgumentException("text may not be empty");
 	if (numPages < 1)
 	    throw new IllegalArgumentException("numPages must be greater than zero");
 	LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
@@ -85,4 +85,68 @@ int numPages)
         }
 	return wrappers.toArray(new TweetWrapper[wrappers.size()]);
     }
+
+    public boolean postTweet(Twitter twitter, String tweet)
+    {
+	if (twitter == null)
+	    throw new NullPointerException("twitter may not be null");
+	if (tweet == null)
+	    throw new NullPointerException("tweet may not be null");
+	if (tweet.trim().isEmpty())
+	    throw new IllegalArgumentException("tweet may not be empty");
+	try {
+	    twitter.updateStatus(tweet);
+	    return true;
+	}
+	catch(TwitterException e)
+	{
+	    e.printStackTrace();
+	    return false;
+	}
+    }
+
+    public TweetWrapper[] homeTweets(Twitter twitter)
+    {
+	if (twitter == null)
+	    throw new NullPointerException("twitter may not be null");
+	try {
+	    List<Status> result = twitter.getHomeTimeline();
+	    if (result == null)
+		return null;
+	    LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	    for(Status s: result)
+		wrappers.add(new TweetWrapper(s));
+	    return wrappers.toArray(new TweetWrapper[wrappers.size()]);
+	}
+	catch (TwitterException e)
+	{
+	    e.printStackTrace();
+	    return null;
+	}
+    }
+
+    public TweetWrapper[] userTweets(Twitter twitter, String user)
+    {
+	if (twitter == null)
+	    throw new NullPointerException("twitter may not be null");
+	if (user == null)
+	    throw new NullPointerException("user may not be null");
+	if (user.trim().isEmpty())
+	    throw new IllegalArgumentException("user may not be empty");
+	try {
+	    List<Status> result = twitter.getUserTimeline(user);
+	    if (result == null)
+		return null;
+	    LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	    for(Status s: result)
+		wrappers.add(new TweetWrapper(s));
+	    return wrappers.toArray(new TweetWrapper[wrappers.size()]);
+	}
+	catch (TwitterException e)
+	{
+	    e.printStackTrace();
+	    return null;
+	}
+    }
+
 }

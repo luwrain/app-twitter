@@ -31,6 +31,7 @@ class TweetWrapper
 
     @Override public String toString()
     {
-	return "@" + tweet.getUser().getScreenName() + " - " + tweet.getText();
+	//	return "@" + tweet.getUser().getScreenName() + " - " + tweet.getText();
+	return tweet.getText();
     }
 }

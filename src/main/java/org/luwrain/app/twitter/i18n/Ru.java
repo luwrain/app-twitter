@@ -22,4 +22,100 @@ public class Ru implements org.luwrain.app.twitter.Strings
     {
 	return "Твиттер";
     }
+
+    @Override public String searchSectionsItem()
+    {
+	return "Поиск";
+    }
+
+    @Override public String postSectionsItem()
+    {
+	return "Новый твит";
+    }
+
+    @Override public String homeTweetsSectionsItem()
+    {
+	return "Опубликованные твиты";
+    }
+
+    @Override public String userTweetsSectionsItem()
+    {
+	return "Твиты других пользователей";
+    }
+
+
+    @Override public String noConnection()
+    {
+	return "Необходимо выбрать учётную запись для работы";
+    }
+
+    @Override public String problemConnecting()
+    {
+	return "Невозможно подключиться к выбранной учётной записи";
+    }
+
+    @Override public String searchPopupName()
+    {
+	return "Поиск";
+    }
+
+    @Override public String searchPopupPrefix()
+    {
+	return "Введите фразу для поиска:";
+    }
+
+    @Override public String problemSearching()
+    {
+	return "Произошла ошибка при поиске";
+    }
+
+    @Override public String nothingFound()
+    {
+	return "Поиск по указанной фразе не дал результатов";
+    }
+
+    @Override public String postPopupName()
+    {
+	return "Новый твит";
+    }
+
+    @Override public String postPopupPrefix()
+    {
+	return "Введите текст нового твита:";
+    }
+
+    @Override public String postingSuccess()
+    {
+	return "Новый твит успешно опубликован";
+    }
+
+    @Override public String problemPosting()
+    {
+	return "Произошла ошибка при публикации нового твита";
+    }
+
+    @Override public String problemHomeTweets()
+    {
+	return "Произошла ошибка при получении опубликованных твитов";
+    }
+
+    @Override public String userTweetsPopupName()
+    {
+	return "Просмотр твитов";
+    }
+
+    @Override public String userTweetsPopupPrefix()
+    {
+	return "Введите имя пользователя для просмотра твитов:";
+    }
+
+    @Override public String problemUserTweets()
+    {
+	return "Произошла ошибка при получении твитов пользователя";
+    }
+
+    @Override public String noUserTweets()
+    {
+	return "Пользователь не имеет опубликованных твитов";
+    }
 }

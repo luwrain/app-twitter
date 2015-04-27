@@ -22,4 +22,8 @@ interface Actions
     void gotoSections();
     void gotoTweets();
     void activateAccount(Account account);
+    void search();
+    void post();
+    void homeTweets();
+    void userTweets();
 }
