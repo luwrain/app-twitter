@@ -20,6 +20,8 @@ import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.popups.*;
+import org.luwrain.util.RegistryAutoCheck;
+
 
 import twitter4j.*;
 
@@ -37,6 +39,7 @@ class TwitterApp implements Application, Actions
     private ListArea sectionsArea;
     private ListArea tweetsArea;
     private Work work = null;
+    private String[] allowedAccounts;
 
     @Override public boolean onLaunch(Luwrain luwrain)
     {
@@ -46,6 +49,7 @@ class TwitterApp implements Application, Actions
 	strings = (Strings)o;
 	this.luwrain = luwrain;
 	createAreas();
+	allowedAccounts = allowedAccounts();
 	return true;
     }
 
@@ -69,7 +73,7 @@ class TwitterApp implements Application, Actions
 	TweetWrapper[] wrappers = base.search(twitter, query, 10);
 	if (wrappers == null)
 	{
-message(strings.problemSearching(), Luwrain.MESSAGE_ERROR);
+	    message(strings.problemSearching(), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
 	if (wrappers.length < 0)
@@ -95,6 +99,18 @@ message(strings.problemSearching(), Luwrain.MESSAGE_ERROR);
 	final String user = Popups.simple(luwrain, strings.userTweetsPopupName(), strings.userTweetsPopupPrefix(), "");
 	if (user == null || user.trim().isEmpty())
 	    return;
+	if (allowedAccounts != null && allowedAccounts.length > 0)
+	{
+	    boolean permitted = false;
+	    for(String s: allowedAccounts)
+		if (s.toLowerCase().equals(user.toLowerCase()))
+		    permitted = true;
+	    if (!permitted)
+		{
+		    luwrain.message(strings.problemUserTweets(), Luwrain.MESSAGE_ERROR);
+		    return;
+		}
+	}
 	final Strings s = strings;
 	work = new Work(luwrain, tweetsArea){
 		private Strings strings = s;
@@ -359,5 +375,14 @@ message(strings.problemSearching(), Luwrain.MESSAGE_ERROR);
 	if (work != null && !work.finished)
 	    return;
 	luwrain.closeApp();
+    }
+
+    private String[] allowedAccounts()
+    {
+    RegistryAutoCheck check = new RegistryAutoCheck(luwrain.getRegistry());
+    final String value = check.stringAny("/org/luwrain/app/twitter/allowed-accounts", "");
+    if (value.trim().isEmpty())
+	return null;
+    return value.split(":");
     }
 }
