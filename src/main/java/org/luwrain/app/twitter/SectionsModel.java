@@ -73,6 +73,18 @@ class SectionsModel implements ListModel
 	return false;
     }
 
+    public void setActiveAccount(Account account)
+    {
+	for(Account a: accounts)
+	    a.connected = (a == account);
+    }
+
+    public void noActiveAccount()
+    {
+	for(Account a: accounts)
+	    a.connected = false;
+    }
+
     private void refreshAccounts()
     {
 	final String accountsPath = "/org/luwrain/app/twitter/accounts";

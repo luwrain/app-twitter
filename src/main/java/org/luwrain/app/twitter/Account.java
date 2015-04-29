@@ -23,9 +23,10 @@ class Account
     public String consumerSecret = "";
     public String accessToken = "";
     public String accessTokenSecret= "";
+    public boolean connected = false;
 
     @Override public String toString()
     {
-	return name;
+	return "@" + name;
     }
 }

@@ -36,6 +36,7 @@ class TwitterApp implements Application, Actions
     private TweetsModel tweetsModel;
     private ListArea sectionsArea;
     private ListArea tweetsArea;
+    private Work work = null;
 
     @Override public boolean onLaunch(Luwrain luwrain)
     {
@@ -50,6 +51,8 @@ class TwitterApp implements Application, Actions
 
     @Override public void search()
     {
+	if (work != null && !work.finished)
+	    return;
 	if (twitter == null)
 	{
 	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
@@ -58,24 +61,32 @@ class TwitterApp implements Application, Actions
 	final String query = Popups.simple(luwrain, strings.searchPopupName(), strings.searchPopupPrefix(), "");
 	if (query == null || query.trim().isEmpty())
 	    return;
+	final Strings s = strings;
+	work = new Work(luwrain, tweetsArea){
+		private Strings strings = s;
+		@Override public void work()
+		{
 	TweetWrapper[] wrappers = base.search(twitter, query, 10);
 	if (wrappers == null)
 	{
-	    luwrain.message(strings.problemSearching(), Luwrain.MESSAGE_ERROR);
+message(strings.problemSearching(), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
 	if (wrappers.length < 0)
 	{
-	    luwrain.message(strings.nothingFound(), Luwrain.MESSAGE_ERROR);
+	    message(strings.nothingFound(), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
-	tweetsModel.setTweets(wrappers);
-	tweetsArea.refresh();
-	luwrain.setActiveArea(tweetsArea);
+	showTweets(wrappers);
+		}
+	    };
+		new Thread(work).start();
     }
 
     @Override public void userTweets()
     {
+	if (work != null && !work.finished)
+	    return;
 	if (twitter == null)
 	{
 	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
@@ -84,25 +95,32 @@ class TwitterApp implements Application, Actions
 	final String user = Popups.simple(luwrain, strings.userTweetsPopupName(), strings.userTweetsPopupPrefix(), "");
 	if (user == null || user.trim().isEmpty())
 	    return;
+	final Strings s = strings;
+	work = new Work(luwrain, tweetsArea){
+		private Strings strings = s;
+		@Override public void work()
+		{
 	TweetWrapper[] wrappers = base.userTweets(twitter, user);
 	if (wrappers == null)
 	{
-	    luwrain.message(strings.problemUserTweets(), Luwrain.MESSAGE_ERROR);
+	    message(strings.problemUserTweets(), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
 	if (wrappers.length < 0)
 	{
-	    luwrain.message(strings.noUserTweets(), Luwrain.MESSAGE_ERROR);
+	    message(strings.noUserTweets(), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
-	tweetsModel.setTweets(wrappers);
-	tweetsArea.refresh();
-	luwrain.setActiveArea(tweetsArea);
+	showTweets(wrappers);
+		}
+	    };
+		new Thread(work).start();
     }
-
 
     @Override public void post()
     {
+	if (work != null && !work.finished)
+	    return;
 	if (twitter == null)
 	{
 	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
@@ -111,35 +129,53 @@ class TwitterApp implements Application, Actions
 	final String text = Popups.simple(luwrain, strings.postPopupName(), strings.postPopupPrefix(), "");
 	if (text == null || text.trim().isEmpty())
 	    return;
+	final Strings s = strings;
+	work = new Work(luwrain, tweetsArea){
+		private Strings strings = s;
+		@Override public void work()
+		{
 	if (base.postTweet(twitter, text))
 	{
-	    luwrain.message(strings.postingSuccess(), Luwrain.MESSAGE_OK);
+	    message(strings.postingSuccess(), Luwrain.MESSAGE_OK);
 	} else 
 	{
-	    luwrain.message(strings.problemPosting(), Luwrain.MESSAGE_ERROR);
+	    message(strings.problemPosting(), Luwrain.MESSAGE_ERROR);
 	}
+		}
+	    };
+		new Thread(work).start();
     }
 
     @Override public void homeTweets()
     {
+	if (work != null && !work.finished)
+	    return;
 	if (twitter == null)
 	{
 	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
-	TweetWrapper[] wrappers = base.homeTweets(twitter);
-	if (wrappers == null)
-	{
-	    luwrain.message(strings.problemHomeTweets(), Luwrain.MESSAGE_ERROR);
+	final Strings s = strings;
+	work = new Work(luwrain, tweetsArea){
+		private Strings strings = s;
+		@Override public void work()
+		{
+		    TweetWrapper[] wrappers = base.homeTweets(twitter);
+		    if (wrappers == null)
+		    {
+			message(strings.problemHomeTweets(), Luwrain.MESSAGE_ERROR);
 	    return;
 	}
-	tweetsModel.setTweets(wrappers);
-	tweetsArea.refresh();
-	luwrain.setActiveArea(tweetsArea);
+		    showTweets(wrappers);
+		}
+	    };
+		new Thread(work).start();
     }
 
     @Override public void activateAccount(Account account)
     {
+	if (work != null && !work.finished)
+	    return;
 	twitter = base.createTwitter(account.consumerKey,
 				     account.consumerSecret,
 				     account.accessToken,
@@ -147,8 +183,10 @@ class TwitterApp implements Application, Actions
 	if (twitter != null)
 	{
 	    luwrain.playSound(Sounds.GENERAL_OK);
+	    sectionsModel.setActiveAccount(account);
 	} else
 	{
+	    sectionsModel.noActiveAccount();
 	    luwrain.message(strings.problemConnecting(), Luwrain.MESSAGE_ERROR);
 	}
     }
@@ -206,7 +244,7 @@ class TwitterApp implements Application, Actions
 
 	sectionsArea = new ListArea(new DefaultControlEnvironment(luwrain), 
 				    sectionsModel,
-				    new DefaultListItemAppearance(new DefaultControlEnvironment(luwrain)),
+				    new SectionsAppearance(luwrain, strings),
 				    sectionsClickHandler,
 				    strings.appName()) {
 		private Strings strings = s;
@@ -269,6 +307,23 @@ class TwitterApp implements Application, Actions
 			throw new NullPointerException("event may not be null");
 		    switch (event.getCode())
 		    {
+		    case EnvironmentEvent.THREAD_SYNC:
+			if (event instanceof MessageEvent)
+			{
+			    final MessageEvent messageEvent = (MessageEvent)event;
+			    luwrain.message(messageEvent.text, messageEvent.type);
+			    return true;
+			}
+			if (event instanceof ShowTweetsEvent)
+			{
+			    final ShowTweetsEvent showTweetsEvent = (ShowTweetsEvent)event;
+			    final TweetsModel tweetsModel = (TweetsModel)model();
+			    tweetsModel.setTweets(showTweetsEvent.tweets);
+			    actions.gotoTweets();
+			    refresh();
+			    return true;
+			}
+			return true;
 		    case EnvironmentEvent.CLOSE:
 			actions.closeApp();
 			return true;
@@ -301,6 +356,8 @@ class TwitterApp implements Application, Actions
 
     @Override public void closeApp()
     {
+	if (work != null && !work.finished)
+	    return;
 	luwrain.closeApp();
     }
 }
