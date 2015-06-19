@@ -19,6 +19,7 @@ package org.luwrain.app.twitter;
 public interface Strings
 {
     String appName();
+    String tweetsAreaName();
     String searchSectionsItem();
     String postSectionsItem();
     String homeTweetsSectionsItem();
@@ -38,4 +39,6 @@ public interface Strings
     String userTweetsPopupPrefix();
     String problemUserTweets();
     String noUserTweets();
+    String connectedAccount();
+    String account();
 }

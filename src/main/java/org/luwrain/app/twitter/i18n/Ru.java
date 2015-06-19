@@ -23,6 +23,11 @@ public class Ru implements org.luwrain.app.twitter.Strings
 	return "Твиттер";
     }
 
+    @Override public String tweetsAreaName()
+    {
+	return "Твиты";
+    }
+
     @Override public String searchSectionsItem()
     {
 	return "Поиск";
@@ -117,5 +122,15 @@ public class Ru implements org.luwrain.app.twitter.Strings
     @Override public String noUserTweets()
     {
 	return "Пользователь не имеет опубликованных твитов";
+    }
+
+    @Override public String connectedAccount()
+    {
+	return "Подключённая учётная запись";
+    }
+
+    @Override public String account()
+    {
+	return "Учётная запись";
     }
 }

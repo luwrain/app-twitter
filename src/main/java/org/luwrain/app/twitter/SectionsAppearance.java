@@ -43,8 +43,8 @@ class SectionsAppearance implements ListItemAppearance
 	    luwrain.playSound(Sounds.NEW_LIST_ITEM);
 	    final Account account = (Account)item;
 	    if (account.connected)
-		luwrain.say("Подключенная учётная запись " + account.name); else
-		luwrain.say("Учётная запись " + account.name);
+		luwrain.say(strings.connectedAccount() + " " + account.name); else
+		luwrain.say(strings.account() + " " + account.name);
 	    return;
 	}
 	luwrain.playSound(Sounds.NEW_LIST_ITEM);

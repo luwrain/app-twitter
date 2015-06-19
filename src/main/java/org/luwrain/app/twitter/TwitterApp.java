@@ -299,7 +299,7 @@ class TwitterApp implements Application, Actions
 				    tweetsModel,
 				    new DefaultListItemAppearance(new DefaultControlEnvironment(luwrain)),
 				  tweetsClickHandler,
-				  "Твиты") { //FIXME:
+				  strings.tweetsAreaName()) {
 		private Strings strings = s;
 		private Actions actions = a;
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
