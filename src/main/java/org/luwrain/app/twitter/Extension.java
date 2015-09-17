@@ -16,13 +16,7 @@
 
 package org.luwrain.app.twitter;
 
-import org.luwrain.core.Application;
-import org.luwrain.core.Shortcut;
-import org.luwrain.core.Command;
-import org.luwrain.core.CommandEnvironment;
-import org.luwrain.core.I18nExtension;
-import org.luwrain.core.Luwrain;
-import org.luwrain.core.Registry;
+import org.luwrain.core.*;
 
 public class Extension extends org.luwrain.core.extensions.EmptyExtension
 {

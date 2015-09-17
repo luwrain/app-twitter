@@ -198,7 +198,7 @@ class TwitterApp implements Application, Actions
 				     account.accessTokenSecret);
 	if (twitter != null)
 	{
-	    luwrain.playSound(Sounds.GENERAL_OK);
+	    luwrain.playSound(Sounds.MESSAGE_OK);
 	    sectionsModel.setActiveAccount(account);
 	} else
 	{
