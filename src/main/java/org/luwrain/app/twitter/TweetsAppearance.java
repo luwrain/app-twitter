@@ -19,32 +19,41 @@ package org.luwrain.app.twitter;
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
-class SectionsAppearance implements ListItemAppearance
+class TweetsAppearance implements ListItemAppearance
 {
     private Luwrain luwrain;
     private Strings strings;
 
-    public SectionsAppearance(Luwrain luwrain, Strings strings)
+    TweetsAppearance(Luwrain luwrain, Strings strings)
     {
 	this.luwrain = luwrain;
 	this.strings = strings;
-	if (luwrain == null)
-	    throw new NullPointerException("luwrain may not be null");
-	if (strings == null)
-	    throw new NullPointerException("strings may not be null");
+	NullCheck.notNull(luwrain, "luwrain");
+	NullCheck.notNull(strings, "strings");
     }
 
     @Override public void introduceItem(Object item, int flags)
     {
 	if (item == null)
 	    return;
-	if (item instanceof Account)
+	if (item instanceof TweetWrapper)
 	{
+	    final TweetWrapper wrapper = (TweetWrapper)item;
 	    luwrain.playSound(Sounds.NEW_LIST_ITEM);
-	    final Account account = (Account)item;
-	    if (account.connected)
-		luwrain.say(strings.connectedAccount() + " " + account.name); else
-		luwrain.say(strings.account() + " " + account.name);
+	    if ((flags & BRIEF) != 0)
+	    {
+		luwrain.say(wrapper.toString());
+		return;
+	    }
+	    final StringBuilder b = new StringBuilder();
+	    if (wrapper.isRetweet())
+		b.append(strings.retweet() + " ");
+	    b.append(wrapper.getUserName() + " ");
+	    b.append(strings.passedTime(wrapper.getDate()) + " ");
+	    b.append(wrapper.getText());
+	    b.append(" " + strings.numberOfFavorites(wrapper.getFavoriteCount()));
+	    b.append(" " + strings.numberOfRetweets(wrapper.getRetweetCount()));
+	    luwrain.say(b.toString());
 	    return;
 	}
 	luwrain.playSound(Sounds.NEW_LIST_ITEM);
@@ -65,8 +74,6 @@ class SectionsAppearance implements ListItemAppearance
 
     @Override public int getObservableRightBound(Object item)
     {
-	if (item == null)
-	    return 0;
-	return item.toString().length();
+	return getScreenAppearance(item, 0).length();
     }
 }

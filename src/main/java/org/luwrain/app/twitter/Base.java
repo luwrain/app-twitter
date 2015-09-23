@@ -1,14 +1,14 @@
 /*
    Copyright 2012-2015 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-   This file is part of the Luwrain.
+   This file is part of the LUWRAIN.
 
-   Luwrain is free software; you can redistribute it and/or
+   LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
    License as published by the Free Software Foundation; either
    version 3 of the License, or (at your option) any later version.
 
-   Luwrain is distributed in the hope that it will be useful,
+   LUWRAIN is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    General Public License for more details.
@@ -18,15 +18,17 @@ package org.luwrain.app.twitter;
 
 import java.util.*;
 
+import org.luwrain.core.NullCheck;
+
 import twitter4j.*;
 import twitter4j.conf.ConfigurationLuwrain;
 
 class Base
 {
-    public Twitter createTwitter(String consumerKey,
-				 String consumerSecret,
-				 String accessToken,
-				 String accessTokenSecret)
+    Twitter createTwitter(String consumerKey,
+			  String consumerSecret,
+			  String accessToken,
+			  String accessTokenSecret)
     {
 	ConfigurationLuwrain conf = new ConfigurationLuwrain(consumerKey, consumerSecret, accessToken, accessTokenSecret);
 	Twitter twitter = new TwitterFactory(conf).getInstance();
@@ -37,7 +39,7 @@ class Base
 	return twitter;
     }
 
-    public boolean updateStatus(Twitter twitter, String text)
+    boolean updateStatus(Twitter twitter, String text)
     {
 	try {
 	    Status status = twitter.updateStatus(text);
@@ -50,14 +52,12 @@ class Base
 	return true;
     }
 
-    public TweetWrapper[] search(Twitter twitter,
-				 String text,
-				 int numPages)
+    TweetWrapper[] search(Twitter twitter,
+			  String text,
+			  int numPages)
     {
-	if (twitter == null)
-	    throw new NullPointerException("twitter may not be null");
-	if (text == null)
-	    throw new NullPointerException("text may not be null");
+	NullCheck.notNull(twitter, "twitter");
+	NullCheck.notNull(text, "text");
 	if (text.trim().isEmpty())
 	    throw new IllegalArgumentException("text may not be empty");
 	if (numPages < 1)
@@ -86,12 +86,10 @@ class Base
 	return wrappers.toArray(new TweetWrapper[wrappers.size()]);
     }
 
-    public boolean postTweet(Twitter twitter, String tweet)
+    boolean postTweet(Twitter twitter, String tweet)
     {
-	if (twitter == null)
-	    throw new NullPointerException("twitter may not be null");
-	if (tweet == null)
-	    throw new NullPointerException("tweet may not be null");
+	NullCheck.notNull(twitter, "twitter");
+	NullCheck.notNull(tweet, "tweet");
 	if (tweet.trim().isEmpty())
 	    throw new IllegalArgumentException("tweet may not be empty");
 	try {
@@ -105,10 +103,9 @@ class Base
 	}
     }
 
-    public TweetWrapper[] homeTweets(Twitter twitter)
+    TweetWrapper[] homeTweets(Twitter twitter)
     {
-	if (twitter == null)
-	    throw new NullPointerException("twitter may not be null");
+	NullCheck.notNull(twitter, "twitter");
 	try {
 	    List<Status> result = twitter.getHomeTimeline();
 	    if (result == null)
@@ -125,19 +122,17 @@ class Base
 	}
     }
 
-    public TweetWrapper[] userTweets(Twitter twitter, String user)
+    TweetWrapper[] userTweets(Twitter twitter, String user)
     {
-	if (twitter == null)
-	    throw new NullPointerException("twitter may not be null");
-	if (user == null)
-	    throw new NullPointerException("user may not be null");
+	NullCheck.notNull(twitter, "twitter");
+	NullCheck.notNull(user, "user");
 	if (user.trim().isEmpty())
 	    throw new IllegalArgumentException("user may not be empty");
 	try {
 	    List<Status> result = twitter.getUserTimeline(user);
 	    if (result == null)
 		return null;
-	    LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	    final LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
 	    for(Status s: result)
 		wrappers.add(new TweetWrapper(s));
 	    return wrappers.toArray(new TweetWrapper[wrappers.size()]);
@@ -148,5 +143,4 @@ class Base
 	    return null;
 	}
     }
-
 }

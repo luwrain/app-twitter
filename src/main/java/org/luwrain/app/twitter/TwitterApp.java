@@ -1,14 +1,14 @@
 /*
    Copyright 2012-2015 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-   This file is part of the Luwrain.
+   This file is part of the LUWRAIN.
 
-   Luwrain is free software; you can redistribute it and/or
+   LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
    License as published by the Free Software Foundation; either
    version 3 of the License, or (at your option) any later version.
 
-   Luwrain is distributed in the hope that it will be useful,
+   LUWRAIN is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    General Public License for more details.
@@ -22,16 +22,15 @@ import org.luwrain.controls.*;
 import org.luwrain.popups.*;
 import org.luwrain.util.RegistryAutoCheck;
 
-
 import twitter4j.*;
 
 class TwitterApp implements Application, Actions
 {
-    public static final String STRINGS_NAME = "luwrain.twitter";
+    static private final String STRINGS_NAME = "luwrain.twitter";
 
     private Luwrain luwrain;
     private Strings strings;
-    private Base base = new Base();
+    private final Base base = new Base();
     Twitter twitter = null;
 
     private SectionsModel sectionsModel;
@@ -43,7 +42,7 @@ class TwitterApp implements Application, Actions
 
     @Override public boolean onLaunch(Luwrain luwrain)
     {
-	Object o = luwrain.i18n().getStrings(STRINGS_NAME);
+	final Object o = luwrain.i18n().getStrings(STRINGS_NAME);
 	if (o == null || !(o instanceof Strings))
 	    return false;
 	strings = (Strings)o;
@@ -70,21 +69,21 @@ class TwitterApp implements Application, Actions
 		private Strings strings = s;
 		@Override public void work()
 		{
-	TweetWrapper[] wrappers = base.search(twitter, query, 10);
-	if (wrappers == null)
-	{
-	    message(strings.problemSearching(), Luwrain.MESSAGE_ERROR);
-	    return;
-	}
-	if (wrappers.length < 0)
-	{
-	    message(strings.nothingFound(), Luwrain.MESSAGE_ERROR);
-	    return;
-	}
-	showTweets(wrappers);
+		    TweetWrapper[] wrappers = base.search(twitter, query, 10);
+		    if (wrappers == null)
+		    {
+			message(strings.problemSearching(), Luwrain.MESSAGE_ERROR);
+			return;
+		    }
+		    if (wrappers.length < 0)
+		    {
+			message(strings.nothingFound(), Luwrain.MESSAGE_ERROR);
+			return;
+		    }
+		    showTweets(wrappers);
 		}
 	    };
-		new Thread(work).start();
+	new Thread(work).start();
     }
 
     @Override public void userTweets()
@@ -106,31 +105,31 @@ class TwitterApp implements Application, Actions
 		if (s.toLowerCase().equals(user.toLowerCase()))
 		    permitted = true;
 	    if (!permitted)
-		{
-		    luwrain.message(strings.problemUserTweets(), Luwrain.MESSAGE_ERROR);
-		    return;
-		}
+	    {
+		luwrain.message(strings.problemUserTweets(), Luwrain.MESSAGE_ERROR);
+		return;
+	    }
 	}
 	final Strings s = strings;
 	work = new Work(luwrain, tweetsArea){
 		private Strings strings = s;
 		@Override public void work()
 		{
-	TweetWrapper[] wrappers = base.userTweets(twitter, user);
-	if (wrappers == null)
-	{
-	    message(strings.problemUserTweets(), Luwrain.MESSAGE_ERROR);
-	    return;
-	}
-	if (wrappers.length < 0)
-	{
-	    message(strings.noUserTweets(), Luwrain.MESSAGE_ERROR);
-	    return;
-	}
-	showTweets(wrappers);
+		    TweetWrapper[] wrappers = base.userTweets(twitter, user);
+		    if (wrappers == null)
+		    {
+			message(strings.problemUserTweets(), Luwrain.MESSAGE_ERROR);
+			return;
+		    }
+		    if (wrappers.length < 0)
+		    {
+			message(strings.noUserTweets(), Luwrain.MESSAGE_ERROR);
+			return;
+		    }
+		    showTweets(wrappers);
 		}
 	    };
-		new Thread(work).start();
+	new Thread(work).start();
     }
 
     @Override public void post()
@@ -150,16 +149,16 @@ class TwitterApp implements Application, Actions
 		private Strings strings = s;
 		@Override public void work()
 		{
-	if (base.postTweet(twitter, text))
-	{
-	    message(strings.postingSuccess(), Luwrain.MESSAGE_OK);
-	} else 
-	{
-	    message(strings.problemPosting(), Luwrain.MESSAGE_ERROR);
-	}
+		    if (base.postTweet(twitter, text))
+		    {
+			message(strings.postingSuccess(), Luwrain.MESSAGE_DONE);
+		    } else 
+		    {
+			message(strings.problemPosting(), Luwrain.MESSAGE_ERROR);
+		    }
 		}
 	    };
-		new Thread(work).start();
+	new Thread(work).start();
     }
 
     @Override public void homeTweets()
@@ -180,12 +179,12 @@ class TwitterApp implements Application, Actions
 		    if (wrappers == null)
 		    {
 			message(strings.problemHomeTweets(), Luwrain.MESSAGE_ERROR);
-	    return;
-	}
+			return;
+		    }
 		    showTweets(wrappers);
 		}
 	    };
-		new Thread(work).start();
+	new Thread(work).start();
     }
 
     @Override public void activateAccount(Account account)
@@ -198,7 +197,7 @@ class TwitterApp implements Application, Actions
 				     account.accessTokenSecret);
 	if (twitter != null)
 	{
-	    luwrain.playSound(Sounds.MESSAGE_OK);
+	    luwrain.playSound(Sounds.MESSAGE_DONE);
 	    sectionsModel.setActiveAccount(account);
 	} else
 	{
@@ -267,60 +266,52 @@ class TwitterApp implements Application, Actions
 		private Actions actions = a;
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
-		    if (event == null)
-			throw new NullPointerException("event may not be null");
+		    NullCheck.notNull(event, "event");
 		    if (event.isCommand() &&! event.isModified())
 			switch(event.getCommand())
 			{
 			case KeyboardEvent.TAB:
 			    actions.gotoTweets();
 			    return super.onKeyboardEvent(event);
-			default:
-			    return super.onKeyboardEvent(event);
 			}
-		    return false;
+			    return super.onKeyboardEvent(event);
 		}
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
-		    if (event == null)
-			throw new NullPointerException("event may not be null");
+		    NullCheck.notNull(event, "event");
 		    switch (event.getCode())
 		    {
 		    case EnvironmentEvent.CLOSE:
 			actions.closeApp();
 			return true;
 		    default:
-			return false;
+			return super.onEnvironmentEvent(event);
 		    }
 		}
 	    };
 
 	tweetsArea = new ListArea(new DefaultControlEnvironment(luwrain), 
 				    tweetsModel,
-				    new DefaultListItemAppearance(new DefaultControlEnvironment(luwrain)),
+				  new TweetsAppearance(luwrain, strings),
 				  tweetsClickHandler,
 				  strings.tweetsAreaName()) {
 		private Strings strings = s;
 		private Actions actions = a;
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
-		    if (event == null)
-			throw new NullPointerException("event may not be null");
+		    NullCheck.notNull(event, "event");
 		    if (event.isCommand() &&! event.isModified())
 			switch(event.getCommand())
 			{
 			case KeyboardEvent.TAB:
 			    actions.gotoSections();
 			    return true;
-			default:
-			    return super.onKeyboardEvent(event);
 			}
-		    return super.onKeyboardEvent(event);
+			    return super.onKeyboardEvent(event);
 		}
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
-		    if (event == null)
-			throw new NullPointerException("event may not be null");
+		    NullCheck.notNull(event, "event");
 		    switch (event.getCode())
 		    {
 		    case EnvironmentEvent.THREAD_SYNC:
@@ -344,7 +335,7 @@ class TwitterApp implements Application, Actions
 			actions.closeApp();
 			return true;
 		    default:
-			return false;
+			return super.onEnvironmentEvent(event);
 		    }
 		}
 	    };
