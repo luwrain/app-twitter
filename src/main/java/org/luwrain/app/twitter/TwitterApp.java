@@ -326,6 +326,7 @@ class TwitterApp implements Application, Actions
 			    final ShowTweetsEvent showTweetsEvent = (ShowTweetsEvent)event;
 			    final TweetsModel tweetsModel = (TweetsModel)model();
 			    tweetsModel.setTweets(showTweetsEvent.tweets);
+			    tweetsArea.resetState(false);
 			    actions.gotoTweets();
 			    refresh();
 			    return true;
