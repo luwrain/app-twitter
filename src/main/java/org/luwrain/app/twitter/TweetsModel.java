@@ -21,7 +21,7 @@ import org.luwrain.controls.*;
 
 import twitter4j.*;
 
-class TweetsModel implements ListModel
+class TweetsModel implements ListArea.Model
 {
     private Luwrain luwrain;
     private TweetWrapper[] wrappers;

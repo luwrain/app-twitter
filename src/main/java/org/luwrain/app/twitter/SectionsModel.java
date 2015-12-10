@@ -22,7 +22,7 @@ import org.luwrain.core.*;
 import org.luwrain.controls.*;
 import org.luwrain.util.RegistryAutoCheck;
 
-class SectionsModel implements ListModel
+class SectionsModel implements ListArea.Model
 {
     private Luwrain luwrain;
     private Strings strings;
