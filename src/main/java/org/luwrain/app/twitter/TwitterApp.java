@@ -281,7 +281,7 @@ class TwitterApp implements Application, Actions
 		    NullCheck.notNull(event, "event");
 		    switch (event.getCode())
 		    {
-		    case EnvironmentEvent.CLOSE:
+		    case CLOSE:
 			actions.closeApp();
 			return true;
 		    default:
@@ -314,7 +314,7 @@ class TwitterApp implements Application, Actions
 		    NullCheck.notNull(event, "event");
 		    switch (event.getCode())
 		    {
-		    case EnvironmentEvent.THREAD_SYNC:
+		    case THREAD_SYNC:
 			if (event instanceof MessageEvent)
 			{
 			    final MessageEvent messageEvent = (MessageEvent)event;
@@ -332,7 +332,7 @@ class TwitterApp implements Application, Actions
 			    return true;
 			}
 			return true;
-		    case EnvironmentEvent.CLOSE:
+		    case CLOSE:
 			actions.closeApp();
 			return true;
 		    default:
