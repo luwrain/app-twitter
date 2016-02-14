@@ -267,10 +267,10 @@ class TwitterApp implements Application, Actions
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
-		    if (event.isCommand() &&! event.isModified())
-			switch(event.getCommand())
+		    if (event.isSpecial() &&! event.isModified())
+			switch(event.getSpecial())
 			{
-			case KeyboardEvent.TAB:
+			case TAB:
 			    actions.gotoTweets();
 			    return super.onKeyboardEvent(event);
 			}
@@ -300,10 +300,10 @@ class TwitterApp implements Application, Actions
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
-		    if (event.isCommand() &&! event.isModified())
-			switch(event.getCommand())
+		    if (event.isSpecial() &&! event.isModified())
+			switch(event.getSpecial())
 			{
-			case KeyboardEvent.TAB:
+			case TAB:
 			    actions.gotoSections();
 			    return true;
 			}
