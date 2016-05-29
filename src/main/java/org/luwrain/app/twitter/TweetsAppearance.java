@@ -16,10 +16,12 @@
 
 package org.luwrain.app.twitter;
 
+import java.util.*;
+
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
-class TweetsAppearance implements ListItemAppearance
+class TweetsAppearance implements ListArea.Appearance
 {
     private Luwrain luwrain;
     private Strings strings;
@@ -32,15 +34,15 @@ class TweetsAppearance implements ListItemAppearance
 	NullCheck.notNull(strings, "strings");
     }
 
-    @Override public void introduceItem(Object item, int flags)
+    @Override public void announceItem(Object item, Set<Flags> flags)
     {
-	if (item == null)
-	    return;
+	NullCheck.notNull(item, "item");
+	NullCheck.notNull(flags, "flags");
 	if (item instanceof TweetWrapper)
 	{
 	    final TweetWrapper wrapper = (TweetWrapper)item;
 	    luwrain.playSound(Sounds.NEW_LIST_ITEM);
-	    if ((flags & BRIEF) != 0)
+	    if (flags.contains(Flags.BRIEF))
 	    {
 		luwrain.say(wrapper.toString());
 		return;
@@ -60,10 +62,10 @@ class TweetsAppearance implements ListItemAppearance
 	luwrain.say(item.toString());
     }
 
-    @Override public String getScreenAppearance(Object item, int flags)
+    @Override public String getScreenAppearance(Object item, Set<Flags> flags)
     {
-	if (item == null)
-	    return "  ";
+	NullCheck.notNull(item, "item");
+	NullCheck.notNull(flags, "flags");
 	return item.toString();
     }
 
@@ -74,6 +76,6 @@ class TweetsAppearance implements ListItemAppearance
 
     @Override public int getObservableRightBound(Object item)
     {
-	return getScreenAppearance(item, 0).length();
+	return getScreenAppearance(item, EnumSet.noneOf(Flags.class)).length();
     }
 }

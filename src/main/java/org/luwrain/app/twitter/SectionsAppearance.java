@@ -16,15 +16,17 @@
 
 package org.luwrain.app.twitter;
 
+import java.util.*;
+
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
-class SectionsAppearance implements ListItemAppearance
+class SectionsAppearance implements ListArea.Appearance
 {
     private Luwrain luwrain;
     private Strings strings;
 
-    public SectionsAppearance(Luwrain luwrain, Strings strings)
+    SectionsAppearance(Luwrain luwrain, Strings strings)
     {
 	this.luwrain = luwrain;
 	this.strings = strings;
@@ -34,10 +36,10 @@ class SectionsAppearance implements ListItemAppearance
 	    throw new NullPointerException("strings may not be null");
     }
 
-    @Override public void introduceItem(Object item, int flags)
+    @Override public void announceItem(Object item, Set<Flags> flags)
     {
-	if (item == null)
-	    return;
+	NullCheck.notNull(item, "item");
+	NullCheck.notNull(flags, "flags");
 	if (item instanceof Account)
 	{
 	    luwrain.playSound(Sounds.NEW_LIST_ITEM);
@@ -51,10 +53,10 @@ class SectionsAppearance implements ListItemAppearance
 	luwrain.say(item.toString());
     }
 
-    @Override public String getScreenAppearance(Object item, int flags)
+    @Override public String getScreenAppearance(Object item, Set<Flags> flags)
     {
-	if (item == null)
-	    return "  ";
+	NullCheck.notNull(item, "item");
+	NullCheck.notNull(flags, "flags");
 	return item.toString();
     }
 
