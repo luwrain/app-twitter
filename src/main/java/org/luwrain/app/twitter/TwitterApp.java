@@ -208,14 +208,12 @@ class TwitterApp implements Application, Actions
 
     private void createAreas()
     {
-	final Actions a = this;
-	final Strings s = strings;
+	final Actions actions = this;
 
 	sectionsModel = new SectionsModel(luwrain, strings);
 	tweetsModel = new TweetsModel(luwrain);
 
 	final ListClickHandler sectionsClickHandler = new ListClickHandler(){
-		private Actions actions = a;
 		@Override public boolean onListClick(ListArea area,
 						     int index,
 						     Object item)
@@ -248,7 +246,6 @@ class TwitterApp implements Application, Actions
 	    };
 
 	final ListClickHandler tweetsClickHandler = new ListClickHandler(){
-		private Actions actions = a;
 		@Override public boolean onListClick(ListArea area,
 						     int index,
 						     Object item)
@@ -257,13 +254,14 @@ class TwitterApp implements Application, Actions
 		}
 	    };
 
-	sectionsArea = new ListArea(new DefaultControlEnvironment(luwrain), 
-				    sectionsModel,
-				    new SectionsAppearance(luwrain, strings),
-				    sectionsClickHandler,
-				    strings.appName()) {
-		private Strings strings = s;
-		private Actions actions = a;
+	final ListArea.Params sectionsParams = new ListArea.Params();
+	sectionsParams.environment = new DefaultControlEnvironment(luwrain);
+	sectionsParams.model = sectionsModel;
+	sectionsParams.appearance = new SectionsAppearance(luwrain, strings);
+	sectionsParams.clickHandler = sectionsClickHandler;
+	sectionsParams.name = strings.appName();
+
+	sectionsArea = new ListArea(sectionsParams) {
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -274,7 +272,7 @@ class TwitterApp implements Application, Actions
 			    actions.gotoTweets();
 			    return super.onKeyboardEvent(event);
 			}
-			    return super.onKeyboardEvent(event);
+		    return super.onKeyboardEvent(event);
 		}
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
@@ -290,13 +288,14 @@ class TwitterApp implements Application, Actions
 		}
 	    };
 
-	tweetsArea = new ListArea(new DefaultControlEnvironment(luwrain), 
-				    tweetsModel,
-				  new TweetsAppearance(luwrain, strings),
-				  tweetsClickHandler,
-				  strings.tweetsAreaName()) {
-		private Strings strings = s;
-		private Actions actions = a;
+	final ListArea.Params tweetsParams = new ListArea.Params();
+	tweetsParams.environment = new DefaultControlEnvironment(luwrain);
+	tweetsParams.model = tweetsModel;
+	tweetsParams.appearance = new TweetsAppearance(luwrain, strings);
+	tweetsParams.clickHandler = tweetsClickHandler;
+	tweetsParams.name = strings.tweetsAreaName();
+
+	tweetsArea = new ListArea(tweetsParams) {
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -326,7 +325,7 @@ class TwitterApp implements Application, Actions
 			    final ShowTweetsEvent showTweetsEvent = (ShowTweetsEvent)event;
 			    final TweetsModel tweetsModel = (TweetsModel)model();
 			    tweetsModel.setTweets(showTweetsEvent.tweets);
-			    tweetsArea.resetState(false);
+			    tweetsArea.reset(false);
 			    actions.gotoTweets();
 			    refresh();
 			    return true;
