@@ -42,14 +42,14 @@ class SectionsAppearance implements ListArea.Appearance
 	NullCheck.notNull(flags, "flags");
 	if (item instanceof Account)
 	{
-	    luwrain.playSound(Sounds.NEW_LIST_ITEM);
+	    luwrain.playSound(Sounds.LIST_ITEM);
 	    final Account account = (Account)item;
 	    if (account.connected)
 		luwrain.say(strings.connectedAccount() + " " + account.name); else
 		luwrain.say(strings.account() + " " + account.name);
 	    return;
 	}
-	luwrain.playSound(Sounds.NEW_LIST_ITEM);
+	luwrain.playSound(Sounds.LIST_ITEM);
 	luwrain.say(item.toString());
     }
 

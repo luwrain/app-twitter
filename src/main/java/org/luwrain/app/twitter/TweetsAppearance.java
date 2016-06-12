@@ -41,7 +41,7 @@ class TweetsAppearance implements ListArea.Appearance
 	if (item instanceof TweetWrapper)
 	{
 	    final TweetWrapper wrapper = (TweetWrapper)item;
-	    luwrain.playSound(Sounds.NEW_LIST_ITEM);
+	    luwrain.playSound(Sounds.LIST_ITEM);
 	    if (flags.contains(Flags.BRIEF))
 	    {
 		luwrain.say(wrapper.toString());
@@ -58,7 +58,7 @@ class TweetsAppearance implements ListArea.Appearance
 	    luwrain.say(b.toString());
 	    return;
 	}
-	luwrain.playSound(Sounds.NEW_LIST_ITEM);
+	luwrain.playSound(Sounds.LIST_ITEM);
 	luwrain.say(item.toString());
     }
 
