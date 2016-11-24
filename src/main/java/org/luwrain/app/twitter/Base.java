@@ -3,17 +3,33 @@ package org.luwrain.app.twitter;
 
 import java.util.*;
 
-import org.luwrain.core.NullCheck;
+import org.luwrain.core.*;
 
 import twitter4j.*;
 import twitter4j.conf.ConfigurationLuwrain;
 
 class Base
 {
-    Twitter createTwitter(String consumerKey,
-			  String consumerSecret,
-			  String accessToken,
-			  String accessTokenSecret)
+    private final Luwrain luwrain;
+
+    Base(Luwrain luwrain)
+    {
+	NullCheck.notNull(luwrain, "luwrain");
+	this.luwrain = luwrain;
+    }
+
+    boolean isBusy()
+    {
+	return true;
+    }
+
+    boolean run(Runnable runnable)
+    {
+	return false;
+    }
+
+    Twitter createTwitter(String consumerKey, String consumerSecret,
+			  String accessToken, String accessTokenSecret)
     {
 	ConfigurationLuwrain conf = new ConfigurationLuwrain(consumerKey, consumerSecret, accessToken, accessTokenSecret);
 	Twitter twitter = new TwitterFactory(conf).getInstance();

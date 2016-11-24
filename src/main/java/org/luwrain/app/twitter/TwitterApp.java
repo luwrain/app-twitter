@@ -12,8 +12,8 @@ import twitter4j.*;
 class TwitterApp implements Application
 {
     private Luwrain luwrain;
-    private Strings strings;
-    private final Base base = new Base();
+    private Strings strings = null;
+    private Base base = null;
     private Actions actions = null;
     Twitter twitter = null;
 
@@ -21,7 +21,6 @@ class TwitterApp implements Application
     private TweetsModel tweetsModel;
     private ListArea sectionsArea;
     private ListArea tweetsArea;
-    private Work work = null;
     private String[] allowedAccounts;
 
     @Override public boolean onLaunch(Luwrain luwrain)
@@ -32,48 +31,17 @@ class TwitterApp implements Application
 	    return false;
 	strings = (Strings)o;
 	this.luwrain = luwrain;
-	this.actions = new Actions(luwrain);
+	this.actions = new Actions(luwrain, strings);
+	this.base = new Base(luwrain);
 	createAreas();
 	allowedAccounts = allowedAccounts();
 	return true;
     }
 
-    private void search()
-    {
-	if (work != null && !work.finished)
-	    return;
-	if (twitter == null)
-	{
-	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
-	    return;
-	}
-	final String query = Popups.simple(luwrain, strings.searchPopupName(), strings.searchPopupPrefix(), "");
-	if (query == null || query.trim().isEmpty())
-	    return;
-	final Strings s = strings;
-	work = new Work(luwrain, tweetsArea){
-		private Strings strings = s;
-		@Override public void work()
-		{
-		    TweetWrapper[] wrappers = base.search(twitter, query, 10);
-		    if (wrappers == null)
-		    {
-			message(strings.problemSearching(), Luwrain.MESSAGE_ERROR);
-			return;
-		    }
-		    if (wrappers.length < 0)
-		    {
-			message(strings.nothingFound(), Luwrain.MESSAGE_ERROR);
-			return;
-		    }
-		    showTweets(wrappers);
-		}
-	    };
-	new Thread(work).start();
-    }
 
     private void userTweets()
     {
+	/*
 	if (work != null && !work.finished)
 	    return;
 	if (twitter == null)
@@ -116,10 +84,12 @@ class TwitterApp implements Application
 		}
 	    };
 	new Thread(work).start();
+	*/
     }
 
     private void post()
     {
+	/*
 	if (work != null && !work.finished)
 	    return;
 	if (twitter == null)
@@ -145,10 +115,12 @@ class TwitterApp implements Application
 		}
 	    };
 	new Thread(work).start();
+	*/
     }
 
     private void homeTweets()
     {
+	/*
 	if (work != null && !work.finished)
 	    return;
 	if (twitter == null)
@@ -171,10 +143,12 @@ class TwitterApp implements Application
 		}
 	    };
 	new Thread(work).start();
+	*/
     }
 
     private void activateAccount(Account account)
     {
+	/*
 	if (work != null && !work.finished)
 	    return;
 	twitter = base.createTwitter(account.consumerKey,
@@ -190,6 +164,7 @@ class TwitterApp implements Application
 	    sectionsModel.noActiveAccount();
 	    luwrain.message(strings.problemConnecting(), Luwrain.MESSAGE_ERROR);
 	}
+	*/
     }
 
     private void createAreas()
@@ -208,7 +183,7 @@ class TwitterApp implements Application
 		    switch (index)
 		    {
 		    case 0:
-			search();
+			actions.search(base, twitter, tweetsArea);
 			return true;
 		    case 1:
 			userTweets();
@@ -298,6 +273,7 @@ gotoSections();
 		    NullCheck.notNull(event, "event");
 		    switch (event.getCode())
 		    {
+			/*
 		    case THREAD_SYNC:
 			if (event instanceof MessageEvent)
 			{
@@ -316,6 +292,7 @@ gotoTweets();
 			    return true;
 			}
 			return true;
+			*/
 		    case CLOSE:
 closeApp();
 			return true;
@@ -348,7 +325,7 @@ private void gotoSections()
 
     private void closeApp()
     {
-	if (work != null && !work.finished)
+	if (base.isBusy())
 	    return;
 	luwrain.closeApp();
     }
