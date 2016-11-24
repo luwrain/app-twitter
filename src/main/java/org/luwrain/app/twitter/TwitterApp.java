@@ -1,18 +1,3 @@
-/*
-   Copyright 2012-2015 Michael Pozhidaev <michael.pozhidaev@gmail.com>
-
-   This file is part of the LUWRAIN.
-
-   LUWRAIN is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public
-   License as published by the Free Software Foundation; either
-   version 3 of the License, or (at your option) any later version.
-
-   LUWRAIN is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   General Public License for more details.
-*/
 
 package org.luwrain.app.twitter;
 
@@ -24,13 +9,12 @@ import org.luwrain.util.RegistryAutoCheck;
 
 import twitter4j.*;
 
-class TwitterApp implements Application, Actions
+class TwitterApp implements Application
 {
-    static private final String STRINGS_NAME = "luwrain.twitter";
-
     private Luwrain luwrain;
     private Strings strings;
     private final Base base = new Base();
+    private Actions actions = null;
     Twitter twitter = null;
 
     private SectionsModel sectionsModel;
@@ -42,17 +26,19 @@ class TwitterApp implements Application, Actions
 
     @Override public boolean onLaunch(Luwrain luwrain)
     {
-	final Object o = luwrain.i18n().getStrings(STRINGS_NAME);
+	NullCheck.notNull(luwrain, "luwrain");
+	final Object o = luwrain.i18n().getStrings(Strings.NAME);
 	if (o == null || !(o instanceof Strings))
 	    return false;
 	strings = (Strings)o;
 	this.luwrain = luwrain;
+	this.actions = new Actions(luwrain);
 	createAreas();
 	allowedAccounts = allowedAccounts();
 	return true;
     }
 
-    @Override public void search()
+    private void search()
     {
 	if (work != null && !work.finished)
 	    return;
@@ -86,7 +72,7 @@ class TwitterApp implements Application, Actions
 	new Thread(work).start();
     }
 
-    @Override public void userTweets()
+    private void userTweets()
     {
 	if (work != null && !work.finished)
 	    return;
@@ -132,7 +118,7 @@ class TwitterApp implements Application, Actions
 	new Thread(work).start();
     }
 
-    @Override public void post()
+    private void post()
     {
 	if (work != null && !work.finished)
 	    return;
@@ -161,7 +147,7 @@ class TwitterApp implements Application, Actions
 	new Thread(work).start();
     }
 
-    @Override public void homeTweets()
+    private void homeTweets()
     {
 	if (work != null && !work.finished)
 	    return;
@@ -187,7 +173,7 @@ class TwitterApp implements Application, Actions
 	new Thread(work).start();
     }
 
-    @Override public void activateAccount(Account account)
+    private void activateAccount(Account account)
     {
 	if (work != null && !work.finished)
 	    return;
@@ -208,7 +194,6 @@ class TwitterApp implements Application, Actions
 
     private void createAreas()
     {
-	final Actions actions = this;
 
 	sectionsModel = new SectionsModel(luwrain, strings);
 	tweetsModel = new TweetsModel(luwrain);
@@ -223,21 +208,21 @@ class TwitterApp implements Application, Actions
 		    switch (index)
 		    {
 		    case 0:
-			actions.search();
+			search();
 			return true;
 		    case 1:
-			actions.userTweets();
+			userTweets();
 			return true;
 		    case 2:
-			actions.homeTweets();
+			homeTweets();
 			return true;
 		    case 3:
-			actions.post();
+			post();
 			return true;
 		    default:
 			if (item instanceof Account)
 			{
-			    actions.activateAccount((Account)item);
+			    activateAccount((Account)item);
 			    return true;
 			}
 			return false;
@@ -269,7 +254,7 @@ class TwitterApp implements Application, Actions
 			switch(event.getSpecial())
 			{
 			case TAB:
-			    actions.gotoTweets();
+			    gotoTweets();
 			    return super.onKeyboardEvent(event);
 			}
 		    return super.onKeyboardEvent(event);
@@ -280,7 +265,7 @@ class TwitterApp implements Application, Actions
 		    switch (event.getCode())
 		    {
 		    case CLOSE:
-			actions.closeApp();
+			closeApp();
 			return true;
 		    default:
 			return super.onEnvironmentEvent(event);
@@ -303,7 +288,7 @@ class TwitterApp implements Application, Actions
 			switch(event.getSpecial())
 			{
 			case TAB:
-			    actions.gotoSections();
+gotoSections();
 			    return true;
 			}
 			    return super.onKeyboardEvent(event);
@@ -326,13 +311,13 @@ class TwitterApp implements Application, Actions
 			    final TweetsModel tweetsModel = (TweetsModel)model();
 			    tweetsModel.setTweets(showTweetsEvent.tweets);
 			    tweetsArea.reset(false);
-			    actions.gotoTweets();
+gotoTweets();
 			    refresh();
 			    return true;
 			}
 			return true;
 		    case CLOSE:
-			actions.closeApp();
+closeApp();
 			return true;
 		    default:
 			return super.onEnvironmentEvent(event);
@@ -346,12 +331,12 @@ class TwitterApp implements Application, Actions
 	return strings.appName();
     }
 
-    @Override public void gotoSections()
+private void gotoSections()
     {
 	luwrain.setActiveArea(sectionsArea);
     }
 
-    @Override public void gotoTweets()
+    private void gotoTweets()
     {
 	luwrain.setActiveArea(tweetsArea);
     }
@@ -361,7 +346,7 @@ class TwitterApp implements Application, Actions
 	return new AreaLayout(AreaLayout.LEFT_RIGHT, sectionsArea, tweetsArea);
     }
 
-    @Override public void closeApp()
+    private void closeApp()
     {
 	if (work != null && !work.finished)
 	    return;

@@ -20,6 +20,8 @@ import java.util.Date;
 
 public interface Strings
 {
+    static final String NAME = "luwrain.twitter";
+
     String appName();
     String tweetsAreaName();
     String searchSectionsItem();
