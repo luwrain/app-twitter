@@ -17,11 +17,9 @@ class TwitterApp implements Application
     private Actions actions = null;
     Twitter twitter = null;
 
-    private SectionsModel sectionsModel;
     private TweetsModel tweetsModel;
     private ListArea sectionsArea;
-    private ListArea tweetsArea;
-    private String[] allowedAccounts;
+    private StatusArea statusArea;
 
     @Override public boolean onLaunch(Luwrain luwrain)
     {
@@ -34,7 +32,6 @@ class TwitterApp implements Application
 	this.actions = new Actions(luwrain, strings);
 	this.base = new Base(luwrain);
 	createAreas();
-	allowedAccounts = allowedAccounts();
 	return true;
     }
 
@@ -146,64 +143,10 @@ class TwitterApp implements Application
 	*/
     }
 
-    private void activateAccount(Account account)
-    {
-	/*
-	if (work != null && !work.finished)
-	    return;
-	twitter = base.createTwitter(account.consumerKey,
-				     account.consumerSecret,
-				     account.accessToken,
-				     account.accessTokenSecret);
-	if (twitter != null)
-	{
-	    luwrain.playSound(Sounds.DONE);
-	    sectionsModel.setActiveAccount(account);
-	} else
-	{
-	    sectionsModel.noActiveAccount();
-	    luwrain.message(strings.problemConnecting(), Luwrain.MESSAGE_ERROR);
-	}
-	*/
-    }
-
     private void createAreas()
     {
 
-	sectionsModel = new SectionsModel(luwrain, strings);
 	tweetsModel = new TweetsModel(luwrain);
-
-	final ListClickHandler sectionsClickHandler = new ListClickHandler(){
-		@Override public boolean onListClick(ListArea area,
-						     int index,
-						     Object item)
-		{
-		    if (index < 0 || item == null)
-			return false;
-		    switch (index)
-		    {
-		    case 0:
-			actions.search(base, twitter, tweetsArea);
-			return true;
-		    case 1:
-			userTweets();
-			return true;
-		    case 2:
-			homeTweets();
-			return true;
-		    case 3:
-			post();
-			return true;
-		    default:
-			if (item instanceof Account)
-			{
-			    activateAccount((Account)item);
-			    return true;
-			}
-			return false;
-		    }
-		}
-	    };
 
 	final ListClickHandler tweetsClickHandler = new ListClickHandler(){
 		@Override public boolean onListClick(ListArea area,
@@ -216,9 +159,8 @@ class TwitterApp implements Application
 
 	final ListArea.Params sectionsParams = new ListArea.Params();
 	sectionsParams.environment = new DefaultControlEnvironment(luwrain);
-	sectionsParams.model = sectionsModel;
+	sectionsParams.model = new FixedListModel(base.getAccounts());
 	sectionsParams.appearance = new SectionsAppearance(luwrain, strings);
-	sectionsParams.clickHandler = sectionsClickHandler;
 	sectionsParams.name = strings.appName();
 
 	sectionsArea = new ListArea(sectionsParams) {
@@ -229,7 +171,7 @@ class TwitterApp implements Application
 			switch(event.getSpecial())
 			{
 			case TAB:
-			    gotoTweets();
+			    gotoStatus();
 			    return super.onKeyboardEvent(event);
 			}
 		    return super.onKeyboardEvent(event);
@@ -255,7 +197,8 @@ class TwitterApp implements Application
 	tweetsParams.clickHandler = tweetsClickHandler;
 	tweetsParams.name = strings.tweetsAreaName();
 
-	tweetsArea = new ListArea(tweetsParams) {
+	statusArea = new StatusArea(new DefaultControlEnvironment(luwrain)) {
+
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -268,31 +211,14 @@ gotoSections();
 			}
 			    return super.onKeyboardEvent(event);
 		}
+
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onEnvironmentEvent(event);
 		    switch (event.getCode())
 		    {
-			/*
-		    case THREAD_SYNC:
-			if (event instanceof MessageEvent)
-			{
-			    final MessageEvent messageEvent = (MessageEvent)event;
-			    luwrain.message(messageEvent.text, messageEvent.type);
-			    return true;
-			}
-			if (event instanceof ShowTweetsEvent)
-			{
-			    final ShowTweetsEvent showTweetsEvent = (ShowTweetsEvent)event;
-			    final TweetsModel tweetsModel = (TweetsModel)model();
-			    tweetsModel.setTweets(showTweetsEvent.tweets);
-			    tweetsArea.reset(false);
-gotoTweets();
-			    refresh();
-			    return true;
-			}
-			return true;
-			*/
 		    case CLOSE:
 closeApp();
 			return true;
@@ -300,7 +226,10 @@ closeApp();
 			return super.onEnvironmentEvent(event);
 		    }
 		}
+
 	    };
+
+	sectionsArea.setClickHandler((area, index, obj)->actions.onAccountsClick(base, statusArea, obj));
     }
 
     @Override public String getAppName()
@@ -313,14 +242,14 @@ private void gotoSections()
 	luwrain.setActiveArea(sectionsArea);
     }
 
-    private void gotoTweets()
+    private void gotoStatus()
     {
-	luwrain.setActiveArea(tweetsArea);
+	luwrain.setActiveArea(statusArea);
     }
 
     @Override public AreaLayout getAreasToShow()
     {
-	return new AreaLayout(AreaLayout.LEFT_RIGHT, sectionsArea, tweetsArea);
+	return new AreaLayout(AreaLayout.LEFT_RIGHT, sectionsArea, statusArea);
     }
 
     private void closeApp()
@@ -328,14 +257,5 @@ private void gotoSections()
 	if (base.isBusy())
 	    return;
 	luwrain.closeApp();
-    }
-
-    private String[] allowedAccounts()
-    {
-    RegistryAutoCheck check = new RegistryAutoCheck(luwrain.getRegistry());
-    final String value = check.stringAny("/org/luwrain/app/twitter/allowed-accounts", "");
-    if (value.trim().isEmpty())
-	return null;
-    return value.split(":");
     }
 }

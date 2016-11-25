@@ -34,22 +34,54 @@ class Actions
 	if (query == null || query.trim().isEmpty())
 	    return true;
 	return base.run(()->{
-		    final TweetWrapper[] wrappers = base.search(twitter, query, 10);
-		    if (wrappers == null)
-		    {
-			luwrain.runInMainThread(()->luwrain.message(strings.problemSearching(), Luwrain.MESSAGE_ERROR));
-			return;
-		    }
-		    if (wrappers.length <= 0)
-		    {
-			luwrain.runInMainThread(()->luwrain.message(strings.nothingFound(), Luwrain.MESSAGE_ERROR));
-			return;
-		    }
-		    luwrain.runInMainThread(()->showTweets(destArea, wrappers));
+		final TweetWrapper[] wrappers = base.search(twitter, query, 10);
+		if (wrappers == null)
+		{
+		    luwrain.runInMainThread(()->luwrain.message(strings.problemSearching(), Luwrain.MESSAGE_ERROR));
+		    return;
+		}
+		if (wrappers.length <= 0)
+		{
+		    luwrain.runInMainThread(()->luwrain.message(strings.nothingFound(), Luwrain.MESSAGE_ERROR));
+		    return;
+		}
+		luwrain.runInMainThread(()->showTweets(destArea, wrappers));
+	    });
+    }
+
+    boolean onAccountsClick(Base base, StatusArea statusArea, Object obj)
+    {
+	NullCheck.notNull(base, "base");
+	NullCheck.notNull(statusArea, "statusArea");
+	if (obj == null || !(obj instanceof Account))
+	    return false;
+	if (base.isBusy())
+	    return false;
+	final Account account = (Account)obj;
+	if (!base.activateAccount(account))
+	{
+	    luwrain.message(strings.problemConnecting(), Luwrain.MESSAGE_ERROR);
+	    return true;
+	}
+	return base.run(()->{
+		final TweetWrapper[] wrappers = base.getAccountTweets();
+		if (wrappers == null)
+		{
+		    luwrain.runInMainThread(()->luwrain.message(strings.problemHomeTweets(), Luwrain.MESSAGE_ERROR));
+		    return;
+		}
+		luwrain.runInMainThread(()->{
+			showTweets(statusArea, wrappers);
+			luwrain.setActiveArea(statusArea);
+		    });
 	    });
     }
 
     static private void showTweets(Area area, TweetWrapper[] wrappers)
     {
+	NullCheck.notNull(area, "area");
+	NullCheck.notNullItems(wrappers, "wrappers");
+	if (area instanceof StatusArea)
+	    ((StatusArea)area).setTweets(wrappers);
     }
 }

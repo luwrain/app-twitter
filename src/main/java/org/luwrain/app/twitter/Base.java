@@ -2,6 +2,7 @@
 package org.luwrain.app.twitter;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 import org.luwrain.core.*;
 
@@ -10,7 +11,11 @@ import twitter4j.conf.ConfigurationLuwrain;
 
 class Base
 {
+    private final Executor executor = Executors.newSingleThreadExecutor();
+
     private final Luwrain luwrain;
+    private Twitter twitter = null;
+    private FutureTask task = null;
 
     Base(Luwrain luwrain)
     {
@@ -20,15 +25,37 @@ class Base
 
     boolean isBusy()
     {
-	return true;
+	return task != null && !task.isDone();
     }
 
     boolean run(Runnable runnable)
     {
-	return false;
+	NullCheck.notNull(runnable, "runnable");
+	if (isBusy())
+	    return false;
+	task = new FutureTask(runnable, null);
+	executor.execute(task);
+	return true;
     }
 
-    Twitter createTwitter(String consumerKey, String consumerSecret,
+    boolean activateAccount(Account account)
+    {
+	NullCheck.notNull(account, "account");
+	if (twitter != null)
+	    return false;
+	twitter = createTwitter(account.consumerKey, account.consumerSecret,
+				     account.accessToken, account.accessTokenSecret);
+	return twitter != null;
+    }
+
+    TweetWrapper[] getAccountTweets()
+    {
+	if (twitter == null)
+	    return null;
+	return homeTweets(twitter);
+    }
+
+    static private Twitter createTwitter(String consumerKey, String consumerSecret,
 			  String accessToken, String accessTokenSecret)
     {
 	ConfigurationLuwrain conf = new ConfigurationLuwrain(consumerKey, consumerSecret, accessToken, accessTokenSecret);
@@ -104,7 +131,7 @@ class Base
 	}
     }
 
-    TweetWrapper[] homeTweets(Twitter twitter)
+    static private TweetWrapper[] homeTweets(Twitter twitter)
     {
 	NullCheck.notNull(twitter, "twitter");
 	try {
@@ -143,5 +170,27 @@ class Base
 	    e.printStackTrace();
 	    return null;
 	}
+    }
+
+Account[] getAccounts()
+    {
+	final Registry registry = luwrain.getRegistry();
+	final LinkedList<Account> res = new LinkedList<Account>();
+	registry.addDirectory(Settings.ACCOUNTS_PATH);
+	for (String a: registry.getDirectories(Settings.ACCOUNTS_PATH))
+	{
+	    final String path = Registry.join(Settings.ACCOUNTS_PATH, a);
+	    final Settings.Account sett = Settings.createAccount(registry, path);
+res.add(new Account(a, sett.getConsumerKey(""), sett.getConsumerSecret(""),
+				     sett.getAccessToken(""), sett.getAccessTokenSecret("")));
+	}
+return res.toArray(new Account[res.size()]);
+    }
+
+
+    String[] getAllowedAccounts()
+    {
+	return null;
+	//    return value.split(":");
     }
 }
