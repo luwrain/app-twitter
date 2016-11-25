@@ -48,22 +48,46 @@ class Base
 	return twitter != null;
     }
 
-    TweetWrapper[] getAccountTweets()
+    boolean isAccountActivated()
+    {
+	return twitter != null;
+    }
+
+    void closeAccount()
+    {
+	twitter = null;
+    }
+
+    TweetWrapper[] getHomeTimeline()
     {
 	if (twitter == null)
 	    return null;
 	return homeTweets(twitter);
     }
 
+    TweetWrapper[] getUserTimeline(String user)
+    {
+	NullCheck.notNull(user, "user");
+	if (twitter == null)
+	    return null;
+	return userTimeline(twitter, user);
+    }
+
+
     static private Twitter createTwitter(String consumerKey, String consumerSecret,
 			  String accessToken, String accessTokenSecret)
     {
-	ConfigurationLuwrain conf = new ConfigurationLuwrain(consumerKey, consumerSecret, accessToken, accessTokenSecret);
-	Twitter twitter = new TwitterFactory(conf).getInstance();
+	Log.debug("twitter", "preparing new Twitter instance");
+	final ConfigurationLuwrain conf = new ConfigurationLuwrain(consumerKey, consumerSecret, accessToken, accessTokenSecret);
+	final Twitter twitter = new TwitterFactory(conf).getInstance();
 	if (twitter == null)
 	    return null;
 	if (!twitter.getAuthorization().isEnabled()) 
+	{
+	    Log.error("twitter", "no enabled authorization");
 	    return null;
+	}
+	Log.debug("twitter", "new twitter instance prepared");
 	return twitter;
     }
 
@@ -134,30 +158,34 @@ class Base
     static private TweetWrapper[] homeTweets(Twitter twitter)
     {
 	NullCheck.notNull(twitter, "twitter");
+	Log.debug("twitter", "trying to get list of tweets for the current user");
 	try {
-	    List<Status> result = twitter.getHomeTimeline();
+	    final List<Status> result = twitter.getHomeTimeline();
 	    if (result == null)
+	    {
+		Log.debug("twitter", "null returned in responce");
 		return null;
-	    LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	    }
+	    Log.debug("twitter", "" + result.size() + " items returned in responce");
+	    final LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
 	    for(Status s: result)
 		wrappers.add(new TweetWrapper(s));
 	    return wrappers.toArray(new TweetWrapper[wrappers.size()]);
 	}
 	catch (TwitterException e)
 	{
+	    Log.error("twitter", "unable to get current user timeline:" + e.getClass().getName() + ":" + e.getMessage());
 	    e.printStackTrace();
 	    return null;
 	}
     }
 
-    TweetWrapper[] userTweets(Twitter twitter, String user)
+    static private TweetWrapper[] userTimeline(Twitter twitter, String user)
     {
 	NullCheck.notNull(twitter, "twitter");
-	NullCheck.notNull(user, "user");
-	if (user.trim().isEmpty())
-	    throw new IllegalArgumentException("user may not be empty");
+	NullCheck.notEmpty(user, "user");
 	try {
-	    List<Status> result = twitter.getUserTimeline(user);
+	    final List<Status> result = twitter.getUserTimeline(user);
 	    if (result == null)
 		return null;
 	    final LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
@@ -185,12 +213,5 @@ res.add(new Account(a, sett.getConsumerKey(""), sett.getConsumerSecret(""),
 				     sett.getAccessToken(""), sett.getAccessTokenSecret("")));
 	}
 return res.toArray(new Account[res.size()]);
-    }
-
-
-    String[] getAllowedAccounts()
-    {
-	return null;
-	//    return value.split(":");
     }
 }

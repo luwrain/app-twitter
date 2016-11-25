@@ -1,18 +1,3 @@
-/*
-   Copyright 2012-2015 Michael Pozhidaev <michael.pozhidaev@gmail.com>
-
-   This file is part of the LUWRAIN.
-
-   LUWRAIN is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public
-   License as published by the Free Software Foundation; either
-   version 3 of the License, or (at your option) any later version.
-
-   LUWRAIN is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   General Public License for more details.
-*/
 
 package org.luwrain.app.twitter;
 
@@ -24,18 +9,46 @@ import twitter4j.conf.*;
 
 public class Auth
 {
+private 	final Twitter twitter;
+    private final ConfigurationLuwrain conf;
+    private final RequestToken requestToken;
+private 	    AccessToken accessToken = null;
+
+    Auth(String consumerKey, String consumerSecret) throws TwitterException
+    {
+	conf = new ConfigurationLuwrain(consumerKey, consumerSecret, null, null);
+	    twitter = new TwitterFactory(conf).getInstance();
+requestToken = twitter.getOAuthRequestToken();
+    }
+String getAuthorizationURL()
+    {
+	return requestToken.getAuthorizationURL();
+    }
+
+    void askForAccessToken(String pin) throws TwitterException
+    {
+	if (pin.length() > 0) 
+			accessToken = twitter.getOAuthAccessToken(requestToken, pin); else
+	    accessToken = twitter.getOAuthAccessToken(requestToken);
+    }
+
+    String getAccessToken()
+    {
+	return accessToken.getToken();
+    }
+
+    String getAccessTokenSecret()
+    {
+	return accessToken.getTokenSecret();
+    }
+
     public static void main(String[] args) 
     {
-	if (args.length < 2)
-	{
-	    System.err.println("You must provide consumer key and consumer secret");
-	    return ;
-	}
 	Twitter twitter = null;
 	try {
 	    ConfigurationLuwrain conf = new ConfigurationLuwrain(args[0], args[1], null, null);
 	    twitter = new TwitterFactory(conf).getInstance();
-	    RequestToken requestToken = twitter.getOAuthRequestToken();
+	    final RequestToken requestToken = twitter.getOAuthRequestToken();
 	    System.out.println("Got request token.");
 	    System.out.println("Request token: " + requestToken.getToken());
 	    System.out.println("Request token secret: " + requestToken.getTokenSecret());

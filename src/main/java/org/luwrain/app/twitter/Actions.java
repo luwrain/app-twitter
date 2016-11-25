@@ -58,19 +58,22 @@ class Actions
 	if (base.isBusy())
 	    return false;
 	final Account account = (Account)obj;
+	if (base.isAccountActivated())
+	    base.closeAccount();
 	if (!base.activateAccount(account))
 	{
 	    luwrain.message(strings.problemConnecting(), Luwrain.MESSAGE_ERROR);
 	    return true;
 	}
 	return base.run(()->{
-		final TweetWrapper[] wrappers = base.getAccountTweets();
+		final TweetWrapper[] wrappers = base.getHomeTimeline();
 		if (wrappers == null)
 		{
 		    luwrain.runInMainThread(()->luwrain.message(strings.problemHomeTweets(), Luwrain.MESSAGE_ERROR));
 		    return;
 		}
 		luwrain.runInMainThread(()->{
+			statusArea.setEnteringPrefix(account.name + ">");
 			showTweets(statusArea, wrappers);
 			luwrain.setActiveArea(statusArea);
 		    });
