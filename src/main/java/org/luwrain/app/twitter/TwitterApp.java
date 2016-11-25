@@ -7,7 +7,7 @@ import org.luwrain.controls.*;
 import org.luwrain.popups.*;
 import org.luwrain.util.RegistryAutoCheck;
 
-import twitter4j.*;
+//import twitter4j.*;
 
 class TwitterApp implements Application
 {
@@ -15,8 +15,6 @@ class TwitterApp implements Application
     private Strings strings = null;
     private Base base = null;
     private Actions actions = null;
-    Twitter twitter = null;
-
     private TweetsModel tweetsModel;
     private ListArea sectionsArea;
     private StatusArea statusArea;

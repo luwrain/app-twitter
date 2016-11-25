@@ -1,7 +1,11 @@
 
 package org.luwrain.app.twitter;
 
+//For consumer key and secret everybody should go to https://dev.twitter.com/apps
+
 import java.io.*;
+
+import org.luwrain.core.*;
 
 import twitter4j.*;
 import twitter4j.auth.*;
@@ -16,10 +20,13 @@ private 	    AccessToken accessToken = null;
 
     Auth(String consumerKey, String consumerSecret) throws TwitterException
     {
+	NullCheck.notEmpty(consumerKey, "consumerKey");
+	NullCheck.notNull(consumerSecret, "consumerSecret");
 	conf = new ConfigurationLuwrain(consumerKey, consumerSecret, null, null);
 	    twitter = new TwitterFactory(conf).getInstance();
 requestToken = twitter.getOAuthRequestToken();
     }
+
 String getAuthorizationURL()
     {
 	return requestToken.getAuthorizationURL();
@@ -27,6 +34,7 @@ String getAuthorizationURL()
 
     void askForAccessToken(String pin) throws TwitterException
     {
+	NullCheck.notNull(pin, "pin");
 	if (pin.length() > 0) 
 			accessToken = twitter.getOAuthAccessToken(requestToken, pin); else
 	    accessToken = twitter.getOAuthAccessToken(requestToken);
@@ -44,6 +52,11 @@ String getAuthorizationURL()
 
     public static void main(String[] args) 
     {
+	if (args.length < 2)
+	{
+	    System.err.println("You must provide consumer key and consumer secret");
+	    return ;
+	}
 	Twitter twitter = null;
 	try {
 	    ConfigurationLuwrain conf = new ConfigurationLuwrain(args[0], args[1], null, null);
