@@ -21,7 +21,7 @@ class TwitterApp implements Application
     private ListArea accountsArea;
     private StatusArea statusArea;
     private TweetsModel tweetsModel;
-
+    
     //For account auth procedure
     private Account accountToAuth = null;
     private AccessTokenForm accessTokenForm;
@@ -50,9 +50,9 @@ class TwitterApp implements Application
 
     private void createAreas()
     {
-
 	tweetsModel = new TweetsModel(luwrain);
 
+	/*
 	final ListClickHandler tweetsClickHandler = new ListClickHandler(){
 		@Override public boolean onListClick(ListArea area,
 						     int index,
@@ -61,6 +61,7 @@ class TwitterApp implements Application
 		    return false;
 		}
 	    };
+	*/
 
 	final ListArea.Params accountsParams = new ListArea.Params();
 	accountsParams.environment = new DefaultControlEnvironment(luwrain);
