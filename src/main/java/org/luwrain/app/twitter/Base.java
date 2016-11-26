@@ -14,6 +14,8 @@ class Base
     private final Executor executor = Executors.newSingleThreadExecutor();
 
     private final Luwrain luwrain;
+    private String consumerKey = "";
+    private String consumerSecret = "";
     private Twitter twitter = null;
     private FutureTask task = null;
 
@@ -21,6 +23,16 @@ class Base
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	this.luwrain = luwrain;
+    }
+
+    boolean init()
+    {
+	return readKeys();
+    }
+
+    Auth createAuth() throws TwitterException
+    {
+	return new Auth(consumerKey, consumerSecret);
     }
 
     boolean isBusy()
@@ -200,18 +212,58 @@ class Base
 	}
     }
 
-Account[] getAccounts()
+    Settings.Account getAccountSettings(String accountName)
+    {
+	NullCheck.notEmpty(accountName, "accountName");
+	final Registry registry = luwrain.getRegistry();
+	final String path = Registry.join(Settings.ACCOUNTS_PATH, accountName);
+	registry.addDirectory(path);
+	return Settings.createAccount(registry, path);
+    }
+
+    Account[] getAccounts()
     {
 	final Registry registry = luwrain.getRegistry();
 	final LinkedList<Account> res = new LinkedList<Account>();
 	registry.addDirectory(Settings.ACCOUNTS_PATH);
 	for (String a: registry.getDirectories(Settings.ACCOUNTS_PATH))
 	{
-	    final String path = Registry.join(Settings.ACCOUNTS_PATH, a);
-	    final Settings.Account sett = Settings.createAccount(registry, path);
-res.add(new Account(a, sett.getConsumerKey(""), sett.getConsumerSecret(""),
-				     sett.getAccessToken(""), sett.getAccessTokenSecret("")));
+	    final Settings.Account sett = getAccountSettings(a);
+	    res.add(new Account(a, sett, sett.getConsumerKey(""), sett.getConsumerSecret(""),
+				sett.getAccessToken(""), sett.getAccessTokenSecret("")));
 	}
-return res.toArray(new Account[res.size()]);
+	return res.toArray(new Account[res.size()]);
+    }
+
+    private boolean readKeys()
+    {
+	final Object o;
+		try {
+	    o = Class.forName("org.luwrain.keys.TwitterKeys").newInstance();
+	    	}
+		catch(ClassNotFoundException | InstantiationException | IllegalAccessException e)
+		{
+		    Log.error("twitter", "unable to read keys:" + e.getClass().getName() + ":" + e.getMessage());
+		    return false;
+		}
+	    if (!(o instanceof org.luwrain.base.CoreProperties))
+	    {
+		Log.error("twitter", "unable to read keys:" + o.getClass().getName() + " is not an instance of org.luwrain.base.CoreProperties");
+		return false;
+	    }
+	    final org.luwrain.base.CoreProperties props = (org.luwrain.base.CoreProperties)o;
+	    consumerKey = props.getProperty("consumer-key"); 
+	    consumerSecret = props.getProperty("consumer-secret");
+	    if (consumerKey == null || consumerKey.isEmpty())
+	    {
+		Log.error("twitter", "no consumer-key value in keys class");
+		return false;
+	    }
+	    if (consumerSecret == null || consumerSecret.isEmpty())
+	    {
+		Log.error("twitter", "no consumer-secret value in keys class");
+		return false;
+	    }
+	    return true;
     }
 }

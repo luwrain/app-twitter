@@ -11,13 +11,22 @@ import org.luwrain.util.RegistryAutoCheck;
 
 class TwitterApp implements Application
 {
+    static private final int INITIAL_LAYOUT_INDEX = 0;
+    static private final int ACCESS_TOKEN_FORM_LAYOUT_INDEX = 1;
+
     private Luwrain luwrain;
     private Strings strings = null;
     private Base base = null;
     private Actions actions = null;
-    private TweetsModel tweetsModel;
+
+    private AreaLayoutSwitch layouts;
     private ListArea sectionsArea;
     private StatusArea statusArea;
+    private TweetsModel tweetsModel;
+
+    //For account auth procedure
+    private Account accountToAuth = null;
+    private AccessTokenForm accessTokenForm;
 
     @Override public boolean onLaunch(Luwrain luwrain)
     {
@@ -29,7 +38,12 @@ class TwitterApp implements Application
 	this.luwrain = luwrain;
 	this.actions = new Actions(luwrain, strings);
 	this.base = new Base(luwrain);
+	if (!base.init())
+	    return false;
 	createAreas();
+	layouts = new AreaLayoutSwitch(luwrain);
+	layouts.add(new AreaLayout(AreaLayout.LEFT_RIGHT, sectionsArea, statusArea));
+	layouts.add(new AreaLayout(accessTokenForm));
 	return true;
     }
 
@@ -227,12 +241,66 @@ closeApp();
 
 	    };
 
-	sectionsArea.setClickHandler((area, index, obj)->actions.onAccountsClick(base, statusArea, obj));
+	accessTokenForm = new AccessTokenForm(luwrain, this, base) {
+
+		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onEnvironmentEvent(event);
+		    switch(event.getCode())
+		    {
+		    case CLOSE:
+			closeApp();
+			return true;
+		    default:
+			return super.onEnvironmentEvent(event);
+		    }
+
+		}
+	    };
+
+	sectionsArea.setClickHandler((area, index, obj)->{
+		if (obj == null || !(obj instanceof Account))
+		    return false;
+		final Account account = (Account)obj;
+		if (account.isReadyToConnect())
+		    return actions.onAccountsClick(base, statusArea, account);
+		return startAccountAuth(account);
+	    });
     }
 
-    @Override public String getAppName()
+    private boolean startAccountAuth(Account account)
     {
-	return strings.appName();
+	NullCheck.notNull(account, "account");
+	if (!Popups.confirmDefaultYes(luwrain, "Подключение новой учётной записи", "Учётная запись \"" + account.name + "\" не подключена; подключить её сейчас?"))
+	    return true;
+	accountToAuth = account;
+	accessTokenForm.reset();
+	layouts.show(ACCESS_TOKEN_FORM_LAYOUT_INDEX);
+	luwrain.announceActiveArea();
+	return true;
+    }
+
+    void endAccountAuth(boolean success, String errorMsg,
+			String accessToken, String accessTokenSecret)
+    {
+	layouts.show(INITIAL_LAYOUT_INDEX);
+	if (!success)
+	{
+	    if (errorMsg != null && !errorMsg.isEmpty())
+	    luwrain.message(errorMsg, Luwrain.MESSAGE_ERROR);
+	    return;
+	}
+	if (accountToAuth == null)
+	    return;
+	NullCheck.notNull(accessToken, "accessToken");
+	NullCheck.notNull(accessTokenSecret, "accessTokenSecret");
+	accountToAuth.accessToken = accessToken;
+	accountToAuth.accessTokenSecret = accessTokenSecret;
+	accountToAuth.sett.setAccessToken(accountToAuth.accessToken);
+	accountToAuth.sett.setAccessTokenSecret(accountToAuth.accessTokenSecret);
+	luwrain.message("Учётная запись подключена", Luwrain.MESSAGE_OK);
     }
 
 private void gotoSections()
@@ -245,15 +313,20 @@ private void gotoSections()
 	luwrain.setActiveArea(statusArea);
     }
 
-    @Override public AreaLayout getAreasToShow()
-    {
-	return new AreaLayout(AreaLayout.LEFT_RIGHT, sectionsArea, statusArea);
-    }
-
     private void closeApp()
     {
 	if (base.isBusy())
 	    return;
 	luwrain.closeApp();
+    }
+
+    @Override public AreaLayout getAreasToShow()
+    {
+	return layouts.getCurrentLayout();
+    }
+
+    @Override public String getAppName()
+    {
+	return strings.appName();
     }
 }

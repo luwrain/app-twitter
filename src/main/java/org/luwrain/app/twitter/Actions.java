@@ -49,15 +49,13 @@ class Actions
 	    });
     }
 
-    boolean onAccountsClick(Base base, StatusArea statusArea, Object obj)
+    boolean onAccountsClick(Base base, StatusArea statusArea, Account account)
     {
 	NullCheck.notNull(base, "base");
 	NullCheck.notNull(statusArea, "statusArea");
-	if (obj == null || !(obj instanceof Account))
-	    return false;
+	NullCheck.notNull(account, "account");
 	if (base.isBusy())
 	    return false;
-	final Account account = (Account)obj;
 	if (base.isAccountActivated())
 	    base.closeAccount();
 	if (!base.activateAccount(account))
