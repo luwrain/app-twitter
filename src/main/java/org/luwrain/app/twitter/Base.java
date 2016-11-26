@@ -85,6 +85,14 @@ class Base
 	return userTimeline(twitter, user);
     }
 
+    TweetWrapper[] searchTweets(String query, int numPages)
+    {
+	NullCheck.notNull(query, "query");
+	if (twitter == null)
+	    return null;
+	return search(twitter, query, numPages);
+    }
+
 
     static private Twitter createTwitter(String consumerKey, String consumerSecret,
 			  String accessToken, String accessTokenSecret)
@@ -116,8 +124,7 @@ class Base
 	return true;
     }
 
-    TweetWrapper[] search(Twitter twitter,
-			  String text,
+    static private TweetWrapper[] search(Twitter twitter, String text,
 			  int numPages)
     {
 	NullCheck.notNull(twitter, "twitter");

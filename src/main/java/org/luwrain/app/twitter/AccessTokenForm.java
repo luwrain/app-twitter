@@ -13,18 +13,22 @@ class AccessTokenForm extends FormArea
     private final Luwrain luwrain;
     private final TwitterApp app;
     private final Base base;
+    private final Strings strings;
 
     private State state = null;
     private Auth auth = null;
 
-    AccessTokenForm(Luwrain luwrain, TwitterApp app, Base base)
+    AccessTokenForm(Luwrain luwrain, TwitterApp app, 
+		    Strings strings, Base base)
     {
-	super(new DefaultControlEnvironment(luwrain), "Подключение новой учётной записи");
+	super(new DefaultControlEnvironment(luwrain), strings.accessTokenFormName());
 	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notNull(app, "app");
+	NullCheck.notNull(strings, "strings");
 	NullCheck.notNull(base, "base");
 	this.luwrain = luwrain;
 	this.app = app;
+	this.strings = strings;
 	this.base = base;
 	reset();
     }
@@ -70,7 +74,7 @@ class AccessTokenForm extends FormArea
 	case WAITING_PIN:
 	    if (getEnteredText("pin").trim().isEmpty())
 	    {
-		luwrain.message("Необходимо ввести PIN-код", Luwrain.MESSAGE_ERROR);
+		luwrain.message(strings.accessTokenFormYouMustEnterPin(), Luwrain.MESSAGE_ERROR);
 		return true;
 	    }
 	    app.endAccountAuth(true, "", "value1", "value2");
@@ -80,7 +84,7 @@ class AccessTokenForm extends FormArea
 
     private void fillGreeting()
     {
-	final String message = "ВНИМАНИЕ! Сейчас будет запрошена ссылка для подключения выбранной\\nучётной записи. Необходимо открыть эту ссылку в браузере, указать свой\\nлогин и пароль для входа в Твиттер, после чего\\nзапомнить предоставленный PIN-код.  PIN-код следует ввести в поле,\\nкоторое будет находиться под ссылкой. Для начала процедуры нажмите\\nENTER; для отмены действия нажмите ESCAPE.";
+	final String message = strings.accessTokenFormGreeting();
 	addStatic("intro", "");
 	int k = 1;
 	for(String s: message.split("\\\\n", -1))
@@ -90,10 +94,9 @@ class AccessTokenForm extends FormArea
     void fillWaitingPin(String url)
     {
 	clear();
-	addStatic("static1", "");
-	addStatic("static2", "Open URL in browser");
-	addStatic("static3", "");
+	addStatic("intro", "");
+	addStatic("intro1", strings.accessTokenFormOpenUrl());
 	addStatic("static4", "URL: " + url);
-	addEdit("pin", "PIN:", "");
+	addEdit("pin", strings.accessTokenFormPin(), "");
     }
 }
