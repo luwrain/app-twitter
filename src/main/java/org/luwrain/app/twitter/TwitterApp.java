@@ -5,7 +5,7 @@ import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.popups.*;
-import org.luwrain.util.RegistryAutoCheck;
+//import org.luwrain.util.RegistryAutoCheck;
 
 class TwitterApp implements Application
 {
