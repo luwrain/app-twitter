@@ -55,7 +55,7 @@ class Base
 	NullCheck.notNull(account, "account");
 	if (twitter != null)
 	    return false;
-	twitter = createTwitter(account.consumerKey, account.consumerSecret,
+	twitter = createTwitter(consumerKey, consumerSecret,
 				     account.accessToken, account.accessTokenSecret);
 	return twitter != null;
     }

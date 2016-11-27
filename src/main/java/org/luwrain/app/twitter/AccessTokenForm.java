@@ -57,7 +57,6 @@ class AccessTokenForm extends FormArea
 	switch(state)
 	{
 	case GREETING:
-	    /*
 	    try {
 		auth = base.createAuth();
 	    }
@@ -66,9 +65,7 @@ class AccessTokenForm extends FormArea
 		luwrain.message(e.getMessage(), Luwrain.MESSAGE_ERROR);
 		return true;
 	    }
-	    fillWaitingPid(auth.getAuthorizationURL());
-	    */
-	    fillWaitingPin("http://marigostra.ru");
+	    fillWaitingPin(auth.getAuthorizationURL());
 	    state = State.WAITING_PIN;
 	    return true;
 	case WAITING_PIN:
@@ -77,7 +74,15 @@ class AccessTokenForm extends FormArea
 		luwrain.message(strings.accessTokenFormYouMustEnterPin(), Luwrain.MESSAGE_ERROR);
 		return true;
 	    }
-	    app.endAccountAuth(true, "", "value1", "value2");
+	    try {
+		auth.askForAccessToken(getEnteredText("pin"));
+	    }
+	    catch(Exception e)
+	    {
+		luwrain.message(e.getMessage(), Luwrain.MESSAGE_ERROR);
+		return true;
+	    }
+	    app.endAccountAuth(true, "", auth.getAccessToken(), auth.getAccessTokenSecret());
 	}
 	return true;
     }

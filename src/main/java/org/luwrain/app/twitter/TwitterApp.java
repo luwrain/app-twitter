@@ -100,7 +100,7 @@ class TwitterApp implements Application
 	tweetsParams.environment = new DefaultControlEnvironment(luwrain);
 	tweetsParams.model = tweetsModel;
 	tweetsParams.appearance = new TweetsAppearance(luwrain, strings);
-	tweetsParams.clickHandler = tweetsClickHandler;
+	//	tweetsParams.clickHandler = tweetsClickHandler;
 	tweetsParams.name = strings.statusAreaName();
 
 	statusArea = new StatusArea(new DefaultControlEnvironment(luwrain)) {
