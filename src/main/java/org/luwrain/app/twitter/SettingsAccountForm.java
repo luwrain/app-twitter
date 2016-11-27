@@ -28,8 +28,8 @@ class SettingsAccountForm extends FormArea implements SectionArea
 
     private void fillForm()
     {
-	addEdit("consumer-key", "Consumer key:", account.getConsumerKey(""));
-	addEdit("consumer-secret", "Consumer secret:", account.getConsumerSecret(""));
+	addEdit("access-token", "Access token:", account.getAccessToken(""));
+	addEdit("access-token-secret", "Access token secret:", account.getAccessTokenSecret(""));
     }
 
     @Override public boolean saveSectionData()

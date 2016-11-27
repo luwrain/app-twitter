@@ -236,8 +236,7 @@ class Base
 	for (String a: registry.getDirectories(Settings.ACCOUNTS_PATH))
 	{
 	    final Settings.Account sett = getAccountSettings(a);
-	    res.add(new Account(a, sett, sett.getConsumerKey(""), sett.getConsumerSecret(""),
-				sett.getAccessToken(""), sett.getAccessTokenSecret("")));
+	    res.add(new Account(a, sett, sett.getAccessToken(""), sett.getAccessTokenSecret("")));
 	}
 	return res.toArray(new Account[res.size()]);
     }
