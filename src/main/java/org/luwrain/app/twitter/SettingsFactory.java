@@ -31,7 +31,7 @@ class SettingsFactory implements org.luwrain.cpanel.Factory
     {
 	NullCheck.notNull(parent, "parent");
 	if (!parent.equals(twitterElement))
-return new Element[0];
+	    return new Element[0];
 	final LinkedList<Element> res = new LinkedList<Element>();
 	final Registry registry = luwrain.getRegistry();
 	registry.addDirectory(Settings.ACCOUNTS_PATH);
@@ -51,48 +51,58 @@ return new Element[0];
 	    return new SimpleSection(twitterElement, "Твиттер", null,
 				     new Action[]{
 					 new Action("add-twitter-account", strings.actionAddAccount(), new KeyboardEvent(KeyboardEvent.Special.INSERT)),
-				     }, (controlPanel, event)->onActionEvent(controlPanel, event));
+				     }, (controlPanel, event)->onActionEvent(controlPanel, event, ""));
 	if (el instanceof SettingsAccountElement)
 	{
 	    final SettingsAccountElement accountEl = (SettingsAccountElement)el;
-	    return new SimpleSection(el, accountEl.getTitle(), (controlPanel)->SettingsAccountForm.create(controlPanel, accountEl.getAccount(), accountEl.getTitle()));
-}
-	/*
+	    return new SimpleSection(el, accountEl.getTitle(), (controlPanel)->SettingsAccountForm.create(controlPanel, accountEl.getAccount(), accountEl.getTitle()),
 				     new Action[]{
-					 new Action("add-mail-account", strings.addMailAccount(), new KeyboardEvent(KeyboardEvent.Special.INSERT)),
-					 new Action("add-mail-account-google", strings.addAccountGoogle()),
-					 new Action("add-mail-account-yandex", strings.addAccountYandex()),
-					 new Action("delete-mail-account", strings.deleteAccount(), new KeyboardEvent(KeyboardEvent.Special.DELETE)),
-				     }, (controlPanel, event)->onAccountsActionEvent(controlPanel, event, ((AccountElement)el).id()));
-	*/
+					 new Action("add-twitter-account", strings.actionAddAccount(), new KeyboardEvent(KeyboardEvent.Special.INSERT)),
+					 new Action("delete-twitter-account", strings.actionDeleteAccount(), new KeyboardEvent(KeyboardEvent.Special.DELETE)),
+				     }, (controlPanel, event)->onActionEvent(controlPanel, event, accountEl.getTitle()));
+	}
 	return null;
     }
 
-    private boolean onActionEvent(ControlPanel controlPanel, ActionEvent event)
+    private boolean onActionEvent(ControlPanel controlPanel, ActionEvent event, String accountName)
     {
 	NullCheck.notNull(controlPanel, "controlPanel");
 	NullCheck.notNull(event, "event");
 	if (ActionEvent.isAction(event, "add-twitter-account"))
 	{
-final String name = Popups.simple(luwrain, strings.addAccountPopupName(), strings.addAccountPopupPrefix(), "");
-if (name == null || name.trim().isEmpty())
-    return true;
-if (name.indexOf("/") >= 0)
-{
-    luwrain.message(strings.invalidAccountName(), Luwrain.MESSAGE_ERROR);
-}
-final Registry registry = controlPanel.getCoreInterface().getRegistry();
-final String path = Registry.join(Settings.ACCOUNTS_PATH, name);
-if (registry.hasDirectory(path))
-{
-    luwrain.message(strings.accountAlreadyExists(name), Luwrain.MESSAGE_ERROR);
-    return true;
-}
-registry.addDirectory(path);
-controlPanel.refreshSectionsTree();
-return true;
+	    final String name = Popups.simple(luwrain, strings.addAccountPopupName(), strings.addAccountPopupPrefix(), "");
+	    if (name == null || name.trim().isEmpty())
+		return true;
+	    if (name.indexOf("/") >= 0)
+	    {
+		luwrain.message(strings.invalidAccountName(), Luwrain.MESSAGE_ERROR);
+	    }
+	    final Registry registry = controlPanel.getCoreInterface().getRegistry();
+	    final String path = Registry.join(Settings.ACCOUNTS_PATH, name);
+	    if (registry.hasDirectory(path))
+	    {
+		luwrain.message(strings.accountAlreadyExists(name), Luwrain.MESSAGE_ERROR);
+		return true;
+	    }
+	    registry.addDirectory(path);
+	    controlPanel.refreshSectionsTree();
+	    luwrain.message(strings.accountAddedSuccessfully(name), Luwrain.MESSAGE_OK);
+	    return true;
+	}
+	if (ActionEvent.isAction(event, "delete-twitter-account"))
+	{
+	    NullCheck.notNull(accountName, "accountName");
+	    if (!Popups.confirmDefaultNo(luwrain, strings.deleteAccountPopupName(), strings.deleteAccountPopupText(accountName)))
+		return true;
+	    final Registry registry = controlPanel.getCoreInterface().getRegistry();
+	    final String path = Registry.join(Settings.ACCOUNTS_PATH, accountName);
+	    if (registry.deleteDirectory(path))
+	    {
+		luwrain.message(strings.accountDeletedSuccessfully(accountName), Luwrain.MESSAGE_OK);
+		controlPanel.refreshSectionsTree();
+	    }
+	    return true;
 	}
 	return false;
     }
-
 }

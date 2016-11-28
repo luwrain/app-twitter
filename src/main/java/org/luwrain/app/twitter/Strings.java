@@ -142,6 +142,11 @@ public class Strings
 	return "Добавить учётную запись";
     }
 
+    String actionDeleteAccount()
+    {
+	return "Удалить учётную запись";
+    }
+
     String addAccountPopupName()
     {
 	return "Добавление учётной записи";
@@ -161,5 +166,28 @@ public class Strings
     {
 	return "Учётная запись \"" + name + "\" уже существует";
     }
+
+    String accountAddedSuccessfully(String accountName)
+    {
+	return "Учётная запись \"" + accountName + "\" добавлена";
+    }
+
+    String deleteAccountPopupName()
+    {
+	return "Удаление учётной записи";
+    }
+
+    String deleteAccountPopupText(String accountName)
+    {
+	return "Вы действительно хотите удалить учётную запись Твиттера \"" + accountName + "\"?";
+    }
+
+    String accountDeletedSuccessfully(String accountName)
+    {
+	return "Учётная запись Твиттера \"" + accountName + "\" удалена";
+    }
+
+
+
 
 }
