@@ -11,7 +11,7 @@ import org.luwrain.cpanel.*;
 class SettingsFactory implements org.luwrain.cpanel.Factory
 {
     private final Luwrain luwrain;
-    //    private Strings strings;
+    private final Strings strings;
 
     private SimpleElement twitterElement = new SimpleElement(StandardElements.APPLICATIONS, this.getClass().getName());
 
@@ -19,6 +19,7 @@ class SettingsFactory implements org.luwrain.cpanel.Factory
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	this.luwrain = luwrain;
+	this.strings = new Strings();//FIXME:
     }
 
     @Override public Element[] getElements()
@@ -47,14 +48,10 @@ return new Element[0];
     {
 	NullCheck.notNull(el, "el");
 	if (el.equals(twitterElement))
-	    return new SimpleSection(twitterElement, "Твиттер", null);/*,
+	    return new SimpleSection(twitterElement, "Твиттер", null,
 				     new Action[]{
-					 //					 new Action("add-mail-account-yandex", strings.addAccountYandex()),
-					 //					 new Action("add-mail-account", strings.addMailAccount(), new KeyboardEvent(KeyboardEvent.Special.INSERT)),
-					 //					 new Action("add-mail-account-google", strings.addAccountGoogle()),
-				     }, (controlPanel, event)->onAccountsActionEvent(controlPanel, event, -1));
-										       */
-
+					 new Action("add-twitter-account", strings.actionAddAccount(), new KeyboardEvent(KeyboardEvent.Special.INSERT)),
+				     }, (controlPanel, event)->onActionEvent(controlPanel, event));
 	if (el instanceof SettingsAccountElement)
 	{
 	    final SettingsAccountElement accountEl = (SettingsAccountElement)el;
@@ -71,16 +68,31 @@ return new Element[0];
 	return null;
     }
 
-    /*
-    private boolean onAccountsActionEvent(ControlPanel controlPanel, ActionEvent event, long id)
+    private boolean onActionEvent(ControlPanel controlPanel, ActionEvent event)
     {
 	NullCheck.notNull(controlPanel, "controlPanel");
 	NullCheck.notNull(event, "event");
-	if (!initStoring())
+	if (ActionEvent.isAction(event, "add-twitter-account"))
 	{
-	    luwrain.message(strings.noStoring(), Luwrain.MESSAGE_ERROR);
-	    return true;
+final String name = Popups.simple(luwrain, strings.addAccountPopupName(), strings.addAccountPopupPrefix(), "");
+if (name == null || name.trim().isEmpty())
+    return true;
+if (name.indexOf("/") >= 0)
+{
+    luwrain.message(strings.invalidAccountName(), Luwrain.MESSAGE_ERROR);
+}
+final Registry registry = controlPanel.getCoreInterface().getRegistry();
+final String path = Registry.join(Settings.ACCOUNTS_PATH, name);
+if (registry.hasDirectory(path))
+{
+    luwrain.message(strings.accountAlreadyExists(name), Luwrain.MESSAGE_ERROR);
+    return true;
+}
+registry.addDirectory(path);
+controlPanel.refreshSectionsTree();
+return true;
 	}
-    */
+	return false;
+    }
 
 }

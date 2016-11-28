@@ -136,4 +136,30 @@ public class Strings
     {
 	return "Необходимо ввести PIN-код";
     }
+
+    String actionAddAccount()
+    {
+	return "Добавить учётную запись";
+    }
+
+    String addAccountPopupName()
+    {
+	return "Добавление учётной записи";
+    }
+
+    String addAccountPopupPrefix()
+    {
+	return "Имя новой учётной записи:";
+    }
+
+    String invalidAccountName()
+    {
+	return "Имя учётной записи содержит неверные символы";
+    }
+
+    String accountAlreadyExists(String name)
+    {
+	return "Учётная запись \"" + name + "\" уже существует";
+    }
+
 }
