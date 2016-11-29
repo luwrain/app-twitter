@@ -134,35 +134,23 @@ class Actions
 	*/
     }
 
-    private void post()
+    boolean onUpdateStatus(Base base, String text, StatusArea area)
     {
-	/*
-	if (work != null && !work.finished)
-	    return;
-	if (twitter == null)
-	{
-	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
-	    return;
-	}
-	final String text = Popups.simple(luwrain, strings.postPopupName(), strings.postPopupPrefix(), "");
-	if (text == null || text.trim().isEmpty())
-	    return;
-	final Strings s = strings;
-	work = new Work(luwrain, tweetsArea){
-		private Strings strings = s;
-		@Override public void work()
-		{
-		    if (base.postTweet(twitter, text))
-		    {
-			message(strings.postingSuccess(), Luwrain.MESSAGE_DONE);
-		    } else 
-		    {
-			message(strings.problemPosting(), Luwrain.MESSAGE_ERROR);
-		    }
-		}
-	    };
-	new Thread(work).start();
-	*/
+	NullCheck.notNull(base, "base");
+	NullCheck.notNull(text, "text");
+	NullCheck.notNull(area, "area");
+	if (base.isBusy() || text.isEmpty())
+	    return false;
+	if (!base.isAccountActivated())
+	    return false;
+	base.run(()->{
+		if (base.updateStatus(text))
+		    luwrain.runInMainThread(()->{
+			    luwrain.message(strings.published(text), Luwrain.MESSAGE_DONE);
+			}); else
+		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+	    });
+	return true;
     }
 
     private void homeTweets()

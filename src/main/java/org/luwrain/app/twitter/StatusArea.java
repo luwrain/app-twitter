@@ -127,6 +127,6 @@ StatusArea(ControlEnvironment environment)
 
 	interface Listener 
 	{
-	    void onNewEnteredMessage(String text);
+	    boolean onNewEnteredMessage(String text);
 	}
 }

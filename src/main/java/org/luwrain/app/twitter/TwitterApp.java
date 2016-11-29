@@ -162,6 +162,8 @@ closeApp();
 		    return actions.onAccountsClick(base, statusArea, account);
 		return startAccountAuth(account);
 	    });
+
+	statusArea.setListener((text)->actions.onUpdateStatus(base, text, statusArea));
     }
 
     private boolean startAccountAuth(Account account)

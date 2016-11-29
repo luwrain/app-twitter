@@ -85,6 +85,14 @@ class Base
 	return userTimeline(twitter, user);
     }
 
+    boolean updateStatus(String text)
+    {
+	NullCheck.notEmpty(text, "text");
+	if (twitter == null)
+	    return false;
+	return updateStatusImpl(twitter, text);
+    }
+
     TweetWrapper[] searchTweets(String query, int numPages)
     {
 	NullCheck.notNull(query, "query");
@@ -157,18 +165,17 @@ class Base
 	return wrappers.toArray(new TweetWrapper[wrappers.size()]);
     }
 
-    boolean postTweet(Twitter twitter, String tweet)
+    static boolean updateStatusImpl(Twitter twitter, String tweet)
     {
 	NullCheck.notNull(twitter, "twitter");
-	NullCheck.notNull(tweet, "tweet");
-	if (tweet.trim().isEmpty())
-	    throw new IllegalArgumentException("tweet may not be empty");
+	NullCheck.notEmpty(tweet, "tweet");
 	try {
 	    twitter.updateStatus(tweet);
 	    return true;
 	}
 	catch(TwitterException e)
 	{
+	    Log.error("twitter", "unable to update status:" + e.getClass().getName() + ":" + e.getMessage());
 	    e.printStackTrace();
 	    return false;
 	}

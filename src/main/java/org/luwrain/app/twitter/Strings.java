@@ -187,6 +187,11 @@ public class Strings
 	return "Учётная запись Твиттера \"" + accountName + "\" удалена";
     }
 
+    String published(String text)
+    {
+	return "Опубликовано \"" + text + "\"";
+    }
+
 
 
 
