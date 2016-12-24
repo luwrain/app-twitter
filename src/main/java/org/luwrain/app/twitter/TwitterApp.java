@@ -65,7 +65,7 @@ class TwitterApp implements Application
 
 	final ListArea.Params accountsParams = new ListArea.Params();
 	accountsParams.environment = new DefaultControlEnvironment(luwrain);
-	accountsParams.model = new FixedListModel(base.getAccounts());
+	accountsParams.model = new ListUtils.FixedModel(base.getAccounts());
 	accountsParams.appearance = new SectionsAppearance(luwrain, strings);
 	accountsParams.name = strings.accountsAreaName();
 
@@ -154,7 +154,7 @@ closeApp();
 		}
 	    };
 
-	accountsArea.setClickHandler((area, index, obj)->{
+	accountsArea.setListClickHandler((area, index, obj)->{
 		if (obj == null || !(obj instanceof Account))
 		    return false;
 		final Account account = (Account)obj;
