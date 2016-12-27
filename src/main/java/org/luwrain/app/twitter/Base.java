@@ -1,3 +1,18 @@
+/*
+   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+
+   This file is part of LUWRAIN.
+
+   LUWRAIN is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public
+   License as published by the Free Software Foundation; either
+   version 3 of the License, or (at your option) any later version.
+
+   LUWRAIN is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+*/
 
 package org.luwrain.app.twitter;
 
@@ -14,8 +29,6 @@ class Base
     private final Executor executor = Executors.newSingleThreadExecutor();
 
     private final Luwrain luwrain;
-    private String consumerKey = "";
-    private String consumerSecret = "";
     private Twitter twitter = null;
     private FutureTask task = null;
 
@@ -25,14 +38,9 @@ class Base
 	this.luwrain = luwrain;
     }
 
-    boolean init()
-    {
-	return readKeys();
-    }
-
     Auth createAuth() throws TwitterException
     {
-	return new Auth(consumerKey, consumerSecret);
+	return new Auth("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret");
     }
 
     boolean isBusy()
@@ -55,7 +63,7 @@ class Base
 	NullCheck.notNull(account, "account");
 	if (twitter != null)
 	    return false;
-	twitter = createTwitter(consumerKey, consumerSecret,
+	twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
 				     account.accessToken, account.accessTokenSecret);
 	return twitter != null;
     }
@@ -246,37 +254,5 @@ class Base
 	    res.add(new Account(a, sett, sett.getAccessToken(""), sett.getAccessTokenSecret("")));
 	}
 	return res.toArray(new Account[res.size()]);
-    }
-
-    private boolean readKeys()
-    {
-	final Object o;
-		try {
-	    o = Class.forName("org.luwrain.keys.TwitterKeys").newInstance();
-	    	}
-		catch(ClassNotFoundException | InstantiationException | IllegalAccessException e)
-		{
-		    Log.error("twitter", "unable to read keys:" + e.getClass().getName() + ":" + e.getMessage());
-		    return false;
-		}
-	    if (!(o instanceof org.luwrain.base.CoreProperties))
-	    {
-		Log.error("twitter", "unable to read keys:" + o.getClass().getName() + " is not an instance of org.luwrain.base.CoreProperties");
-		return false;
-	    }
-	    final org.luwrain.base.CoreProperties props = (org.luwrain.base.CoreProperties)o;
-	    consumerKey = props.getProperty("consumer-key"); 
-	    consumerSecret = props.getProperty("consumer-secret");
-	    if (consumerKey == null || consumerKey.isEmpty())
-	    {
-		Log.error("twitter", "no consumer-key value in keys class");
-		return false;
-	    }
-	    if (consumerSecret == null || consumerSecret.isEmpty())
-	    {
-		Log.error("twitter", "no consumer-secret value in keys class");
-		return false;
-	    }
-	    return true;
     }
 }
