@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -19,27 +19,27 @@ package org.luwrain.app.twitter;
 import java.util.*;
 import twitter4j.*;
 
+import org.luwrain.core.*;
+
 class TweetWrapper
 {
-    private Status tweet;
+    private final Status tweet;
 
     TweetWrapper(Status tweet)
     {
+	NullCheck.notNull(tweet, "tweet");
 	this.tweet = tweet;
-	if (tweet == null)
-	    throw new NullPointerException("tweet may not be null");
     }
 
     String getText()
     {
 	return tweet.getText().replaceAll("\n", " ");
     }
+
     String getUserName()
     {
 	return tweet.getUser().getName();
     }
-
-
 
     Date getDate()
     {

@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -23,43 +23,28 @@ import org.luwrain.controls.*;
 
 class TweetsAppearance implements ListArea.Appearance
 {
-    private Luwrain luwrain;
-    private Strings strings;
+    private final Luwrain luwrain;
+    private final Strings strings;
 
     TweetsAppearance(Luwrain luwrain, Strings strings)
     {
-	this.luwrain = luwrain;
-	this.strings = strings;
 	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notNull(strings, "strings");
+	this.luwrain = luwrain;
+	this.strings = strings;
     }
 
     @Override public void announceItem(Object item, Set<Flags> flags)
     {
 	NullCheck.notNull(item, "item");
 	NullCheck.notNull(flags, "flags");
-	if (item instanceof TweetWrapper)
+	if (!(item instanceof TweetWrapper))
 	{
-	    final TweetWrapper wrapper = (TweetWrapper)item;
-	    luwrain.playSound(Sounds.LIST_ITEM);
-	    if (flags.contains(Flags.BRIEF))
-	    {
-		luwrain.say(wrapper.toString());
-		return;
-	    }
-	    final StringBuilder b = new StringBuilder();
-	    if (wrapper.isRetweet())
-		b.append(strings.retweet() + " ");
-	    b.append(wrapper.getUserName() + " ");
-	    b.append(strings.passedTime(wrapper.getDate()) + " ");
-	    b.append(wrapper.getText());
-	    b.append(" " + strings.numberOfFavorites(wrapper.getFavoriteCount()));
-	    b.append(" " + strings.numberOfRetweets(wrapper.getRetweetCount()));
-	    luwrain.say(b.toString());
+	    luwrain.setEventResponse(DefaultEventResponse.listItem(item.toString(), Suggestions.LIST_ITEM));
 	    return;
 	}
-	luwrain.playSound(Sounds.LIST_ITEM);
-	luwrain.say(item.toString());
+	final TweetWrapper wrapper = (TweetWrapper)item;
+	luwrain.setEventResponse(DefaultEventResponse.listItem(wrapper.toString(), Suggestions.LIST_ITEM));
     }
 
     @Override public String getScreenAppearance(Object item, Set<Flags> flags)

@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -20,7 +20,14 @@ import org.luwrain.core.*;
 
 interface Settings
 {
+    static final String PATH = "/org/luwrain/app/twitter";
     static final String ACCOUNTS_PATH = "/org/luwrain/app/twitter/accounts";
+
+interface Main
+{
+    String getDefaultAccount(String defValue);
+    void setDefaultAccount(String value);
+}
 
     interface Account
     {
@@ -36,4 +43,11 @@ interface Settings
 	NullCheck.notEmpty(path, "path");
 	return RegistryProxy.create(registry, path, Account.class);
     }
+
+    static Main createMain(Registry registry)
+    {
+	NullCheck.notNull(registry, "registry");
+	return RegistryProxy.create(registry, PATH, Main.class);
+    }
+
 }

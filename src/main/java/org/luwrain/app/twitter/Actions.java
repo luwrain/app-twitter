@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -16,15 +16,20 @@
 
 package org.luwrain.app.twitter;
 
-import org.luwrain.core.*;
-import org.luwrain.popups.Popups;
-
 import twitter4j.*;
+
+import org.luwrain.core.*;
+import org.luwrain.core.events.*;
+import org.luwrain.controls.*;
+import org.luwrain.popups.Popups;
 
 class Actions
 {
+    static final int MAX_TWEET_LEN = 140;
+
     private final Luwrain luwrain;
     private final Strings strings;
+    private final Conversations conversations;
 
     Actions(Luwrain luwrain, Strings strings)
     {
@@ -32,7 +37,35 @@ class Actions
 	NullCheck.notNull(strings, "strings");
 	this.luwrain = luwrain;
 	this.strings = strings;
+	this.conversations = new Conversations(luwrain, strings);
     }
+
+    Action[] getAccountsActions()
+    {
+	return new Action[]{
+	    new Action("user-timeline", "Показать твиты другого пользователя", new KeyboardEvent(KeyboardEvent.Special.F5)),
+	    new Action("search", "Поиск твитов", new KeyboardEvent(KeyboardEvent.Special.F6)),
+	};
+    }
+
+    Action[] getHomeTimelineActions(boolean withShowAccounts)
+    {
+	return new Action[]{
+	    new Action("user-timeline", "Показать твиты другого пользователя", new KeyboardEvent(KeyboardEvent.Special.F5)),
+	    new Action("search", "Поиск твитов", new KeyboardEvent(KeyboardEvent.Special.F6)),
+	    new Action("show-accounts", "Показать список учётных записей"),
+	};
+    }
+
+    Action[] getTweetsActions()
+    {
+	return new Action[]{
+	    new Action("user-timeline", "Показать твиты другого пользователя", new KeyboardEvent(KeyboardEvent.Special.F5)),
+	    new Action("search", "Поиск твитов", new KeyboardEvent(KeyboardEvent.Special.F6)),
+	    new Action("show-timeline", "Вернуться к личной хронологии", new KeyboardEvent(KeyboardEvent.Special.ESCAPE)),
+	};
+    }
+
 
     boolean search(Base base, Area destArea)
     {
@@ -93,60 +126,54 @@ class Actions
 	    });
     }
 
-    static private void showTweets(Area area, TweetWrapper[] wrappers)
+    boolean onShowUserTimeline(Base base, ListArea area, AreaLayoutSwitch layouts)
     {
+	NullCheck.notNull(base, "base");
 	NullCheck.notNull(area, "area");
-	NullCheck.notNullItems(wrappers, "wrappers");
-	if (area instanceof StatusArea)
-	    ((StatusArea)area).setTweets(wrappers);
+	NullCheck.notNull(layouts, "layouts");
+	if (base.isBusy())
+	    return false;
+	final String userName = conversations.askUserNameToShowTimeline();
+	if (userName == null)
+	    return true;
+	return base.run(()->{
+		final TweetWrapper[] wrappers = base.getUserTimeline(userName);
+		if (wrappers == null)
+		{
+		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		    return;
+		}
+		luwrain.runInMainThread(()->{
+			showTweets(area, wrappers);
+			layouts.show(TwitterApp.TWEETS_LAYOUT_INDEX);
+			luwrain.announceActiveArea();
+		    });
+	    });
     }
 
-    private void userTweets()
+    boolean onSearch(Base base, ListArea area, AreaLayoutSwitch layouts)
     {
-	/*
-	if (work != null && !work.finished)
-	    return;
-	if (twitter == null)
-	{
-	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
-	    return;
-	}
-	final String user = Popups.simple(luwrain, strings.userTweetsPopupName(), strings.userTweetsPopupPrefix(), "");
-	if (user == null || user.trim().isEmpty())
-	    return;
-	if (allowedAccounts != null && allowedAccounts.length > 0)
-	{
-	    boolean permitted = false;
-	    for(String s: allowedAccounts)
-		if (s.toLowerCase().equals(user.toLowerCase()))
-		    permitted = true;
-	    if (!permitted)
-	    {
-		luwrain.message(strings.problemUserTweets(), Luwrain.MESSAGE_ERROR);
-		return;
-	    }
-	}
-	final Strings s = strings;
-	work = new Work(luwrain, tweetsArea){
-		private Strings strings = s;
-		@Override public void work()
+	NullCheck.notNull(base, "base");
+	NullCheck.notNull(area, "area");
+	NullCheck.notNull(layouts, "layouts");
+	if (base.isBusy())
+	    return false;
+	final String query = conversations.askSearchQuery();
+	if (query == null)
+	    return true;
+	return base.run(()->{
+		final TweetWrapper[] wrappers = base.searchTweets(query, 1);
+		if (wrappers == null)
 		{
-		    TweetWrapper[] wrappers = base.userTweets(twitter, user);
-		    if (wrappers == null)
-		    {
-			message(strings.problemUserTweets(), Luwrain.MESSAGE_ERROR);
-			return;
-		    }
-		    if (wrappers.length < 0)
-		    {
-			message(strings.noUserTweets(), Luwrain.MESSAGE_ERROR);
-			return;
-		    }
-		    showTweets(wrappers);
+		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		    return;
 		}
-	    };
-	new Thread(work).start();
-	*/
+		luwrain.runInMainThread(()->{
+			showTweets(area, wrappers);
+			layouts.show(TwitterApp.TWEETS_LAYOUT_INDEX);
+			luwrain.announceActiveArea();
+		    });
+	    });
     }
 
     boolean onUpdateStatus(Base base, String text, StatusArea area)
@@ -158,42 +185,39 @@ class Actions
 	    return false;
 	if (!base.isAccountActivated())
 	    return false;
+	if (text.length() > MAX_TWEET_LEN && !conversations.confirmTooLongTweet())
+	    return true;
 	base.run(()->{
-		if (base.updateStatus(text))
-		    luwrain.runInMainThread(()->{
-			    luwrain.message(strings.published(text), Luwrain.MESSAGE_DONE);
-			}); else
+		if (!base.updateStatus(text))
+		{
 		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		return;
+	    }
+		final TweetWrapper[] wrappers = base.getHomeTimeline();
+		if (wrappers == null)
+		{
+		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		    return;
+		}
+		    luwrain.runInMainThread(()->{
+			    showTweets(area, wrappers);
+			    luwrain.playSound(Sounds.MESSAGE);
+			}); 
 	    });
 	return true;
     }
 
-    private void homeTweets()
+    static private void showTweets(Area area, TweetWrapper[] wrappers)
     {
-	/*
-	if (work != null && !work.finished)
-	    return;
-	if (twitter == null)
+	NullCheck.notNull(area, "area");
+	NullCheck.notNullItems(wrappers, "wrappers");
+	if (area instanceof StatusArea)
+	    ((StatusArea)area).setTweets(wrappers);
+	if (area instanceof ListArea)
 	{
-	    luwrain.message(strings.noConnection(), Luwrain.MESSAGE_ERROR);
-	    return;
+	    final ListArea.Model model = ((ListArea)area).getListModel();
+	    if (model instanceof ListUtils.FixedModel)
+		((ListUtils.FixedModel)model).setItems(wrappers);
 	}
-	final Strings s = strings;
-	work = new Work(luwrain, tweetsArea){
-		private Strings strings = s;
-		@Override public void work()
-		{
-		    TweetWrapper[] wrappers = base.homeTweets(twitter);
-		    if (wrappers == null)
-		    {
-			message(strings.problemHomeTweets(), Luwrain.MESSAGE_ERROR);
-			return;
-		    }
-		    showTweets(wrappers);
-		}
-	    };
-	new Thread(work).start();
-	*/
     }
-
 }

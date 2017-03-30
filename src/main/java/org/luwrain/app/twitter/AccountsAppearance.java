@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -21,12 +21,12 @@ import java.util.*;
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
-class SectionsAppearance implements ListArea.Appearance
+class AccountsAppearance implements ListArea.Appearance
 {
     private Luwrain luwrain;
     private Strings strings;
 
-    SectionsAppearance(Luwrain luwrain, Strings strings)
+    AccountsAppearance(Luwrain luwrain, Strings strings)
     {
 	this.luwrain = luwrain;
 	this.strings = strings;

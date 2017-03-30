@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -63,7 +63,7 @@ class Base
 	NullCheck.notNull(account, "account");
 	if (twitter != null)
 	    return false;
-	twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
+twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
 				     account.accessToken, account.accessTokenSecret);
 	return twitter != null;
     }
@@ -140,16 +140,13 @@ class Base
 	return true;
     }
 
-    static private TweetWrapper[] search(Twitter twitter, String text,
-			  int numPages)
+    static private TweetWrapper[] search(Twitter twitter, String text, int numPages)
     {
 	NullCheck.notNull(twitter, "twitter");
-	NullCheck.notNull(text, "text");
-	if (text.trim().isEmpty())
-	    throw new IllegalArgumentException("text may not be empty");
+	NullCheck.notEmpty(text, "text");
 	if (numPages < 1)
 	    throw new IllegalArgumentException("numPages must be greater than zero");
-	LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	final LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
 	try {
 	    Query query = new Query(text);
             QueryResult result;

@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -20,12 +20,13 @@ import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.popups.*;
-//import org.luwrain.util.RegistryAutoCheck;
 
 class TwitterApp implements Application
 {
-    static private final int INITIAL_LAYOUT_INDEX = 0;
-    static private final int ACCESS_TOKEN_FORM_LAYOUT_INDEX = 1;
+    static final int INITIAL_LAYOUT_INDEX = 0;
+    static final int TWEETS_LAYOUT_INDEX = 1;
+    static final int ACCOUNTS_LAYOUT_INDEX = 2;
+    static final int ACCESS_TOKEN_FORM_LAYOUT_INDEX = 3;
 
     private Luwrain luwrain;
     private Strings strings = null;
@@ -34,9 +35,10 @@ class TwitterApp implements Application
 
     private AreaLayoutSwitch layouts;
     private ListArea accountsArea;
+    private ListArea tweetsArea;
     private StatusArea statusArea;
-    private TweetsModel tweetsModel;
-    
+    private int defaultLayoutIndex = -1;
+
     //For account auth procedure
     private Account accountToAuth = null;
     private AccessTokenForm accessTokenForm;
@@ -56,33 +58,35 @@ class TwitterApp implements Application
 	this.base = new Base(luwrain);
 	createAreas();
 	layouts = new AreaLayoutSwitch(luwrain);
+	layouts.add(new AreaLayout(statusArea));
+	layouts.add(new AreaLayout(tweetsArea));
 	layouts.add(new AreaLayout(AreaLayout.LEFT_RIGHT, accountsArea, statusArea));
 	layouts.add(new AreaLayout(accessTokenForm));
+
+	final Settings.Main sett = Settings.createMain(luwrain.getRegistry());
+	final String defaultAccountName = sett.getDefaultAccount("");
+	if (!defaultAccountName.isEmpty())
+	{
+	final Account defaultAccount = findAccount(accountsArea.getListModel(), defaultAccountName);
+	if (defaultAccount == null || !actions.onAccountsClick(base, statusArea, defaultAccount))
+	    layouts.show(ACCOUNTS_LAYOUT_INDEX);
+	} else
+	    layouts.show(ACCOUNTS_LAYOUT_INDEX);
+
+	defaultLayoutIndex = layouts.getCurrentIndex();
 	return true;
     }
 
     private void createAreas()
     {
-	tweetsModel = new TweetsModel(luwrain);
-
-	/*
-	final ListClickHandler tweetsClickHandler = new ListClickHandler(){
-		@Override public boolean onListClick(ListArea area,
-						     int index,
-						     Object item)
-		{
-		    return false;
-		}
-	    };
-	*/
-
 	final ListArea.Params accountsParams = new ListArea.Params();
 	accountsParams.environment = new DefaultControlEnvironment(luwrain);
 	accountsParams.model = new ListUtils.FixedModel(base.getAccounts());
-	accountsParams.appearance = new SectionsAppearance(luwrain, strings);
-	accountsParams.name = strings.accountsAreaName();
+	accountsParams.appearance = new AccountsAppearance(luwrain, strings);
+	accountsParams.name = "Учётные записи";
 
 	accountsArea = new ListArea(accountsParams) {
+
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -95,11 +99,21 @@ class TwitterApp implements Application
 			}
 		    return super.onKeyboardEvent(event);
 		}
+
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onEnvironmentEvent(event);
 		    switch (event.getCode())
 		    {
+
+		    case ACTION:
+			if (ActionEvent.isAction(event, "user-timeline"))
+			    return actions.onShowUserTimeline(base, tweetsArea, layouts);
+			if (ActionEvent.isAction(event, "search"))
+			    return actions.onSearch(base, tweetsArea, layouts);
+			return false;
 		    case CLOSE:
 			closeApp();
 			return true;
@@ -107,14 +121,14 @@ class TwitterApp implements Application
 			return super.onEnvironmentEvent(event);
 		    }
 		}
-	    };
 
-	final ListArea.Params tweetsParams = new ListArea.Params();
-	tweetsParams.environment = new DefaultControlEnvironment(luwrain);
-	tweetsParams.model = tweetsModel;
-	tweetsParams.appearance = new TweetsAppearance(luwrain, strings);
-	//	tweetsParams.clickHandler = tweetsClickHandler;
-	tweetsParams.name = strings.statusAreaName();
+		@Override public Action[] getAreaActions()
+		{
+		    if (!base.isAccountActivated())
+			return new Action[0];
+		    return actions.getAccountsActions();
+		}
+	    };
 
 	statusArea = new StatusArea(new DefaultControlEnvironment(luwrain)) {
 
@@ -125,8 +139,12 @@ class TwitterApp implements Application
 			switch(event.getSpecial())
 			{
 			case TAB:
+			    if (layouts.getCurrentIndex() == ACCOUNTS_LAYOUT_INDEX)
+			    {
 gotoAccounts();
 			    return true;
+			    }
+			    break;
 			}
 			    return super.onKeyboardEvent(event);
 		}
@@ -138,6 +156,19 @@ gotoAccounts();
 			return super.onEnvironmentEvent(event);
 		    switch (event.getCode())
 		    {
+		    case ACTION:
+			if (ActionEvent.isAction(event, "user-timeline"))
+			    return actions.onShowUserTimeline(base, tweetsArea, layouts);
+			if (ActionEvent.isAction(event, "search"))
+			    return actions.onSearch(base, tweetsArea, layouts);
+			if (ActionEvent.isAction(event, "show-accounts"))
+			{
+			    layouts.show(ACCOUNTS_LAYOUT_INDEX);
+			    defaultLayoutIndex = layouts.getCurrentIndex();
+			    luwrain.setActiveArea(accountsArea);
+			    return true;
+			}
+			return false;
 		    case CLOSE:
 closeApp();
 			return true;
@@ -146,6 +177,51 @@ closeApp();
 		    }
 		}
 
+		@Override public Action[] getAreaActions()
+		{
+		    if (!base.isAccountActivated())
+			return new Action[0];
+		    return actions.getHomeTimelineActions(true);
+		}
+	    };
+
+	final ListArea.Params tweetsParams = new ListArea.Params();
+	tweetsParams.environment = new DefaultControlEnvironment(luwrain);
+	tweetsParams.model = new ListUtils.FixedModel();
+	tweetsParams.appearance = new TweetsAppearance(luwrain, strings);
+	tweetsParams.name = "Список твитов";
+
+	tweetsArea = new ListArea(tweetsParams) {
+
+		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onEnvironmentEvent(event);
+		    switch(event.getCode())
+		    {
+		    case ACTION:
+			if (ActionEvent.isAction(event, "search"))
+			    return actions.onSearch(base, tweetsArea, layouts);
+			if (ActionEvent.isAction(event, "user-timeline"))
+			    return actions.onShowUserTimeline(base, tweetsArea, layouts);
+			if (ActionEvent.isAction(event, "show-timeline"))
+			    return showDefaultLayout();
+			return false;
+		    case CLOSE:
+			closeApp();
+			return true;
+		    default:
+			return super.onEnvironmentEvent(event);
+		    }
+		}
+
+		@Override public Action[] getAreaActions()
+		{
+		    if (!base.isAccountActivated())
+			return new Action[0];
+		    return actions.getTweetsActions();
+		}
 	    };
 
 	accessTokenForm = new AccessTokenForm(luwrain, this, strings, base) {
@@ -212,6 +288,15 @@ closeApp();
 	luwrain.message(strings.accountAuthCompleted (), Luwrain.MESSAGE_OK);
     }
 
+    private boolean showDefaultLayout()
+    {
+	if (defaultLayoutIndex < 0)
+	    return false;
+	layouts.show(defaultLayoutIndex);
+	luwrain.announceActiveArea();
+	return true;
+    }
+
 private void gotoAccounts()
     {
 	luwrain.setActiveArea(accountsArea);
@@ -237,5 +322,23 @@ private void gotoAccounts()
     @Override public String getAppName()
     {
 	return strings.appName();
+    }
+
+    static private Account findAccount(ListArea.Model model, String name)
+    {
+	NullCheck.notNull(model, "model");
+	NullCheck.notNull(name, "name");
+	if (!(model instanceof ListUtils.FixedModel))
+	    return null;
+	final ListUtils.FixedModel items = (ListUtils.FixedModel)model;
+	for(Object o: items)
+	{
+	    if (!(o instanceof Account))
+		continue;
+	    final Account account = (Account)o;
+	    if (account.name.equals(name))
+		return account;
+	}
+	return null;
     }
 }
