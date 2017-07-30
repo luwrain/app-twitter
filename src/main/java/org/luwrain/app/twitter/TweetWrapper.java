@@ -41,6 +41,11 @@ class TweetWrapper
 	return tweet.getUser().getName();
     }
 
+    long getAuthorId()
+    {
+	return tweet.getUser().getId();
+    }
+
     Date getDate()
     {
 	return tweet.getCreatedAt();

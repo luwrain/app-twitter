@@ -63,7 +63,7 @@ class Base
 	NullCheck.notNull(account, "account");
 	if (twitter != null)
 	    return false;
-twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
+	twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
 				     account.accessToken, account.accessTokenSecret);
 	return twitter != null;
     }
@@ -99,6 +99,19 @@ twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consume
 	if (twitter == null)
 	    return false;
 	return updateStatusImpl(twitter, text);
+    }
+
+    boolean followAuthor(TweetWrapper wrapper)
+    {
+	NullCheck.notNull(wrapper, "wrapper");
+	try {
+	    twitter.createFriendship(wrapper.getAuthorId(), true);
+	    return true;
+	}
+	catch(TwitterException e)
+	{
+	    return false;
+	}
     }
 
     TweetWrapper[] searchTweets(String query, int numPages)

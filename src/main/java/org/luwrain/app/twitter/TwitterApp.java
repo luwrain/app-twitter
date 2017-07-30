@@ -43,7 +43,7 @@ class TwitterApp implements Application
     private Account accountToAuth = null;
     private AccessTokenForm accessTokenForm;
 
-    @Override public boolean onLaunch(Luwrain luwrain)
+    @Override public InitResult onLaunchApp(Luwrain luwrain)
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	/*
@@ -74,13 +74,13 @@ class TwitterApp implements Application
 	    layouts.show(ACCOUNTS_LAYOUT_INDEX);
 
 	defaultLayoutIndex = layouts.getCurrentIndex();
-	return true;
+	return new InitResult();
     }
 
     private void createAreas()
     {
 	final ListArea.Params accountsParams = new ListArea.Params();
-	accountsParams.environment = new DefaultControlEnvironment(luwrain);
+	accountsParams.context = new DefaultControlEnvironment(luwrain);
 	accountsParams.model = new ListUtils.FixedModel(base.getAccounts());
 	accountsParams.appearance = new AccountsAppearance(luwrain, strings);
 	accountsParams.name = "Учётные записи";
@@ -186,13 +186,13 @@ closeApp();
 	    };
 
 	final ListArea.Params tweetsParams = new ListArea.Params();
-	tweetsParams.environment = new DefaultControlEnvironment(luwrain);
+	tweetsParams.context = new DefaultControlEnvironment(luwrain);
 	tweetsParams.model = new ListUtils.FixedModel();
 	tweetsParams.appearance = new TweetsAppearance(luwrain, strings);
 	tweetsParams.name = "Список твитов";
 
 	tweetsArea = new ListArea(tweetsParams) {
-
+	    
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -201,6 +201,8 @@ closeApp();
 		    switch(event.getCode())
 		    {
 		    case ACTION:
+			if (ActionEvent.isAction(event, "follow-author"))
+			    return actions.onFollowAuthor(base, this);
 			if (ActionEvent.isAction(event, "search"))
 			    return actions.onSearch(base, tweetsArea, layouts);
 			if (ActionEvent.isAction(event, "user-timeline"))
@@ -307,14 +309,14 @@ private void gotoAccounts()
 	luwrain.setActiveArea(statusArea);
     }
 
-    private void closeApp()
+    @Override public void closeApp()
     {
 	if (base.isBusy())
 	    return;
 	luwrain.closeApp();
     }
 
-    @Override public AreaLayout getAreasToShow()
+    @Override public AreaLayout getAreaLayout()
     {
 	return layouts.getCurrentLayout();
     }

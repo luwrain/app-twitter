@@ -43,7 +43,7 @@ StatusArea(ControlEnvironment environment)
 	NullCheck.notNullItems(tweets, "tweets");
 	this.tweets = tweets;
 	updateEditPos();
-	environment.onAreaNewContent(this);
+	context.onAreaNewContent(this);
     }
 
     void setListener(Listener listener)
@@ -56,7 +56,7 @@ StatusArea(ControlEnvironment environment)
 	NullCheck.notNull(prefix, "prefix");
 	this.enteringPrefix = prefix;
 	updateEditPos();
-	environment.onAreaNewContent(this);
+	context.onAreaNewContent(this);
     }
 
     @Override public int getLineCount()
@@ -126,7 +126,7 @@ StatusArea(ControlEnvironment environment)
 	    return false;
 	    listener.onNewEnteredMessage(enteringText);
 	enteringText = "";
-	environment.onAreaNewContent(this);
+	context.onAreaNewContent(this);
 	//	setHotPoint(enteringPrefix.length(), contact.getMessages().lastMessages().size());
 	return true;
     }

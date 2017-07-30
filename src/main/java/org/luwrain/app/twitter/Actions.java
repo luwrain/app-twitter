@@ -60,6 +60,7 @@ class Actions
     Action[] getTweetsActions()
     {
 	return new Action[]{
+	    new Action("follow-author", "Отслеживать твиты автора", new KeyboardEvent(KeyboardEvent.Special.F9)),
 	    new Action("user-timeline", "Показать твиты другого пользователя", new KeyboardEvent(KeyboardEvent.Special.F5)),
 	    new Action("search", "Поиск твитов", new KeyboardEvent(KeyboardEvent.Special.F6)),
 	    new Action("show-timeline", "Вернуться к личной хронологии", new KeyboardEvent(KeyboardEvent.Special.ESCAPE)),
@@ -205,6 +206,31 @@ class Actions
 			}); 
 	    });
 	return true;
+    }
+
+    boolean onFollowAuthor(Base base, ListArea tweetsArea)
+    {
+	NullCheck.notNull(base, "base");
+	NullCheck.notNull(tweetsArea, "tweetsArea");
+
+	if (base.isBusy() || !base.isAccountActivated())
+	    return false;
+	final Object obj = tweetsArea.selected();
+	if (obj == null || !(obj instanceof TweetWrapper))
+	    return false;
+	base.run(()->{
+		if (!base.followAuthor((TweetWrapper)obj))
+		{
+		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		return;
+	    }
+		    luwrain.runInMainThread(()->{
+			    luwrain.playSound(Sounds.MESSAGE);
+			}); 
+	    });
+	return true;
+
+
     }
 
     static private void showTweets(Area area, TweetWrapper[] wrappers)
