@@ -23,13 +23,16 @@ import org.luwrain.popups.Popups;
 class Conversations
 {
     private final Luwrain luwrain;
+    private final Base base;
     private final Strings strings;
 
-    Conversations(Luwrain luwrain, Strings strings)
+    Conversations(Luwrain luwrain, Base base, Strings strings)
     {
 	NullCheck.notNull(luwrain, "luwrain");
+	NullCheck.notNull(base, "base");
 	NullCheck.notNull(strings, "strings");
 	this.luwrain = luwrain;
+	this.base = base;
 	this.strings = strings;
     }
 
@@ -53,5 +56,11 @@ return res;
     boolean confirmTooLongTweet()
     {
 	return Popups.confirmDefaultYes(luwrain, "Публикация твита", "Ваш твит имеет длину больше " + Actions.MAX_TWEET_LEN + " символов; всё равно продолжить?");
+    }
+
+    Account chooseAnotherAccount()
+    {
+	final Object res = Popups.fixedList(luwrain, "Выберите учётную запись:", base.getAccounts());//FIXME:
+	return (Account)res;
     }
 }

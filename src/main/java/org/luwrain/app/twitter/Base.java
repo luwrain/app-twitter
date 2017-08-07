@@ -64,7 +64,7 @@ class Base
 	if (twitter != null)
 	    return false;
 	twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
-				     account.accessToken, account.accessTokenSecret);
+				account.accessToken, account.accessTokenSecret);
 	return twitter != null;
     }
 
@@ -264,5 +264,17 @@ class Base
 	    res.add(new Account(a, sett, sett.getAccessToken(""), sett.getAccessTokenSecret("")));
 	}
 	return res.toArray(new Account[res.size()]);
+    }
+
+    static Account findAccount(Account[] accounts, String name)
+    {
+	NullCheck.notNullItems(accounts, "accounts");
+	NullCheck.notEmpty(name, "name");
+	for(Account a: accounts)
+	{
+	    if (a.name.equals(name))
+		return a;
+	}
+	return null;
     }
 }

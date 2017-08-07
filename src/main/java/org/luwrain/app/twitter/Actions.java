@@ -28,49 +28,23 @@ class Actions
     static final int MAX_TWEET_LEN = 140;
 
     private final Luwrain luwrain;
+    private final Base base;
     private final Strings strings;
-    private final Conversations conversations;
+    final Conversations conversations;
 
-    Actions(Luwrain luwrain, Strings strings)
+    Actions(Luwrain luwrain, Base base, Strings strings)
     {
 	NullCheck.notNull(luwrain, "luwrain");
+	NullCheck.notNull(base, "base");
 	NullCheck.notNull(strings, "strings");
 	this.luwrain = luwrain;
+	this.base = base;
 	this.strings = strings;
-	this.conversations = new Conversations(luwrain, strings);
+	this.conversations = new Conversations(luwrain, base, strings);
     }
 
-    Action[] getAccountsActions()
+    boolean search(Area destArea)
     {
-	return new Action[]{
-	    new Action("user-timeline", "Показать твиты другого пользователя", new KeyboardEvent(KeyboardEvent.Special.F5)),
-	    new Action("search", "Поиск твитов", new KeyboardEvent(KeyboardEvent.Special.F6)),
-	};
-    }
-
-    Action[] getHomeTimelineActions(boolean withShowAccounts)
-    {
-	return new Action[]{
-	    new Action("user-timeline", "Показать твиты другого пользователя", new KeyboardEvent(KeyboardEvent.Special.F5)),
-	    new Action("search", "Поиск твитов", new KeyboardEvent(KeyboardEvent.Special.F6)),
-	    new Action("show-accounts", "Показать список учётных записей"),
-	};
-    }
-
-    Action[] getTweetsActions()
-    {
-	return new Action[]{
-	    new Action("follow-author", "Отслеживать твиты автора", new KeyboardEvent(KeyboardEvent.Special.F9)),
-	    new Action("user-timeline", "Показать твиты другого пользователя", new KeyboardEvent(KeyboardEvent.Special.F5)),
-	    new Action("search", "Поиск твитов", new KeyboardEvent(KeyboardEvent.Special.F6)),
-	    new Action("show-timeline", "Вернуться к личной хронологии", new KeyboardEvent(KeyboardEvent.Special.ESCAPE)),
-	};
-    }
-
-
-    boolean search(Base base, Area destArea)
-    {
-	NullCheck.notNull(base, "base");
 	NullCheck.notNull(destArea, "destArea");
 	if (base.isBusy())
 	    return false;
@@ -98,9 +72,8 @@ class Actions
 	    });
     }
 
-    boolean onAccountsClick(Base base, StatusArea statusArea, Account account)
+    boolean activateAccount(StatusArea statusArea, Account account)
     {
-	NullCheck.notNull(base, "base");
 	NullCheck.notNull(statusArea, "statusArea");
 	NullCheck.notNull(account, "account");
 	if (base.isBusy())
@@ -109,14 +82,14 @@ class Actions
 	    base.closeAccount();
 	if (!base.activateAccount(account))
 	{
-	    luwrain.message(strings.problemConnecting(), Luwrain.MESSAGE_ERROR);
+	    luwrain.message(strings.problemConnecting(), Luwrain.MessageType.ERROR);
 	    return true;
 	}
 	return base.run(()->{
 		final TweetWrapper[] wrappers = base.getHomeTimeline();
 		if (wrappers == null)
 		{
-		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
 		    return;
 		}
 		luwrain.runInMainThread(()->{
@@ -127,36 +100,30 @@ class Actions
 	    });
     }
 
-    boolean onShowUserTimeline(Base base, ListArea area, AreaLayoutSwitch layouts)
+    boolean onShowUserTimeline(TwitterApp app)
     {
-	NullCheck.notNull(base, "base");
-	NullCheck.notNull(area, "area");
-	NullCheck.notNull(layouts, "layouts");
+	NullCheck.notNull(app, "app");
 	if (base.isBusy())
 	    return false;
 	final String userName = conversations.askUserNameToShowTimeline();
-	if (userName == null)
+	if (userName == null || userName.trim().isEmpty())
 	    return true;
 	return base.run(()->{
 		final TweetWrapper[] wrappers = base.getUserTimeline(userName);
 		if (wrappers == null)
 		{
-		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
 		    return;
 		}
 		luwrain.runInMainThread(()->{
-			showTweets(area, wrappers);
-			layouts.show(TwitterApp.TWEETS_LAYOUT_INDEX);
-			luwrain.announceActiveArea();
+			app.showTweetsArea("Твиты пользователя \"" + userName + "\"", wrappers);
 		    });
 	    });
     }
 
-    boolean onSearch(Base base, ListArea area, AreaLayoutSwitch layouts)
+    boolean onSearch(TwitterApp app)
     {
-	NullCheck.notNull(base, "base");
-	NullCheck.notNull(area, "area");
-	NullCheck.notNull(layouts, "layouts");
+	NullCheck.notNull(app, "app");
 	if (base.isBusy())
 	    return false;
 	final String query = conversations.askSearchQuery();
@@ -166,20 +133,17 @@ class Actions
 		final TweetWrapper[] wrappers = base.searchTweets(query, 1);
 		if (wrappers == null)
 		{
-		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
 		    return;
 		}
 		luwrain.runInMainThread(()->{
-			showTweets(area, wrappers);
-			layouts.show(TwitterApp.TWEETS_LAYOUT_INDEX);
-			luwrain.announceActiveArea();
+			app.showTweetsArea("Результаты поиска по фразе \"" + query + "\"", wrappers);
 		    });
 	    });
     }
 
-    boolean onUpdateStatus(Base base, String text, StatusArea area)
+    boolean onUpdateStatus(String text, StatusArea area)
     {
-	NullCheck.notNull(base, "base");
 	NullCheck.notNull(text, "text");
 	NullCheck.notNull(area, "area");
 	if (base.isBusy() || text.isEmpty())
@@ -191,28 +155,26 @@ class Actions
 	base.run(()->{
 		if (!base.updateStatus(text))
 		{
-		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
 		return;
 	    }
 		final TweetWrapper[] wrappers = base.getHomeTimeline();
 		if (wrappers == null)
 		{
-		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
 		    return;
 		}
 		    luwrain.runInMainThread(()->{
 			    showTweets(area, wrappers);
-			    luwrain.playSound(Sounds.MESSAGE);
+			    luwrain.playSound(Sounds.DONE);
 			}); 
 	    });
 	return true;
     }
 
-    boolean onFollowAuthor(Base base, ListArea tweetsArea)
+    boolean onFollowAuthor(ListArea tweetsArea)
     {
-	NullCheck.notNull(base, "base");
 	NullCheck.notNull(tweetsArea, "tweetsArea");
-
 	if (base.isBusy() || !base.isAccountActivated())
 	    return false;
 	final Object obj = tweetsArea.selected();
@@ -222,15 +184,13 @@ class Actions
 		if (!base.followAuthor((TweetWrapper)obj))
 		{
 		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
-		return;
-	    }
-		    luwrain.runInMainThread(()->{
-			    luwrain.playSound(Sounds.MESSAGE);
-			}); 
+		    return;
+		}
+		luwrain.runInMainThread(()->{
+			luwrain.playSound(Sounds.MESSAGE);
+		    }); 
 	    });
 	return true;
-
-
     }
 
     static private void showTweets(Area area, TweetWrapper[] wrappers)

@@ -75,7 +75,7 @@ StatusArea(ControlEnvironment environment)
 
     @Override public String getAreaName()
     {
-	return "Хронология";
+	return "Твиттер";
     }
 
     @Override public boolean onKeyboardEvent(KeyboardEvent event)
