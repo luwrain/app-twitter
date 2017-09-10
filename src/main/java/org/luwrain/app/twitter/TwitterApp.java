@@ -16,6 +16,10 @@
 
 package org.luwrain.app.twitter;
 
+import java.util.*;
+
+import twitter4j.*;
+
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
@@ -28,7 +32,7 @@ class TwitterApp implements Application
     private Base base = null;
     private Actions actions = null;
 
-    private StatusArea statusArea;
+    private StatusArea2 statusArea;
     private AreaLayoutHelper layout = null;
 
     //For account auth procedure
@@ -76,8 +80,8 @@ class TwitterApp implements Application
 
     private void createAreas()
     {
+	/*
 	statusArea = new StatusArea(new DefaultControlEnvironment(luwrain)) {
-
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -89,10 +93,12 @@ class TwitterApp implements Application
 				return false;
 			    luwrain.setActiveArea(layout.getAdditionalArea());
 			    return true;
+			case ESCAPE:
+			closeApp();
+			return true;
 			}
 			    return super.onKeyboardEvent(event);
 		}
-
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -103,6 +109,8 @@ class TwitterApp implements Application
 		    case ACTION:
 			if (ActionEvent.isAction(event, "user-timeline"))
 			    return actions.onShowUserTimeline(TwitterApp.this);
+			if (ActionEvent.isAction(event, "show-friends"))
+			    return onShowFriends();
 			if (ActionEvent.isAction(event, "search"))
 			    return actions.onSearch(TwitterApp.this);
 			if (ActionEvent.isAction(event, "change-account"))
@@ -115,7 +123,6 @@ closeApp();
 			return super.onEnvironmentEvent(event);
 		    }
 		}
-
 		@Override public Action[] getAreaActions()
 		{
 		    if (!base.isAccountActivated())
@@ -123,8 +130,66 @@ closeApp();
 		    return ActionLists.getHomeTimelineActions(true);
 		}
 	    };
-
 	statusArea.setListener((text)->actions.onUpdateStatus(text, statusArea));
+	*/
+
+	final ConsoleArea2.ClickHandler clickHandler = (area,index,obj)->{
+	    return false;
+	};
+
+	final ConsoleArea2.InputHandler inputHandler = (text)->{
+	    return ConsoleArea2.InputHandler.Result.OK;
+	};
+
+	statusArea = new StatusArea2(new DefaultControlEnvironment(luwrain), base.statusModel, clickHandler, inputHandler) {
+		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.isSpecial() &&! event.isModified())
+			switch(event.getSpecial())
+			{
+			case TAB:
+			    if (!layout.hasAdditionalArea())
+				return false;
+			    luwrain.setActiveArea(layout.getAdditionalArea());
+			    return true;
+			case ESCAPE:
+			closeApp();
+			return true;
+			}
+			    return super.onKeyboardEvent(event);
+		}
+		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onEnvironmentEvent(event);
+		    switch (event.getCode())
+		    {
+		    case ACTION:
+			if (ActionEvent.isAction(event, "user-timeline"))
+			    return actions.onShowUserTimeline(TwitterApp.this);
+			if (ActionEvent.isAction(event, "show-friends"))
+			    return onShowFriends();
+			if (ActionEvent.isAction(event, "search"))
+			    return actions.onSearch(TwitterApp.this);
+			if (ActionEvent.isAction(event, "change-account"))
+			    return onChangeAccount();
+			return false;
+		    case CLOSE:
+closeApp();
+			return true;
+		    default:
+			return super.onEnvironmentEvent(event);
+		    }
+		}
+		@Override public Action[] getAreaActions()
+		{
+		    if (!base.isAccountActivated())
+			return new Action[0];
+		    return ActionLists.getHomeTimelineActions(true);
+		}
+	    };
 
 	accessTokenForm = new AccessTokenForm(luwrain, this, strings, base) {
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
@@ -211,6 +276,73 @@ closeApp();
 	    };
 	layout.openAdditionalArea(area, AreaLayoutHelper.Position.BOTTOM);
 	luwrain.setActiveArea(area);
+    }
+
+    private boolean onShowFriends()
+    {
+	final List<User> friends;
+	try {
+	    friends = (List)base.call(()->base.getTwitter().getFriendsList(base.getTwitter().getId(), -1));
+	    //	    friends = (List)base.call(()->base.getTwitter().getFriendsList("adpopko", 0));
+	}
+	catch(java.util.concurrent.ExecutionException e)
+	{
+	    luwrain.crash(e);
+	    return true;
+	}
+	final ListArea.Params params = new ListArea.Params();
+params.context = new DefaultControlEnvironment(luwrain);
+params.model = new ListUtils.FixedModel(UserWrapper.create(friends)){
+	@Override public void refresh()
+	{
+	    //FIXME:
+	}
+    };
+params.appearance = new ListUtils.DefaultAppearance(params.context);
+params.name = "Друзья";//FIXME:
+	final ListArea area = new ListArea(params) {
+		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.isSpecial() && !event.isModified())
+			switch(event.getSpecial())
+			{
+			case ESCAPE:
+			    layout.closeAdditionalArea();
+			    return true;
+			case TAB:
+			case BACKSPACE:
+			    luwrain.setActiveArea(statusArea);
+			    return true;
+			}
+		    return super.onKeyboardEvent(event);
+		}
+		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onEnvironmentEvent(event);
+		    switch(event.getCode())
+		    {
+		    case ACTION:
+			if (ActionEvent.isAction(event, "delete-friendship"))
+			    return actions.onDeleteFriendship(this);
+			return false;
+		    case CLOSE:
+			closeApp();
+			return true;
+		    default:
+			return super.onEnvironmentEvent(event);
+		    }
+		}
+		@Override public Action[] getAreaActions()
+		{
+		    return ActionLists.getFriendsActions(selected());
+		}
+	    };
+	layout.openAdditionalArea(area, AreaLayoutHelper.Position.BOTTOM);
+	luwrain.setActiveArea(area);
+	return true;
     }
 
     private boolean startAccountAuth(Account account)

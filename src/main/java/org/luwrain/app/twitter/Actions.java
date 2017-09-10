@@ -16,6 +16,8 @@
 
 package org.luwrain.app.twitter;
 
+import java.util.*;
+
 import twitter4j.*;
 
 import org.luwrain.core.*;
@@ -72,7 +74,7 @@ class Actions
 	    });
     }
 
-    boolean activateAccount(StatusArea statusArea, Account account)
+    boolean activateAccount(StatusArea2 statusArea, Account account)
     {
 	NullCheck.notNull(statusArea, "statusArea");
 	NullCheck.notNull(account, "account");
@@ -86,15 +88,10 @@ class Actions
 	    return true;
 	}
 	return base.run(()->{
-		final TweetWrapper[] wrappers = base.getHomeTimeline();
-		if (wrappers == null)
-		{
-		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
-		    return;
-		}
+		base.updateHomeTimeline();
 		luwrain.runInMainThread(()->{
-			statusArea.setEnteringPrefix(account.name + ">");
-			showTweets(statusArea, wrappers);
+			statusArea.setInputPrefix(account.name + ">");
+			statusArea.refresh();
 			luwrain.setActiveArea(statusArea);
 		    });
 	    });
@@ -142,34 +139,32 @@ class Actions
 	    });
     }
 
-    boolean onUpdateStatus(String text, StatusArea area)
+    ConsoleArea2.InputHandler.Result onUpdateStatus(String text, StatusArea2 area)
     {
 	NullCheck.notNull(text, "text");
 	NullCheck.notNull(area, "area");
 	if (base.isBusy() || text.isEmpty())
-	    return false;
+	    return ConsoleArea2.InputHandler.Result.REJECTED;
 	if (!base.isAccountActivated())
-	    return false;
-	if (text.length() > MAX_TWEET_LEN && !conversations.confirmTooLongTweet())
-	    return true;
+	    return ConsoleArea2.InputHandler.Result.REJECTED;
+	if (text.length() > MAX_TWEET_LEN)
+	{
+	    luwrain.message("Слишком длинный твит", Luwrain.MessageType.ERROR);
+	    return ConsoleArea2.InputHandler.Result.OK;
+	}
 	base.run(()->{
 		if (!base.updateStatus(text))
 		{
 		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
 		return;
 	    }
-		final TweetWrapper[] wrappers = base.getHomeTimeline();
-		if (wrappers == null)
-		{
-		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
-		    return;
-		}
+		base.updateHomeTimeline();
 		    luwrain.runInMainThread(()->{
-			    showTweets(area, wrappers);
+			    area.refresh();
 			    luwrain.playSound(Sounds.DONE);
 			}); 
 	    });
-	return true;
+	return ConsoleArea2.InputHandler.Result.CLEAR_INPUT;
     }
 
     boolean onFollowAuthor(ListArea tweetsArea)
@@ -180,25 +175,53 @@ class Actions
 	final Object obj = tweetsArea.selected();
 	if (obj == null || !(obj instanceof TweetWrapper))
 	    return false;
+	final TweetWrapper wrapper = (TweetWrapper)obj;
 	base.run(()->{
-		if (!base.followAuthor((TweetWrapper)obj))
+		try {
+		    base.getTwitter().createFriendship(wrapper.getAuthorId(), true);
+		}
+		catch(TwitterException e)
 		{
-		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		    luwrain.crash(e);
 		    return;
 		}
 		luwrain.runInMainThread(()->{
-			luwrain.playSound(Sounds.MESSAGE);
+			luwrain.playSound(Sounds.DONE);
 		    }); 
 	    });
 	return true;
+    }
+
+    boolean onDeleteFriendship(ListArea listArea)
+    {
+	NullCheck.notNull(listArea, "listArea");
+	if (base.isBusy())
+	    return false;
+	if (listArea.selected() == null || !(listArea.selected() instanceof UserWrapper))
+	    return false;
+	final UserWrapper userWrapper = (UserWrapper)listArea.selected();
+	if (!Popups.confirmDefaultNo(luwrain, "Исключение из списка друзей", "Вы действительно хотите исключить из списка друзей пользователя \"" + userWrapper.toString() + "\"?"))
+	    return true;
+	base.run(()->{
+	    try {
+		base.getTwitter().destroyFriendship(userWrapper.user.getId());
+		luwrain.runInMainThread(()->{
+			luwrain.playSound(Sounds.DONE);
+			listArea.refresh();
+		    });
+	    }
+	    catch(TwitterException e)
+	    {
+		luwrain.crash(e);
+	    }
+	});
+    return true;
     }
 
     static private void showTweets(Area area, TweetWrapper[] wrappers)
     {
 	NullCheck.notNull(area, "area");
 	NullCheck.notNullItems(wrappers, "wrappers");
-	if (area instanceof StatusArea)
-	    ((StatusArea)area).setTweets(wrappers);
 	if (area instanceof ListArea)
 	{
 	    final ListArea.Model model = ((ListArea)area).getListModel();

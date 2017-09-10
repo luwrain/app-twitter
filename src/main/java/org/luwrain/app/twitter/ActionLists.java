@@ -24,6 +24,7 @@ class ActionLists
     static Action[] getHomeTimelineActions(boolean withShowAccounts)
     {
 	return new Action[]{
+	    new Action("show-friends", "Показать друзей"),
 	    new Action("user-timeline", "Показать твиты другого пользователя", new KeyboardEvent(KeyboardEvent.Special.F5)),
 	    new Action("search", "Поиск твитов", new KeyboardEvent(KeyboardEvent.Special.F6)),
 	    new Action("change-account", "Сменить учётную запись", new KeyboardEvent(KeyboardEvent.Special.F10)),
@@ -36,6 +37,15 @@ class ActionLists
 	    new Action("follow-author", "Отслеживать твиты автора", new KeyboardEvent(KeyboardEvent.Special.F9)),
 	    new Action("user-timeline", "Показать твиты другого пользователя", new KeyboardEvent(KeyboardEvent.Special.F5)),
 	    new Action("search", "Поиск твитов", new KeyboardEvent(KeyboardEvent.Special.F6)),
+	};
+    }
+
+    static Action[] getFriendsActions(Object selected)
+    {
+	if (selected == null)
+	    return new Action[0];
+	return new Action[]{
+	    new Action("delete-friendship", "Исключить из друзей", new KeyboardEvent(KeyboardEvent.Special.DELETE)),
 	};
     }
 }

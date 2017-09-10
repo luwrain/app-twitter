@@ -19,10 +19,11 @@ package org.luwrain.app.twitter;
 import java.util.*;
 import java.util.concurrent.*;
 
-import org.luwrain.core.*;
-
 import twitter4j.*;
 import twitter4j.conf.ConfigurationLuwrain;
+
+import org.luwrain.core.*;
+import org.luwrain.controls.*;
 
 class Base
 {
@@ -30,12 +31,16 @@ class Base
 
     private final Luwrain luwrain;
     private Twitter twitter = null;
+    final StatusModel statusModel;
+
+    private TweetWrapper[] tweets = new TweetWrapper[0];
     private FutureTask task = null;
 
     Base(Luwrain luwrain)
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	this.luwrain = luwrain;
+	this.statusModel = new StatusModel();
     }
 
     Auth createAuth() throws TwitterException
@@ -58,6 +63,27 @@ class Base
 	return true;
     }
 
+    Object call(Callable callable) throws ExecutionException
+    {
+	NullCheck.notNull(callable, "callable");
+	if (isBusy())
+	    return false;
+	task = new FutureTask(callable);
+	executor.execute(task);
+	try {
+	    return task.get();
+	}
+	catch(ExecutionException e)
+	{
+	    throw e;
+	}
+	catch(InterruptedException e)
+	{
+	    Thread.currentThread().interrupt();
+	    return null;
+	}
+    }
+
     boolean activateAccount(Account account)
     {
 	NullCheck.notNull(account, "account");
@@ -78,13 +104,6 @@ class Base
 	twitter = null;
     }
 
-    TweetWrapper[] getHomeTimeline()
-    {
-	if (twitter == null)
-	    return null;
-	return homeTweets(twitter);
-    }
-
     TweetWrapper[] getUserTimeline(String user)
     {
 	NullCheck.notNull(user, "user");
@@ -101,19 +120,6 @@ class Base
 	return updateStatusImpl(twitter, text);
     }
 
-    boolean followAuthor(TweetWrapper wrapper)
-    {
-	NullCheck.notNull(wrapper, "wrapper");
-	try {
-	    twitter.createFriendship(wrapper.getAuthorId(), true);
-	    return true;
-	}
-	catch(TwitterException e)
-	{
-	    return false;
-	}
-    }
-
     TweetWrapper[] searchTweets(String query, int numPages)
     {
 	NullCheck.notNull(query, "query");
@@ -122,11 +128,9 @@ class Base
 	return search(twitter, query, numPages);
     }
 
-
     static private Twitter createTwitter(String consumerKey, String consumerSecret,
 			  String accessToken, String accessTokenSecret)
     {
-	Log.debug("twitter", "preparing new Twitter instance");
 	final ConfigurationLuwrain conf = new ConfigurationLuwrain(consumerKey, consumerSecret, accessToken, accessTokenSecret);
 	final Twitter twitter = new TwitterFactory(conf).getInstance();
 	if (twitter == null)
@@ -199,28 +203,25 @@ class Base
 	}
     }
 
-    static private TweetWrapper[] homeTweets(Twitter twitter)
+    void updateHomeTimeline()
     {
 	NullCheck.notNull(twitter, "twitter");
-	Log.debug("twitter", "trying to get list of tweets for the current user");
 	try {
 	    final List<Status> result = twitter.getHomeTimeline();
 	    if (result == null)
 	    {
-		Log.debug("twitter", "null returned in responce");
-		return null;
+		tweets = new TweetWrapper[0];
+		return;
 	    }
-	    Log.debug("twitter", "" + result.size() + " items returned in responce");
-	    final LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	    final List<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
 	    for(Status s: result)
 		wrappers.add(new TweetWrapper(s));
-	    return wrappers.toArray(new TweetWrapper[wrappers.size()]);
+tweets = wrappers.toArray(new TweetWrapper[wrappers.size()]);
 	}
 	catch (TwitterException e)
 	{
-	    Log.error("twitter", "unable to get current user timeline:" + e.getClass().getName() + ":" + e.getMessage());
-	    e.printStackTrace();
-	    return null;
+	    luwrain.crash(e);
+	    tweets = new TweetWrapper[0];
 	}
     }
 
@@ -266,6 +267,11 @@ class Base
 	return res.toArray(new Account[res.size()]);
     }
 
+    Twitter getTwitter()
+    {
+	return twitter;
+    }
+
     static Account findAccount(Account[] accounts, String name)
     {
 	NullCheck.notNullItems(accounts, "accounts");
@@ -277,4 +283,19 @@ class Base
 	}
 	return null;
     }
+
+    private class StatusModel implements ConsoleArea2.Model
+{
+    @Override public int getConsoleItemCount()
+    {
+	return tweets.length;
+    }
+
+    @Override public Object getConsoleItem(int index)
+    {
+	if (index < 0 || index >= tweets.length)
+	    throw new IllegalArgumentException("Illegal index value (" + index + ")");
+	return tweets[index];
+    }
+}
 }
