@@ -32,7 +32,7 @@ class Actions
     private final Luwrain luwrain;
     private final Base base;
     private final Strings strings;
-    final Conversations conversations;
+    final Conversations conv;
 
     Actions(Luwrain luwrain, Base base, Strings strings)
     {
@@ -42,7 +42,7 @@ class Actions
 	this.luwrain = luwrain;
 	this.base = base;
 	this.strings = strings;
-	this.conversations = new Conversations(luwrain, base, strings);
+	this.conv = new Conversations(luwrain, base, strings);
     }
 
     boolean search(Area destArea)
@@ -74,7 +74,7 @@ class Actions
 	    });
     }
 
-    boolean activateAccount(StatusArea2 statusArea, Account account)
+    boolean activateAccount(StatusArea statusArea, Account account)
     {
 	NullCheck.notNull(statusArea, "statusArea");
 	NullCheck.notNull(account, "account");
@@ -102,7 +102,7 @@ class Actions
 	NullCheck.notNull(app, "app");
 	if (base.isBusy())
 	    return false;
-	final String userName = conversations.askUserNameToShowTimeline();
+	final String userName = conv.askUserNameToShowTimeline();
 	if (userName == null || userName.trim().isEmpty())
 	    return true;
 	return base.run(()->{
@@ -123,7 +123,7 @@ class Actions
 	NullCheck.notNull(app, "app");
 	if (base.isBusy())
 	    return false;
-	final String query = conversations.askSearchQuery();
+	final String query = conv.askSearchQuery();
 	if (query == null)
 	    return true;
 	return base.run(()->{
@@ -139,13 +139,11 @@ class Actions
 	    });
     }
 
-    ConsoleArea2.InputHandler.Result onUpdateStatus(String text, StatusArea2 area)
+    ConsoleArea2.InputHandler.Result onUpdateStatus(String text, ConsoleArea2 area)
     {
 	NullCheck.notNull(text, "text");
 	NullCheck.notNull(area, "area");
-	if (base.isBusy() || text.isEmpty())
-	    return ConsoleArea2.InputHandler.Result.REJECTED;
-	if (!base.isAccountActivated())
+	if (text.isEmpty() || !base.isReadyForQuery())
 	    return ConsoleArea2.InputHandler.Result.REJECTED;
 	if (text.length() > MAX_TWEET_LEN)
 	{
@@ -153,11 +151,14 @@ class Actions
 	    return ConsoleArea2.InputHandler.Result.OK;
 	}
 	base.run(()->{
-		if (!base.updateStatus(text))
-		{
-		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
-		return;
-	    }
+	try {
+	    base.getTwitter().updateStatus(text);
+	}
+	catch (TwitterException e)
+	{
+	luwrain.crash(e);
+	return;
+    }
 		base.updateHomeTimeline();
 		    luwrain.runInMainThread(()->{
 			    area.refresh();
@@ -165,6 +166,80 @@ class Actions
 			}); 
 	    });
 	return ConsoleArea2.InputHandler.Result.CLEAR_INPUT;
+    }
+
+    boolean onDestroyStatus(TweetWrapper tweet, ConsoleArea2 area)
+    {
+	NullCheck.notNull(tweet, "tweet");
+	NullCheck.notNull(area, "area");
+	if (!base.isReadyForQuery())
+	    return false;
+	if (!conv.confirmTweetDeleting(tweet))
+	    return true;
+	base.run(()->{
+	try {
+	    base.getTwitter().destroyStatus(tweet.tweet.getId());
+	}
+	catch (TwitterException e)
+	{
+	luwrain.crash(e);
+	return;
+    }
+		base.updateHomeTimeline();
+		    luwrain.runInMainThread(()->{
+			    area.refresh();
+			    luwrain.playSound(Sounds.DONE);
+			}); 
+	    });
+	return true;
+    }
+
+    boolean onCreateFavourite(TweetWrapper tweet, ConsoleArea2 area)
+    {
+	NullCheck.notNull(tweet, "tweet");
+	NullCheck.notNull(area, "area");
+	if (!base.isReadyForQuery())
+	    return false;
+	base.run(()->{
+	try {
+	    base.getTwitter().createFavorite(tweet.tweet.getId());
+	}
+	catch (TwitterException e)
+	{
+	luwrain.crash(e);
+	return;
+    }
+		base.updateHomeTimeline();
+		    luwrain.runInMainThread(()->{
+			    area.refresh();
+			    luwrain.playSound(Sounds.DONE);
+			}); 
+	    });
+	return true;
+    }
+
+    boolean onRetweetStatus(TweetWrapper tweet, ConsoleArea2 area)
+    {
+	NullCheck.notNull(tweet, "tweet");
+	NullCheck.notNull(area, "area");
+	if (!base.isReadyForQuery())
+	    return false;
+	base.run(()->{
+	try {
+	    base.getTwitter().retweetStatus(tweet.tweet.getId());
+	}
+	catch (TwitterException e)
+	{
+	luwrain.crash(e);
+	return;
+    }
+		base.updateHomeTimeline();
+		    luwrain.runInMainThread(()->{
+			    area.refresh();
+			    luwrain.playSound(Sounds.DONE);
+			}); 
+	    });
+	return true;
     }
 
     boolean onFollowAuthor(ListArea tweetsArea)

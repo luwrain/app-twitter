@@ -23,9 +23,9 @@ import org.luwrain.core.events.*;
 import org.luwrain.core.queries.*;
 import org.luwrain.controls.*;
 
-class StatusArea2 extends ConsoleArea2
+class StatusArea extends ConsoleArea2
 {
-    StatusArea2(ControlEnvironment context, Model model, ClickHandler clickHandler, InputHandler inputHandler)
+    StatusArea(ControlEnvironment context, Model model, ClickHandler clickHandler, InputHandler inputHandler)
     {
 	super(createParams(context, model, clickHandler, inputHandler));
     }
@@ -75,7 +75,7 @@ static private class StatusAppearance implements ConsoleArea2.Appearance
 	return;
 	}
 	final TweetWrapper wrapper = (TweetWrapper)item;
-context.say(wrapper.getText() + " " + wrapper.getUserName());
+	context.say(wrapper.getText() + " " + wrapper.getUserName() + " " + context.getI18n().getPastTimeBrief(wrapper.getDate()) + " " + wrapper.getFavoriteCount());
     }
 }
 }

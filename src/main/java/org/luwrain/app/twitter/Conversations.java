@@ -53,14 +53,22 @@ return res;
     }
 
 
+    /*
     boolean confirmTooLongTweet()
     {
 	return Popups.confirmDefaultYes(luwrain, "Публикация твита", "Ваш твит имеет длину больше " + Actions.MAX_TWEET_LEN + " символов; всё равно продолжить?");
     }
+    */
 
     Account chooseAnotherAccount()
     {
 	final Object res = Popups.fixedList(luwrain, "Выберите учётную запись:", base.getAccounts());//FIXME:
 	return (Account)res;
+    }
+
+    boolean confirmTweetDeleting(TweetWrapper tweet)
+    {
+	NullCheck.notNull(tweet, "tweet");
+	return Popups.confirmDefaultNo(luwrain, "Удаление твита", "Вы действительно хотите удалить твит \"" + tweet.getText() + "\"?");
     }
 }

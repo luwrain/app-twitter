@@ -24,6 +24,9 @@ class ActionLists
     static Action[] getHomeTimelineActions(boolean withShowAccounts)
     {
 	return new Action[]{
+	    new Action("retweet", "Ретвитнуть"),//FIXME://FIXME:
+	    new Action("like", "Поставить лайк"),//FIXME://FIXME:
+	    new Action("delete-tweet", "Удалить твит", new KeyboardEvent(KeyboardEvent.Special.DELETE)),//FIXME://FIXME:
 	    new Action("show-friends", "Показать друзей"),
 	    new Action("user-timeline", "Показать твиты другого пользователя", new KeyboardEvent(KeyboardEvent.Special.F5)),
 	    new Action("search", "Поиск твитов", new KeyboardEvent(KeyboardEvent.Special.F6)),

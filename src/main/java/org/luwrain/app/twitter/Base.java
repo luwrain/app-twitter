@@ -99,6 +99,11 @@ class Base
 	return twitter != null;
     }
 
+    boolean isReadyForQuery()
+    {
+	return isAccountActivated() && !isBusy();
+    }
+
     void closeAccount()
     {
 	twitter = null;
@@ -110,14 +115,6 @@ class Base
 	if (twitter == null)
 	    return null;
 	return userTimeline(twitter, user);
-    }
-
-    boolean updateStatus(String text)
-    {
-	NullCheck.notEmpty(text, "text");
-	if (twitter == null)
-	    return false;
-	return updateStatusImpl(twitter, text);
     }
 
     TweetWrapper[] searchTweets(String query, int numPages)
@@ -140,21 +137,7 @@ class Base
 	    Log.error("twitter", "no enabled authorization");
 	    return null;
 	}
-	Log.debug("twitter", "new twitter instance prepared");
 	return twitter;
-    }
-
-    boolean updateStatus(Twitter twitter, String text)
-    {
-	try {
-	    Status status = twitter.updateStatus(text);
-	}
-	catch (TwitterException e)
-	{
-	    e.printStackTrace();
-	    return false;
-	}
-	return true;
     }
 
     static private TweetWrapper[] search(Twitter twitter, String text, int numPages)
@@ -203,7 +186,7 @@ class Base
 	}
     }
 
-    void updateHomeTimeline()
+    synchronized void updateHomeTimeline()
     {
 	NullCheck.notNull(twitter, "twitter");
 	try {

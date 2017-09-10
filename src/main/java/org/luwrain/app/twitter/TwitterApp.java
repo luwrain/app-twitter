@@ -32,7 +32,7 @@ class TwitterApp implements Application
     private Base base = null;
     private Actions actions = null;
 
-    private StatusArea2 statusArea;
+    private StatusArea statusArea;
     private AreaLayoutHelper layout = null;
 
     //For account auth procedure
@@ -80,68 +80,11 @@ class TwitterApp implements Application
 
     private void createAreas()
     {
-	/*
-	statusArea = new StatusArea(new DefaultControlEnvironment(luwrain)) {
-		@Override public boolean onKeyboardEvent(KeyboardEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.isSpecial() &&! event.isModified())
-			switch(event.getSpecial())
-			{
-			case TAB:
-			    if (!layout.hasAdditionalArea())
-				return false;
-			    luwrain.setActiveArea(layout.getAdditionalArea());
-			    return true;
-			case ESCAPE:
-			closeApp();
-			return true;
-			}
-			    return super.onKeyboardEvent(event);
-		}
-		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
-			return super.onEnvironmentEvent(event);
-		    switch (event.getCode())
-		    {
-		    case ACTION:
-			if (ActionEvent.isAction(event, "user-timeline"))
-			    return actions.onShowUserTimeline(TwitterApp.this);
-			if (ActionEvent.isAction(event, "show-friends"))
-			    return onShowFriends();
-			if (ActionEvent.isAction(event, "search"))
-			    return actions.onSearch(TwitterApp.this);
-			if (ActionEvent.isAction(event, "change-account"))
-			    return onChangeAccount();
-			return false;
-		    case CLOSE:
-closeApp();
-			return true;
-		    default:
-			return super.onEnvironmentEvent(event);
-		    }
-		}
-		@Override public Action[] getAreaActions()
-		{
-		    if (!base.isAccountActivated())
-			return new Action[0];
-		    return ActionLists.getHomeTimelineActions(true);
-		}
-	    };
-	statusArea.setListener((text)->actions.onUpdateStatus(text, statusArea));
-	*/
-
 	final ConsoleArea2.ClickHandler clickHandler = (area,index,obj)->{
 	    return false;
 	};
-
-	final ConsoleArea2.InputHandler inputHandler = (text)->{
-	    return ConsoleArea2.InputHandler.Result.OK;
-	};
-
-	statusArea = new StatusArea2(new DefaultControlEnvironment(luwrain), base.statusModel, clickHandler, inputHandler) {
+	final ConsoleArea2.InputHandler inputHandler = (area,text)->actions.onUpdateStatus(text, area);
+	statusArea = new StatusArea(new DefaultControlEnvironment(luwrain), base.statusModel, clickHandler, inputHandler) {
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -167,6 +110,27 @@ closeApp();
 		    switch (event.getCode())
 		    {
 		    case ACTION:
+			if (ActionEvent.isAction(event, "retweet"))
+{
+final Object obj = selected();
+if (obj == null || !(obj instanceof TweetWrapper))
+return false;
+return actions.onRetweetStatus((TweetWrapper)obj, this);
+}
+			if (ActionEvent.isAction(event, "like"))
+{
+final Object obj = selected();
+if (obj == null || !(obj instanceof TweetWrapper))
+return false;
+return actions.onCreateFavourite((TweetWrapper)obj, this);
+}
+			if (ActionEvent.isAction(event, "delete-tweet"))
+{
+final Object obj = selected();
+if (obj == null || !(obj instanceof TweetWrapper))
+return false;
+return actions.onDestroyStatus((TweetWrapper)obj, this);
+}
 			if (ActionEvent.isAction(event, "user-timeline"))
 			    return actions.onShowUserTimeline(TwitterApp.this);
 			if (ActionEvent.isAction(event, "show-friends"))
@@ -211,7 +175,7 @@ closeApp();
 
     private boolean onChangeAccount()
     {
-	final Account newAccount = actions.conversations.chooseAnotherAccount();
+	final Account newAccount = actions.conv.chooseAnotherAccount();
 	if (newAccount == null)
 	    return true;
 	if (base.isAccountActivated())

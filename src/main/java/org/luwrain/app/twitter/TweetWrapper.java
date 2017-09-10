@@ -23,7 +23,7 @@ import org.luwrain.core.*;
 
 class TweetWrapper
 {
-    private final Status tweet;
+final Status tweet;
 
     TweetWrapper(Status tweet)
     {
