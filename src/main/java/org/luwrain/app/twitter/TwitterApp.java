@@ -17,7 +17,6 @@
 package org.luwrain.app.twitter;
 
 import java.util.*;
-
 import twitter4j.*;
 
 import org.luwrain.core.*;
@@ -97,10 +96,10 @@ class TwitterApp implements Application
 			    luwrain.setActiveArea(layout.getAdditionalArea());
 			    return true;
 			case ESCAPE:
-			closeApp();
-			return true;
+			    closeApp();
+			    return true;
 			}
-			    return super.onKeyboardEvent(event);
+		    return super.onKeyboardEvent(event);
 		}
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
@@ -111,26 +110,26 @@ class TwitterApp implements Application
 		    {
 		    case ACTION:
 			if (ActionEvent.isAction(event, "retweet"))
-{
-final Object obj = selected();
-if (obj == null || !(obj instanceof TweetWrapper))
-return false;
-return actions.onRetweetStatus((TweetWrapper)obj, this);
-}
+			{
+			    final Object obj = selected();
+			    if (obj == null || !(obj instanceof TweetWrapper))
+				return false;
+			    return actions.onRetweetStatus((TweetWrapper)obj, this);
+			}
 			if (ActionEvent.isAction(event, "like"))
-{
-final Object obj = selected();
-if (obj == null || !(obj instanceof TweetWrapper))
-return false;
-return actions.onCreateFavourite((TweetWrapper)obj, this);
-}
+			{
+			    final Object obj = selected();
+			    if (obj == null || !(obj instanceof TweetWrapper))
+				return false;
+			    return actions.onCreateFavourite((TweetWrapper)obj, this);
+			}
 			if (ActionEvent.isAction(event, "delete-tweet"))
-{
-final Object obj = selected();
-if (obj == null || !(obj instanceof TweetWrapper))
-return false;
-return actions.onDestroyStatus((TweetWrapper)obj, this);
-}
+			{
+			    final Object obj = selected();
+			    if (obj == null || !(obj instanceof TweetWrapper))
+				return false;
+			    return actions.onDestroyStatus((TweetWrapper)obj, this);
+			}
 			if (ActionEvent.isAction(event, "user-timeline"))
 			    return actions.onShowUserTimeline(TwitterApp.this);
 			if (ActionEvent.isAction(event, "show-friends"))
@@ -141,7 +140,7 @@ return actions.onDestroyStatus((TweetWrapper)obj, this);
 			    return onChangeAccount();
 			return false;
 		    case CLOSE:
-closeApp();
+			closeApp();
 			return true;
 		    default:
 			return super.onEnvironmentEvent(event);
@@ -247,7 +246,6 @@ closeApp();
 	final List<User> friends;
 	try {
 	    friends = (List)base.call(()->base.getTwitter().getFriendsList(base.getTwitter().getId(), -1));
-	    //	    friends = (List)base.call(()->base.getTwitter().getFriendsList("adpopko", 0));
 	}
 	catch(java.util.concurrent.ExecutionException e)
 	{
@@ -255,15 +253,15 @@ closeApp();
 	    return true;
 	}
 	final ListArea.Params params = new ListArea.Params();
-params.context = new DefaultControlEnvironment(luwrain);
-params.model = new ListUtils.FixedModel(UserWrapper.create(friends)){
-	@Override public void refresh()
-	{
-	    //FIXME:
-	}
-    };
-params.appearance = new ListUtils.DefaultAppearance(params.context);
-params.name = "Друзья";//FIXME:
+	params.context = new DefaultControlEnvironment(luwrain);
+	params.model = new ListUtils.FixedModel(UserWrapper.create(friends)){
+		@Override public void refresh()
+		{
+		    //FIXME:
+		}
+	    };
+	params.appearance = new ListUtils.DefaultAppearance(params.context);
+	params.name = "Друзья";//FIXME:
 	final ListArea area = new ListArea(params) {
 		@Override public boolean onKeyboardEvent(KeyboardEvent event)
 		{
@@ -327,7 +325,7 @@ params.name = "Друзья";//FIXME:
 	if (!success)
 	{
 	    if (errorMsg != null && !errorMsg.isEmpty())
-	    luwrain.message(errorMsg, Luwrain.MESSAGE_ERROR);
+		luwrain.message(errorMsg, Luwrain.MESSAGE_ERROR);
 	    return;
 	}
 	if (accountToAuth == null)

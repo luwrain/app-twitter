@@ -17,7 +17,6 @@
 package org.luwrain.app.twitter;
 
 import java.util.*;
-
 import twitter4j.*;
 
 import org.luwrain.core.*;
@@ -151,19 +150,19 @@ class Actions
 	    return ConsoleArea2.InputHandler.Result.OK;
 	}
 	base.run(()->{
-	try {
-	    base.getTwitter().updateStatus(text);
-	}
-	catch (TwitterException e)
-	{
-	luwrain.crash(e);
-	return;
-    }
+		try {
+		    base.getTwitter().updateStatus(text);
+		}
+		catch (TwitterException e)
+		{
+		    luwrain.crash(e);
+		    return;
+		}
 		base.updateHomeTimeline();
-		    luwrain.runInMainThread(()->{
-			    area.refresh();
-			    luwrain.playSound(Sounds.DONE);
-			}); 
+		luwrain.runInMainThread(()->{
+			area.refresh();
+			luwrain.playSound(Sounds.DONE);
+		    }); 
 	    });
 	return ConsoleArea2.InputHandler.Result.CLEAR_INPUT;
     }
@@ -177,19 +176,19 @@ class Actions
 	if (!conv.confirmTweetDeleting(tweet))
 	    return true;
 	base.run(()->{
-	try {
-	    base.getTwitter().destroyStatus(tweet.tweet.getId());
-	}
-	catch (TwitterException e)
-	{
-	luwrain.crash(e);
-	return;
-    }
+		try {
+		    base.getTwitter().destroyStatus(tweet.tweet.getId());
+		}
+		catch (TwitterException e)
+		{
+		    luwrain.crash(e);
+		    return;
+		}
 		base.updateHomeTimeline();
-		    luwrain.runInMainThread(()->{
-			    area.refresh();
-			    luwrain.playSound(Sounds.DONE);
-			}); 
+		luwrain.runInMainThread(()->{
+			area.refresh();
+			luwrain.playSound(Sounds.DONE);
+		    }); 
 	    });
 	return true;
     }
@@ -201,19 +200,19 @@ class Actions
 	if (!base.isReadyForQuery())
 	    return false;
 	base.run(()->{
-	try {
-	    base.getTwitter().createFavorite(tweet.tweet.getId());
-	}
-	catch (TwitterException e)
-	{
-	luwrain.crash(e);
-	return;
-    }
+		try {
+		    base.getTwitter().createFavorite(tweet.tweet.getId());
+		}
+		catch (TwitterException e)
+		{
+		    luwrain.crash(e);
+		    return;
+		}
 		base.updateHomeTimeline();
-		    luwrain.runInMainThread(()->{
-			    area.refresh();
-			    luwrain.playSound(Sounds.DONE);
-			}); 
+		luwrain.runInMainThread(()->{
+			area.refresh();
+			luwrain.playSound(Sounds.DONE);
+		    }); 
 	    });
 	return true;
     }
@@ -225,19 +224,19 @@ class Actions
 	if (!base.isReadyForQuery())
 	    return false;
 	base.run(()->{
-	try {
-	    base.getTwitter().retweetStatus(tweet.tweet.getId());
-	}
-	catch (TwitterException e)
-	{
-	luwrain.crash(e);
-	return;
-    }
+		try {
+		    base.getTwitter().retweetStatus(tweet.tweet.getId());
+		}
+		catch (TwitterException e)
+		{
+		    luwrain.crash(e);
+		    return;
+		}
 		base.updateHomeTimeline();
-		    luwrain.runInMainThread(()->{
-			    area.refresh();
-			    luwrain.playSound(Sounds.DONE);
-			}); 
+		luwrain.runInMainThread(()->{
+			area.refresh();
+			luwrain.playSound(Sounds.DONE);
+		    }); 
 	    });
 	return true;
     }
@@ -278,19 +277,19 @@ class Actions
 	if (!Popups.confirmDefaultNo(luwrain, "Исключение из списка друзей", "Вы действительно хотите исключить из списка друзей пользователя \"" + userWrapper.toString() + "\"?"))
 	    return true;
 	base.run(()->{
-	    try {
-		base.getTwitter().destroyFriendship(userWrapper.user.getId());
-		luwrain.runInMainThread(()->{
-			luwrain.playSound(Sounds.DONE);
-			listArea.refresh();
-		    });
-	    }
-	    catch(TwitterException e)
-	    {
-		luwrain.crash(e);
-	    }
-	});
-    return true;
+		try {
+		    base.getTwitter().destroyFriendship(userWrapper.user.getId());
+		    luwrain.runInMainThread(()->{
+			    luwrain.playSound(Sounds.DONE);
+			    listArea.refresh();
+			});
+		}
+		catch(TwitterException e)
+		{
+		    luwrain.crash(e);
+		}
+	    });
+	return true;
     }
 
     static private void showTweets(Area area, TweetWrapper[] wrappers)
