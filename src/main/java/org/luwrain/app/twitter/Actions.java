@@ -292,6 +292,33 @@ class Actions
 	return true;
     }
 
+    boolean onDeleteLike(ListArea listArea)
+    {
+	NullCheck.notNull(listArea, "listArea");
+	if (!base.isReadyForQuery())
+	    return false;
+	if (listArea.selected() == null || !(listArea.selected() instanceof TweetWrapper))
+	    return false;
+	final TweetWrapper tweetWrapper = (TweetWrapper)listArea.selected();
+	if (!conv.confirmLikeDeleting(tweetWrapper))
+	    return true;
+	base.run(()->{
+		try {
+		    base.getTwitter().destroyFavorite(tweetWrapper.tweet.getId());
+		}
+		catch(TwitterException e)
+		{
+		    luwrain.crash(e);
+		    return;
+		}
+		    luwrain.runInMainThread(()->{
+			    luwrain.playSound(Sounds.DONE);
+			    listArea.refresh();
+			});
+	    });
+	return true;
+    }
+
     static private void showTweets(Area area, TweetWrapper[] wrappers)
     {
 	NullCheck.notNull(area, "area");

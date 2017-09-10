@@ -53,13 +53,6 @@ return res;
     }
 
 
-    /*
-    boolean confirmTooLongTweet()
-    {
-	return Popups.confirmDefaultYes(luwrain, "Публикация твита", "Ваш твит имеет длину больше " + Actions.MAX_TWEET_LEN + " символов; всё равно продолжить?");
-    }
-    */
-
     Account chooseAnotherAccount()
     {
 	final Object res = Popups.fixedList(luwrain, "Выберите учётную запись:", base.getAccounts());//FIXME:
@@ -70,5 +63,11 @@ return res;
     {
 	NullCheck.notNull(tweet, "tweet");
 	return Popups.confirmDefaultNo(luwrain, "Удаление твита", "Вы действительно хотите удалить твит \"" + tweet.getText() + "\"?");
+    }
+
+    boolean confirmLikeDeleting(TweetWrapper tweet)
+    {
+	NullCheck.notNull(tweet, "tweet");
+	return Popups.confirmDefaultNo(luwrain, "Отмена лайка", "Вы действительно хотите отменить лайк \"" + tweet.getText() + "\"?");
     }
 }

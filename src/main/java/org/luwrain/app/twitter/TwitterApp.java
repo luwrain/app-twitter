@@ -134,6 +134,8 @@ class TwitterApp implements Application
 			    return actions.onShowUserTimeline(TwitterApp.this);
 			if (ActionEvent.isAction(event, "show-friends"))
 			    return onShowFriends();
+			if (ActionEvent.isAction(event, "show-likes"))
+			    return onShowLikes();
 			if (ActionEvent.isAction(event, "search"))
 			    return actions.onSearch(TwitterApp.this);
 			if (ActionEvent.isAction(event, "change-account"))
@@ -306,6 +308,92 @@ class TwitterApp implements Application
 	luwrain.setActiveArea(area);
 	return true;
     }
+
+    private boolean onShowLikes()
+    {
+	final List<Status> likes;
+	try {
+	    likes = (List)base.call(()->base.getTwitter().getFavorites(new Paging()));
+	}
+	catch(java.util.concurrent.ExecutionException e)
+	{
+	    luwrain.crash(e);
+	    return true;
+	}
+	final ListArea.Params params = new ListArea.Params();
+	params.context = new DefaultControlEnvironment(luwrain);
+	params.model = new ListUtils.FixedModel(TweetWrapper.create(likes)){
+		@Override public void refresh()
+		{
+
+	final List<Status> l;
+	try {
+	    l = (List)base.call(()->base.getTwitter().getFavorites(new Paging()));
+	}
+	catch(java.util.concurrent.ExecutionException e)
+	{
+	    luwrain.crash(e);
+	    return;
+	}
+	final List<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	for(Status s: l)
+	    wrappers.add(new TweetWrapper(s));
+	clear();
+	addAll(wrappers);
+
+
+
+
+		}
+	    };
+	params.appearance = new ListUtils.DefaultAppearance(params.context);
+	params.name = "Лайки";//FIXME:
+	final ListArea area = new ListArea(params) {
+		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.isSpecial() && !event.isModified())
+			switch(event.getSpecial())
+			{
+			case ESCAPE:
+			    layout.closeAdditionalArea();
+			    return true;
+			case TAB:
+			case BACKSPACE:
+			    luwrain.setActiveArea(statusArea);
+			    return true;
+			}
+		    return super.onKeyboardEvent(event);
+		}
+		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onEnvironmentEvent(event);
+		    switch(event.getCode())
+		    {
+case ACTION:
+    if (ActionEvent.isAction(event, "cancel-like"))
+	return actions.onDeleteLike(this);
+    return false;
+		    case CLOSE:
+			closeApp();
+			return true;
+		    default:
+			return super.onEnvironmentEvent(event);
+		    }
+		}
+		@Override public Action[] getAreaActions()
+		{
+return ActionLists.getLikesActions(selected());
+		}
+	    };
+	layout.openAdditionalArea(area, AreaLayoutHelper.Position.BOTTOM);
+	luwrain.setActiveArea(area);
+	return true;
+    }
+
+
 
     private boolean startAccountAuth(Account account)
     {

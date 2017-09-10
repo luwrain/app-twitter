@@ -28,6 +28,7 @@ class ActionLists
 	    new Action("like", "Поставить лайк"),//FIXME://FIXME:
 	    new Action("delete-tweet", "Удалить твит", new KeyboardEvent(KeyboardEvent.Special.DELETE)),//FIXME://FIXME:
 	    new Action("show-friends", "Показать друзей"),
+	    new Action("show-likes", "Показать лайки"),
 	    new Action("user-timeline", "Показать твиты другого пользователя", new KeyboardEvent(KeyboardEvent.Special.F5)),
 	    new Action("search", "Поиск твитов", new KeyboardEvent(KeyboardEvent.Special.F6)),
 	    new Action("change-account", "Сменить учётную запись", new KeyboardEvent(KeyboardEvent.Special.F10)),
@@ -49,6 +50,15 @@ class ActionLists
 	    return new Action[0];
 	return new Action[]{
 	    new Action("delete-friendship", "Исключить из друзей", new KeyboardEvent(KeyboardEvent.Special.DELETE)),
+	};
+    }
+
+    static Action[] getLikesActions(Object selected)
+    {
+	if (selected == null)
+	    return new Action[0];
+	return new Action[]{
+	    new Action("cancel-like", "Отменить лайк", new KeyboardEvent(KeyboardEvent.Special.DELETE)),
 	};
     }
 }

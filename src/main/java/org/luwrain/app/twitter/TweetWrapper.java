@@ -70,4 +70,13 @@ final Status tweet;
     {
 	return getText();
     }
+
+    static TweetWrapper[] create(List<Status> tweets)
+    {
+	NullCheck.notNull(tweets, "tweets");
+	final List<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	for(Status s: tweets)
+	    wrappers.add(new TweetWrapper(s));
+	return wrappers.toArray(new TweetWrapper[wrappers.size()]);
+    }
 }
