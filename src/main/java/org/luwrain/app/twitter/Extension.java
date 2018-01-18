@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -39,7 +39,7 @@ public class Extension extends org.luwrain.core.extensions.EmptyExtension
     {
 	return new Shortcut[]{
 	    new Shortcut(){
-		@Override public String getName()
+		@Override public String getExtObjName()
 		{
 		    return "twitter";
 		}

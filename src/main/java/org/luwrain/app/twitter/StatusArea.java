@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -68,13 +68,16 @@ static private class StatusAppearance implements ConsoleArea2.Appearance
     @Override public void announceItem(Object item)
     {
 	NullCheck.notNull(item, "item");
-	context.playSound(Sounds.LIST_ITEM);
 	if (!(item instanceof TweetWrapper))
 	{
+	context.playSound(Sounds.LIST_ITEM);
 	context.say(item.toString());
 	return;
 	}
 	final TweetWrapper wrapper = (TweetWrapper)item;
+	if (wrapper.tweet.isFavorited())
+	context.playSound(Sounds.PARAGRAPH); else
+	context.playSound(Sounds.LIST_ITEM);
 	context.say(wrapper.getText() + " " + wrapper.getUserName() + " " + context.getI18n().getPastTimeBrief(wrapper.getDate()) + " " + wrapper.getFavoriteCount());
     }
 }

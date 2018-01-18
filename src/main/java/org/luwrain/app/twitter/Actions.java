@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -51,7 +51,7 @@ class Actions
 	    return false;
 	if (!base.isAccountActivated())
 	{
-	    luwrain.message(strings.youShouldConnect(), Luwrain.MESSAGE_ERROR);
+	    luwrain.message(strings.youShouldConnect(), Luwrain.MessageType.ERROR);
 	    return true;
 	}
 	final String query = Popups.simple(luwrain, strings.searchPopupName(), strings.searchPopupPrefix(), "");
@@ -61,12 +61,12 @@ class Actions
 		final TweetWrapper[] wrappers = base.searchTweets(query, 10);
 		if (wrappers == null)
 		{
-		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MESSAGE_ERROR));
+		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR));
 		    return;
 		}
 		if (wrappers.length <= 0)
 		{
-		    luwrain.runInMainThread(()->luwrain.message(strings.nothingFound(), Luwrain.MESSAGE_ERROR));
+		    luwrain.runInMainThread(()->luwrain.message(strings.nothingFound(), Luwrain.MessageType.ERROR));
 		    return;
 		}
 		luwrain.runInMainThread(()->showTweets(destArea, wrappers));

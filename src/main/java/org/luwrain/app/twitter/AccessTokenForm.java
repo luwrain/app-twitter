@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -77,7 +77,7 @@ class AccessTokenForm extends FormArea
 	    }
 	    catch(Exception e)
 	    {
-		luwrain.message(e.getMessage(), Luwrain.MESSAGE_ERROR);
+		luwrain.message(e.getMessage(), Luwrain.MessageType.ERROR);
 		return true;
 	    }
 	    fillWaitingPin(auth.getAuthorizationURL());
@@ -86,7 +86,7 @@ class AccessTokenForm extends FormArea
 	case WAITING_PIN:
 	    if (getEnteredText("pin").trim().isEmpty())
 	    {
-		luwrain.message(strings.accessTokenFormYouMustEnterPin(), Luwrain.MESSAGE_ERROR);
+		luwrain.message(strings.accessTokenFormYouMustEnterPin(), Luwrain.MessageType.ERROR);
 		return true;
 	    }
 	    try {
@@ -94,7 +94,7 @@ class AccessTokenForm extends FormArea
 	    }
 	    catch(Exception e)
 	    {
-		luwrain.message(e.getMessage(), Luwrain.MESSAGE_ERROR);
+		luwrain.message(e.getMessage(), Luwrain.MessageType.ERROR);
 		return true;
 	    }
 	    app.endAccountAuth(true, "", auth.getAccessToken(), auth.getAccessTokenSecret());

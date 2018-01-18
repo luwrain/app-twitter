@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -90,18 +90,18 @@ class SettingsFactory implements org.luwrain.cpanel.Factory
 		return true;
 	    if (name.indexOf("/") >= 0)
 	    {
-		luwrain.message(strings.invalidAccountName(), Luwrain.MESSAGE_ERROR);
+		luwrain.message(strings.invalidAccountName(), Luwrain.MessageType.ERROR);
 	    }
 	    final Registry registry = controlPanel.getCoreInterface().getRegistry();
 	    final String path = Registry.join(Settings.ACCOUNTS_PATH, name);
 	    if (registry.hasDirectory(path))
 	    {
-		luwrain.message(strings.accountAlreadyExists(name), Luwrain.MESSAGE_ERROR);
+		luwrain.message(strings.accountAlreadyExists(name), Luwrain.MessageType.ERROR);
 		return true;
 	    }
 	    registry.addDirectory(path);
 	    controlPanel.refreshSectionsTree();
-	    luwrain.message(strings.accountAddedSuccessfully(name), Luwrain.MESSAGE_OK);
+	    luwrain.message(strings.accountAddedSuccessfully(name), Luwrain.MessageType.OK);
 	    return true;
 	}
 	if (ActionEvent.isAction(event, "delete-twitter-account"))
@@ -113,7 +113,7 @@ class SettingsFactory implements org.luwrain.cpanel.Factory
 	    final String path = Registry.join(Settings.ACCOUNTS_PATH, accountName);
 	    if (registry.deleteDirectory(path))
 	    {
-		luwrain.message(strings.accountDeletedSuccessfully(accountName), Luwrain.MESSAGE_OK);
+		luwrain.message(strings.accountDeletedSuccessfully(accountName), Luwrain.MessageType.OK);
 		controlPanel.refreshSectionsTree();
 	    }
 	    return true;

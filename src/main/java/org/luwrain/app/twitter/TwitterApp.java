@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -413,7 +413,7 @@ return ActionLists.getLikesActions(selected());
 	if (!success)
 	{
 	    if (errorMsg != null && !errorMsg.isEmpty())
-		luwrain.message(errorMsg, Luwrain.MESSAGE_ERROR);
+		luwrain.message(errorMsg, Luwrain.MessageType.ERROR);
 	    return;
 	}
 	if (accountToAuth == null)
@@ -424,7 +424,7 @@ return ActionLists.getLikesActions(selected());
 	accountToAuth.accessTokenSecret = accessTokenSecret;
 	accountToAuth.sett.setAccessToken(accountToAuth.accessToken);
 	accountToAuth.sett.setAccessTokenSecret(accountToAuth.accessTokenSecret);
-	luwrain.message(strings.accountAuthCompleted (), Luwrain.MESSAGE_OK);
+	luwrain.message(strings.accountAuthCompleted (), Luwrain.MessageType.OK);
     }
 
     @Override public void closeApp()
