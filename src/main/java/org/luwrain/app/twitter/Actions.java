@@ -61,15 +61,15 @@ class Actions
 		final TweetWrapper[] wrappers = base.searchTweets(query, 10);
 		if (wrappers == null)
 		{
-		    luwrain.runInMainThread(()->luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR));
+		    luwrain.runUiSafely(()->luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR));
 		    return;
 		}
 		if (wrappers.length <= 0)
 		{
-		    luwrain.runInMainThread(()->luwrain.message(strings.nothingFound(), Luwrain.MessageType.ERROR));
+		    luwrain.runUiSafely(()->luwrain.message(strings.nothingFound(), Luwrain.MessageType.ERROR));
 		    return;
 		}
-		luwrain.runInMainThread(()->showTweets(destArea, wrappers));
+		luwrain.runUiSafely(()->showTweets(destArea, wrappers));
 	    });
     }
 
@@ -88,7 +88,7 @@ class Actions
 	}
 	return base.run(()->{
 		base.updateHomeTimeline();
-		luwrain.runInMainThread(()->{
+		luwrain.runUiSafely(()->{
 			statusArea.setInputPrefix(account.name + ">");
 			statusArea.refresh();
 			luwrain.setActiveArea(statusArea);
@@ -111,7 +111,7 @@ class Actions
 		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
 		    return;
 		}
-		luwrain.runInMainThread(()->{
+		luwrain.runUiSafely(()->{
 			app.showTweetsArea("Твиты пользователя \"" + userName + "\"", wrappers);
 		    });
 	    });
@@ -132,7 +132,7 @@ class Actions
 		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
 		    return;
 		}
-		luwrain.runInMainThread(()->{
+		luwrain.runUiSafely(()->{
 			app.showTweetsArea("Результаты поиска по фразе \"" + query + "\"", wrappers);
 		    });
 	    });
@@ -159,7 +159,7 @@ class Actions
 		    return;
 		}
 		base.updateHomeTimeline();
-		luwrain.runInMainThread(()->{
+		luwrain.runUiSafely(()->{
 			area.refresh();
 			luwrain.playSound(Sounds.DONE);
 		    }); 
@@ -185,7 +185,7 @@ class Actions
 		    return;
 		}
 		base.updateHomeTimeline();
-		luwrain.runInMainThread(()->{
+		luwrain.runUiSafely(()->{
 			area.refresh();
 			luwrain.playSound(Sounds.DONE);
 		    }); 
@@ -209,7 +209,7 @@ class Actions
 		    return;
 		}
 		base.updateHomeTimeline();
-		luwrain.runInMainThread(()->{
+		luwrain.runUiSafely(()->{
 			area.refresh();
 			luwrain.playSound(Sounds.DONE);
 		    }); 
@@ -233,7 +233,7 @@ class Actions
 		    return;
 		}
 		base.updateHomeTimeline();
-		luwrain.runInMainThread(()->{
+		luwrain.runUiSafely(()->{
 			area.refresh();
 			luwrain.playSound(Sounds.DONE);
 		    }); 
@@ -259,7 +259,7 @@ class Actions
 		    luwrain.crash(e);
 		    return;
 		}
-		luwrain.runInMainThread(()->{
+		luwrain.runUiSafely(()->{
 			luwrain.playSound(Sounds.DONE);
 		    }); 
 	    });
@@ -279,7 +279,7 @@ class Actions
 	base.run(()->{
 		try {
 		    base.getTwitter().destroyFriendship(userWrapper.user.getId());
-		    luwrain.runInMainThread(()->{
+		    luwrain.runUiSafely(()->{
 			    luwrain.playSound(Sounds.DONE);
 			    listArea.refresh();
 			});
@@ -311,7 +311,7 @@ class Actions
 		    luwrain.crash(e);
 		    return;
 		}
-		    luwrain.runInMainThread(()->{
+		    luwrain.runUiSafely(()->{
 			    luwrain.playSound(Sounds.DONE);
 			    listArea.refresh();
 			});

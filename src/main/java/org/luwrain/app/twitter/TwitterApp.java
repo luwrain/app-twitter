@@ -84,7 +84,7 @@ class TwitterApp implements Application
 	};
 	final ConsoleArea2.InputHandler inputHandler = (area,text)->actions.onUpdateStatus(text, area);
 	statusArea = new StatusArea(new DefaultControlEnvironment(luwrain), base.statusModel, clickHandler, inputHandler) {
-		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (event.isSpecial() &&! event.isModified())
@@ -99,13 +99,13 @@ class TwitterApp implements Application
 			    closeApp();
 			    return true;
 			}
-		    return super.onKeyboardEvent(event);
+		    return super.onInputEvent(event);
 		}
-		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
-			return super.onEnvironmentEvent(event);
+			return super.onSystemEvent(event);
 		    switch (event.getCode())
 		    {
 		    case ACTION:
@@ -145,7 +145,7 @@ class TwitterApp implements Application
 			closeApp();
 			return true;
 		    default:
-			return super.onEnvironmentEvent(event);
+			return super.onSystemEvent(event);
 		    }
 		}
 		@Override public Action[] getAreaActions()
@@ -157,18 +157,18 @@ class TwitterApp implements Application
 	    };
 
 	accessTokenForm = new AccessTokenForm(luwrain, this, strings, base) {
-		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
-			return super.onEnvironmentEvent(event);
+			return super.onSystemEvent(event);
 		    switch(event.getCode())
 		    {
 		    case CLOSE:
 			closeApp();
 			return true;
 		    default:
-			return super.onEnvironmentEvent(event);
+			return super.onSystemEvent(event);
 		    }
 		}
 	    };
@@ -195,7 +195,7 @@ class TwitterApp implements Application
 	tweetsParams.appearance = new TweetsAppearance(luwrain, strings);
 	tweetsParams.name = title;
 	final ListArea area = new ListArea(tweetsParams) {
-		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (event.isSpecial() && !event.isModified())
@@ -208,13 +208,13 @@ class TwitterApp implements Application
 			    luwrain.setActiveArea(statusArea);
 			    return true;
 			}
-		    return super.onKeyboardEvent(event);
+		    return super.onInputEvent(event);
 		}
-		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
-			return super.onEnvironmentEvent(event);
+			return super.onSystemEvent(event);
 		    switch(event.getCode())
 		    {
 		    case ACTION:
@@ -229,7 +229,7 @@ class TwitterApp implements Application
 			closeApp();
 			return true;
 		    default:
-			return super.onEnvironmentEvent(event);
+			return super.onSystemEvent(event);
 		    }
 		}
 		@Override public Action[] getAreaActions()
@@ -265,7 +265,7 @@ class TwitterApp implements Application
 	params.appearance = new ListUtils.DefaultAppearance(params.context);
 	params.name = "Друзья";//FIXME:
 	final ListArea area = new ListArea(params) {
-		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (event.isSpecial() && !event.isModified())
@@ -279,13 +279,13 @@ class TwitterApp implements Application
 			    luwrain.setActiveArea(statusArea);
 			    return true;
 			}
-		    return super.onKeyboardEvent(event);
+		    return super.onInputEvent(event);
 		}
-		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
-			return super.onEnvironmentEvent(event);
+			return super.onSystemEvent(event);
 		    switch(event.getCode())
 		    {
 		    case ACTION:
@@ -296,7 +296,7 @@ class TwitterApp implements Application
 			closeApp();
 			return true;
 		    default:
-			return super.onEnvironmentEvent(event);
+			return super.onSystemEvent(event);
 		    }
 		}
 		@Override public Action[] getAreaActions()
@@ -349,7 +349,7 @@ class TwitterApp implements Application
 	params.appearance = new ListUtils.DefaultAppearance(params.context);
 	params.name = "Лайки";//FIXME:
 	final ListArea area = new ListArea(params) {
-		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (event.isSpecial() && !event.isModified())
@@ -363,13 +363,13 @@ class TwitterApp implements Application
 			    luwrain.setActiveArea(statusArea);
 			    return true;
 			}
-		    return super.onKeyboardEvent(event);
+		    return super.onInputEvent(event);
 		}
-		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
-			return super.onEnvironmentEvent(event);
+			return super.onSystemEvent(event);
 		    switch(event.getCode())
 		    {
 case ACTION:
@@ -380,7 +380,7 @@ case ACTION:
 			closeApp();
 			return true;
 		    default:
-			return super.onEnvironmentEvent(event);
+			return super.onSystemEvent(event);
 		    }
 		}
 		@Override public Action[] getAreaActions()

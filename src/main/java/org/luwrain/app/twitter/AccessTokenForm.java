@@ -55,7 +55,7 @@ class AccessTokenForm extends FormArea
 	fillGreeting();
     }
 
-    @Override public boolean onKeyboardEvent(KeyboardEvent event)
+    @Override public boolean onInputEvent(KeyboardEvent event)
     {
 	NullCheck.notNull(event, "event");
 	if (event.isSpecial() && !event.isModified())
@@ -64,7 +64,7 @@ class AccessTokenForm extends FormArea
 	case ENTER:
 	    return onEnter();
 	}
-	return super.onKeyboardEvent(event);
+	return super.onInputEvent(event);
     }
 
     private boolean onEnter()

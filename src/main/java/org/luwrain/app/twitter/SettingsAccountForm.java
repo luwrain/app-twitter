@@ -53,20 +53,20 @@ class SettingsAccountForm extends FormArea implements SectionArea
 	return true;
     }
 
-    @Override public boolean onKeyboardEvent(KeyboardEvent event)
+    @Override public boolean onInputEvent(KeyboardEvent event)
     {
 	NullCheck.notNull(event, "event");
-	if (controlPanel.onKeyboardEvent(event))
+	if (controlPanel.onInputEvent(event))
 	    return true;
-	return super.onKeyboardEvent(event);
+	return super.onInputEvent(event);
     }
 
-    @Override public boolean onEnvironmentEvent(EnvironmentEvent event)
+    @Override public boolean onSystemEvent(EnvironmentEvent event)
     {
 	NullCheck.notNull(event, "event");
-	if (controlPanel.onEnvironmentEvent(event))
+	if (controlPanel.onSystemEvent(event))
 	    return true;
-	return super.onEnvironmentEvent(event);
+	return super.onSystemEvent(event);
     }
 
     static SettingsAccountForm create(ControlPanel controlPanel, Settings.Account account, String title)
