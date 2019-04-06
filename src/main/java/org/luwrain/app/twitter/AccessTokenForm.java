@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -26,14 +26,14 @@ class AccessTokenForm extends FormArea
     enum State {GREETING, WAITING_PIN};
 
     private final Luwrain luwrain;
-    private final TwitterApp app;
+    private final App app;
     private final Base base;
     private final Strings strings;
 
     private State state = null;
     private Auth auth = null;
 
-    AccessTokenForm(Luwrain luwrain, TwitterApp app, 
+    AccessTokenForm(Luwrain luwrain, App app, 
 		    Strings strings, Base base)
     {
 	super(new DefaultControlEnvironment(luwrain), strings.accessTokenFormName());

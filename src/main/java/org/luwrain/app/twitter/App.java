@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -24,14 +24,15 @@ import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.popups.*;
 
-class TwitterApp implements Application
+final class App implements Application
 {
     private Luwrain luwrain = null;
     private Strings strings = null;
     private Base base = null;
     private Actions actions = null;
 
-    private StatusArea statusArea;
+    private StatusArea statusArea = null;
+    private EditArea postArea = null;
     private AreaLayoutHelper layout = null;
 
     //For account auth procedure
@@ -55,7 +56,7 @@ class TwitterApp implements Application
 	layout = new AreaLayoutHelper(()->{
 		luwrain.onNewAreaLayout();
 		luwrain.announceActiveArea();
-	    }, statusArea);
+	    }, new AreaLayout(AreaLayout.TOP_BOTTOM, postArea, statusArea));
 	final Settings.Main sett = Settings.createMain(luwrain.getRegistry());
 	final String defaultAccountName = sett.getDefaultAccount("");
 	if (!defaultAccountName.trim().isEmpty())
@@ -83,7 +84,7 @@ class TwitterApp implements Application
 	    return false;
 	};
 	final ConsoleArea2.InputHandler inputHandler = (area,text)->actions.onUpdateStatus(text, area);
-	statusArea = new StatusArea(new DefaultControlEnvironment(luwrain), base.statusModel, clickHandler, inputHandler) {
+	statusArea = new StatusArea(new DefaultControlContext(luwrain), base.statusModel, clickHandler, inputHandler) {
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -112,32 +113,32 @@ class TwitterApp implements Application
 			if (ActionEvent.isAction(event, "retweet"))
 			{
 			    final Object obj = selected();
-			    if (obj == null || !(obj instanceof TweetWrapper))
+			    if (obj == null || !(obj instanceof Tweet))
 				return false;
-			    return actions.onRetweetStatus((TweetWrapper)obj, this);
+			    return actions.onRetweetStatus((Tweet)obj, this);
 			}
 			if (ActionEvent.isAction(event, "like"))
 			{
 			    final Object obj = selected();
-			    if (obj == null || !(obj instanceof TweetWrapper))
+			    if (obj == null || !(obj instanceof Tweet))
 				return false;
-			    return actions.onCreateFavourite((TweetWrapper)obj, this);
+			    return actions.onCreateFavourite((Tweet)obj, this);
 			}
 			if (ActionEvent.isAction(event, "delete-tweet"))
 			{
 			    final Object obj = selected();
-			    if (obj == null || !(obj instanceof TweetWrapper))
+			    if (obj == null || !(obj instanceof Tweet))
 				return false;
-			    return actions.onDestroyStatus((TweetWrapper)obj, this);
+			    return actions.onDestroyStatus((Tweet)obj, this);
 			}
 			if (ActionEvent.isAction(event, "user-timeline"))
-			    return actions.onShowUserTimeline(TwitterApp.this);
+			    return actions.onShowUserTimeline(App.this);
 			if (ActionEvent.isAction(event, "show-friends"))
 			    return onShowFriends();
 			if (ActionEvent.isAction(event, "show-likes"))
 			    return onShowLikes();
 			if (ActionEvent.isAction(event, "search"))
-			    return actions.onSearch(TwitterApp.this);
+			    return actions.onSearch(App.this);
 			if (ActionEvent.isAction(event, "change-account"))
 			    return onChangeAccount();
 			return false;
@@ -153,6 +154,30 @@ class TwitterApp implements Application
 		    if (!base.isAccountActivated())
 			return new Action[0];
 		    return ActionLists.getHomeTimelineActions(true);
+		}
+	    };
+
+	final EditArea.Params postParams = new EditArea.Params();
+	postParams.context = new DefaultControlContext(luwrain);
+	postParams.name = "Новый твит";
+
+	this.postArea = new EditArea(postParams){
+		@Override public boolean onInputEvent(KeyboardEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.isSpecial())
+			switch(event.getSpecial())
+			{
+			case TAB:
+			    luwrain.setActiveArea(statusArea);
+			    return true;
+			}
+		    return super.onInputEvent(event);
+		}
+		@Override public boolean onSystemEvent(EnvironmentEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    return super.onSystemEvent(event);
 		}
 	    };
 
@@ -185,7 +210,7 @@ class TwitterApp implements Application
 	return true;
     }
 
-    void showTweetsArea(String title, TweetWrapper[] wrappers)
+    void showTweetsArea(String title, Tweet[] wrappers)
     {
 	NullCheck.notEmpty(title, "title");
 	NullCheck.notNullItems(wrappers, "wrappers");
@@ -221,9 +246,9 @@ class TwitterApp implements Application
 			if (ActionEvent.isAction(event, "follow-author"))
 			    return actions.onFollowAuthor(this);
 			if (ActionEvent.isAction(event, "search"))
-			    return actions.onSearch(TwitterApp.this);
+			    return actions.onSearch(App.this);
 			if (ActionEvent.isAction(event, "user-timeline"))
-			    return actions.onShowUserTimeline(TwitterApp.this);
+			    return actions.onShowUserTimeline(App.this);
 			return false;
 		    case CLOSE:
 			closeApp();
@@ -322,7 +347,7 @@ class TwitterApp implements Application
 	}
 	final ListArea.Params params = new ListArea.Params();
 	params.context = new DefaultControlEnvironment(luwrain);
-	params.model = new ListUtils.FixedModel(TweetWrapper.create(likes)){
+	params.model = new ListUtils.FixedModel(Tweet.create(likes)){
 		@Override public void refresh()
 		{
 
@@ -335,9 +360,9 @@ class TwitterApp implements Application
 	    luwrain.crash(e);
 	    return;
 	}
-	final List<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	final List<Tweet> wrappers = new LinkedList();
 	for(Status s: l)
-	    wrappers.add(new TweetWrapper(s));
+	    wrappers.add(new Tweet(s));
 	clear();
 	addAll(wrappers);
 

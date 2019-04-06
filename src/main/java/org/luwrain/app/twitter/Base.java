@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -33,7 +33,7 @@ class Base
     private Twitter twitter = null;
     final StatusModel statusModel;
 
-    private TweetWrapper[] tweets = new TweetWrapper[0];
+    private Tweet[] tweets = new Tweet[0];
     private FutureTask task = null;
 
     Base(Luwrain luwrain)
@@ -109,7 +109,7 @@ class Base
 	twitter = null;
     }
 
-    TweetWrapper[] getUserTimeline(String user)
+    Tweet[] getUserTimeline(String user)
     {
 	NullCheck.notNull(user, "user");
 	if (twitter == null)
@@ -117,7 +117,7 @@ class Base
 	return userTimeline(twitter, user);
     }
 
-    TweetWrapper[] searchTweets(String query, int numPages)
+    Tweet[] searchTweets(String query, int numPages)
     {
 	NullCheck.notNull(query, "query");
 	if (twitter == null)
@@ -140,13 +140,13 @@ class Base
 	return twitter;
     }
 
-    static private TweetWrapper[] search(Twitter twitter, String text, int numPages)
+    static private Tweet[] search(Twitter twitter, String text, int numPages)
     {
 	NullCheck.notNull(twitter, "twitter");
 	NullCheck.notEmpty(text, "text");
 	if (numPages < 1)
 	    throw new IllegalArgumentException("numPages must be greater than zero");
-	final LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	final List<Tweet> wrappers = new LinkedList();
 	try {
 	    Query query = new Query(text);
             QueryResult result;
@@ -156,9 +156,9 @@ class Base
                 List<Status> tweets = result.getTweets();
 		System.out.println("" + tweets.size());
                 for (Status tweet : tweets) 
-		    wrappers.add(new TweetWrapper(tweet));
+		    wrappers.add(new Tweet(tweet));
 		if (pageNum >= numPages)
-		    return wrappers.toArray(new TweetWrapper[wrappers.size()]);
+		    return wrappers.toArray(new Tweet[wrappers.size()]);
 		++pageNum;
             } while ((query = result.nextQuery()) != null);
 	    } 
@@ -167,7 +167,7 @@ class Base
             e.printStackTrace();
 	    return null;
         }
-	return wrappers.toArray(new TweetWrapper[wrappers.size()]);
+	return wrappers.toArray(new Tweet[wrappers.size()]);
     }
 
     static boolean updateStatusImpl(Twitter twitter, String tweet)
@@ -193,22 +193,22 @@ class Base
 	    final List<Status> result = twitter.getHomeTimeline();
 	    if (result == null)
 	    {
-		tweets = new TweetWrapper[0];
+		tweets = new Tweet[0];
 		return;
 	    }
-	    final List<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	    final List<Tweet> wrappers = new LinkedList();
 	    for(Status s: result)
-		wrappers.add(new TweetWrapper(s));
-tweets = wrappers.toArray(new TweetWrapper[wrappers.size()]);
+		wrappers.add(new Tweet(s));
+tweets = wrappers.toArray(new Tweet[wrappers.size()]);
 	}
 	catch (TwitterException e)
 	{
 	    luwrain.crash(e);
-	    tweets = new TweetWrapper[0];
+	    tweets = new Tweet[0];
 	}
     }
 
-    static private TweetWrapper[] userTimeline(Twitter twitter, String user)
+    static private Tweet[] userTimeline(Twitter twitter, String user)
     {
 	NullCheck.notNull(twitter, "twitter");
 	NullCheck.notEmpty(user, "user");
@@ -216,10 +216,10 @@ tweets = wrappers.toArray(new TweetWrapper[wrappers.size()]);
 	    final List<Status> result = twitter.getUserTimeline(user);
 	    if (result == null)
 		return null;
-	    final LinkedList<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	    final List<Tweet> wrappers = new LinkedList();
 	    for(Status s: result)
-		wrappers.add(new TweetWrapper(s));
-	    return wrappers.toArray(new TweetWrapper[wrappers.size()]);
+		wrappers.add(new Tweet(s));
+	    return wrappers.toArray(new Tweet[wrappers.size()]);
 	}
 	catch (TwitterException e)
 	{

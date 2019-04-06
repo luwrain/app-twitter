@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -21,11 +21,11 @@ import twitter4j.*;
 
 import org.luwrain.core.*;
 
-class TweetWrapper
+final class Tweet
 {
 final Status tweet;
 
-    TweetWrapper(Status tweet)
+    Tweet(Status tweet)
     {
 	NullCheck.notNull(tweet, "tweet");
 	this.tweet = tweet;
@@ -71,12 +71,12 @@ final Status tweet;
 	return getText();
     }
 
-    static TweetWrapper[] create(List<Status> tweets)
+    static Tweet[] create(List<Status> tweets)
     {
 	NullCheck.notNull(tweets, "tweets");
-	final List<TweetWrapper> wrappers = new LinkedList<TweetWrapper>();
+	final List<Tweet> wrappers = new LinkedList();
 	for(Status s: tweets)
-	    wrappers.add(new TweetWrapper(s));
-	return wrappers.toArray(new TweetWrapper[wrappers.size()]);
+	    wrappers.add(new Tweet(s));
+	return wrappers.toArray(new Tweet[wrappers.size()]);
     }
 }

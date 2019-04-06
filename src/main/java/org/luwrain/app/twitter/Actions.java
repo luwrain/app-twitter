@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -58,7 +58,7 @@ class Actions
 	if (query == null || query.trim().isEmpty())
 	    return true;
 	return base.run(()->{
-		final TweetWrapper[] wrappers = base.searchTweets(query, 10);
+		final Tweet[] wrappers = base.searchTweets(query, 10);
 		if (wrappers == null)
 		{
 		    luwrain.runUiSafely(()->luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR));
@@ -96,7 +96,7 @@ class Actions
 	    });
     }
 
-    boolean onShowUserTimeline(TwitterApp app)
+    boolean onShowUserTimeline(App app)
     {
 	NullCheck.notNull(app, "app");
 	if (base.isBusy())
@@ -105,7 +105,7 @@ class Actions
 	if (userName == null || userName.trim().isEmpty())
 	    return true;
 	return base.run(()->{
-		final TweetWrapper[] wrappers = base.getUserTimeline(userName);
+		final Tweet[] wrappers = base.getUserTimeline(userName);
 		if (wrappers == null)
 		{
 		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
@@ -117,7 +117,7 @@ class Actions
 	    });
     }
 
-    boolean onSearch(TwitterApp app)
+    boolean onSearch(App app)
     {
 	NullCheck.notNull(app, "app");
 	if (base.isBusy())
@@ -126,7 +126,7 @@ class Actions
 	if (query == null)
 	    return true;
 	return base.run(()->{
-		final TweetWrapper[] wrappers = base.searchTweets(query, 1);
+		final Tweet[] wrappers = base.searchTweets(query, 1);
 		if (wrappers == null)
 		{
 		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
@@ -167,7 +167,7 @@ class Actions
 	return ConsoleArea2.InputHandler.Result.CLEAR_INPUT;
     }
 
-    boolean onDestroyStatus(TweetWrapper tweet, ConsoleArea2 area)
+    boolean onDestroyStatus(Tweet tweet, ConsoleArea2 area)
     {
 	NullCheck.notNull(tweet, "tweet");
 	NullCheck.notNull(area, "area");
@@ -193,7 +193,7 @@ class Actions
 	return true;
     }
 
-    boolean onCreateFavourite(TweetWrapper tweet, ConsoleArea2 area)
+    boolean onCreateFavourite(Tweet tweet, ConsoleArea2 area)
     {
 	NullCheck.notNull(tweet, "tweet");
 	NullCheck.notNull(area, "area");
@@ -217,7 +217,7 @@ class Actions
 	return true;
     }
 
-    boolean onRetweetStatus(TweetWrapper tweet, ConsoleArea2 area)
+    boolean onRetweetStatus(Tweet tweet, ConsoleArea2 area)
     {
 	NullCheck.notNull(tweet, "tweet");
 	NullCheck.notNull(area, "area");
@@ -247,9 +247,9 @@ class Actions
 	if (base.isBusy() || !base.isAccountActivated())
 	    return false;
 	final Object obj = tweetsArea.selected();
-	if (obj == null || !(obj instanceof TweetWrapper))
+	if (obj == null || !(obj instanceof Tweet))
 	    return false;
-	final TweetWrapper wrapper = (TweetWrapper)obj;
+	final Tweet wrapper = (Tweet)obj;
 	base.run(()->{
 		try {
 		    base.getTwitter().createFriendship(wrapper.getAuthorId(), true);
@@ -297,9 +297,9 @@ class Actions
 	NullCheck.notNull(listArea, "listArea");
 	if (!base.isReadyForQuery())
 	    return false;
-	if (listArea.selected() == null || !(listArea.selected() instanceof TweetWrapper))
+	if (listArea.selected() == null || !(listArea.selected() instanceof Tweet))
 	    return false;
-	final TweetWrapper tweetWrapper = (TweetWrapper)listArea.selected();
+	final Tweet tweetWrapper = (Tweet)listArea.selected();
 	if (!conv.confirmLikeDeleting(tweetWrapper))
 	    return true;
 	base.run(()->{
@@ -319,7 +319,7 @@ class Actions
 	return true;
     }
 
-    static private void showTweets(Area area, TweetWrapper[] wrappers)
+    static private void showTweets(Area area, Tweet[] wrappers)
     {
 	NullCheck.notNull(area, "area");
 	NullCheck.notNullItems(wrappers, "wrappers");

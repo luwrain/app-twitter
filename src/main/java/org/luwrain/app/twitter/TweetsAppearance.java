@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -38,12 +38,12 @@ class TweetsAppearance implements ListArea.Appearance
     {
 	NullCheck.notNull(item, "item");
 	NullCheck.notNull(flags, "flags");
-	if (!(item instanceof TweetWrapper))
+	if (!(item instanceof Tweet))
 	{
 	    luwrain.setEventResponse(DefaultEventResponse.listItem(item.toString(), Suggestions.LIST_ITEM));
 	    return;
 	}
-	final TweetWrapper wrapper = (TweetWrapper)item;
+	final Tweet wrapper = (Tweet)item;
 	luwrain.setEventResponse(DefaultEventResponse.listItem(wrapper.toString(), Suggestions.LIST_ITEM));
     }
 

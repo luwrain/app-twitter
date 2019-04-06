@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -30,7 +30,7 @@ class StatusArea extends ConsoleArea2
 	super(createParams(context, model, clickHandler, inputHandler));
     }
 
-    void setTweets(TweetWrapper[] tweets)
+    void setTweets(Tweet[] tweets)
     {
 	NullCheck.notNullItems(tweets, "tweets");
     }
@@ -68,13 +68,13 @@ static private class StatusAppearance implements ConsoleArea2.Appearance
     @Override public void announceItem(Object item)
     {
 	NullCheck.notNull(item, "item");
-	if (!(item instanceof TweetWrapper))
+	if (!(item instanceof Tweet))
 	{
 	context.playSound(Sounds.LIST_ITEM);
 	context.say(item.toString());
 	return;
 	}
-	final TweetWrapper wrapper = (TweetWrapper)item;
+	final Tweet wrapper = (Tweet)item;
 	if (wrapper.tweet.isFavorited())
 	context.playSound(Sounds.PARAGRAPH); else
 	context.playSound(Sounds.LIST_ITEM);

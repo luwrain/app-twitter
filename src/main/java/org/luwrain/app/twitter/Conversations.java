@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -59,13 +59,13 @@ return res;
 	return (Account)res;
     }
 
-    boolean confirmTweetDeleting(TweetWrapper tweet)
+    boolean confirmTweetDeleting(Tweet tweet)
     {
 	NullCheck.notNull(tweet, "tweet");
 	return Popups.confirmDefaultNo(luwrain, "Удаление твита", "Вы действительно хотите удалить твит \"" + tweet.getText() + "\"?");
     }
 
-    boolean confirmLikeDeleting(TweetWrapper tweet)
+    boolean confirmLikeDeleting(Tweet tweet)
     {
 	NullCheck.notNull(tweet, "tweet");
 	return Popups.confirmDefaultNo(luwrain, "Отмена лайка", "Вы действительно хотите отменить лайк \"" + tweet.getText() + "\"?");
