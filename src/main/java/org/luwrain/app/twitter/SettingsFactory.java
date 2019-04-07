@@ -34,7 +34,10 @@ class SettingsFactory implements org.luwrain.cpanel.Factory
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	this.luwrain = luwrain;
-	this.strings = new Strings();//FIXME:
+		final Object o = luwrain.i18n().getStrings(Strings.NAME);
+	if (o == null || !(o instanceof Strings))
+	    throw new RuntimeException("No strings object " + Strings.NAME);
+	  this.strings = (Strings)o;
     }
 
     @Override public Element[] getElements()

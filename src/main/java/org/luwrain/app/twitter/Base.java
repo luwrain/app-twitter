@@ -1,7 +1,7 @@
 /*
    Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-s   This file is part of LUWRAIN.
+   This file is part of LUWRAIN.
 
    LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
@@ -27,8 +27,6 @@ import org.luwrain.controls.*;
 
 final class Base
 {
-    private final Executor executor = Executors.newSingleThreadExecutor();
-
     final Luwrain luwrain;
     final Strings strings;
     private Twitter twitter = null;
@@ -37,6 +35,8 @@ final class Base
     Tweet[] homeTimeline = new Tweet[0];
     private Tweet[] tweets = new Tweet[0];
     private FutureTask task = null;
+
+    private Area[] visibleAreas = new Area[0];
 
     Base(Luwrain luwrain, Strings strings)
     {
@@ -47,14 +47,22 @@ final class Base
 	this.statusModel = new StatusModel();
     }
 
-    Auth createAuth() throws TwitterException
-    {
-	return new Auth("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret");
-    }
-
     boolean isBusy()
     {
 	return task != null && !task.isDone();
+    }
+
+        void done()
+    {
+	this.task = null;
+			for(Area a: visibleAreas)
+	    luwrain.onAreaNewBackgroundSound(a);
+    }
+
+    void setVisibleAreas(Area[] areas)
+    {
+	NullCheck.notNullItems(areas, "areas");
+	this.visibleAreas = areas.clone();
     }
 
     boolean run(Runnable runnable)
@@ -64,6 +72,8 @@ final class Base
 	    return false;
 	task = new FutureTask(runnable, null);
 	luwrain.executeBkg(task);
+		for(Area a: visibleAreas)
+	    luwrain.onAreaNewBackgroundSound(a);
 	return true;
     }
 
@@ -73,7 +83,7 @@ final class Base
 	if (isBusy())
 	    return false;
 	task = new FutureTask(callable);
-	executor.execute(task);
+	luwrain.executeBkg(task);
 	try {
 	    return task.get();
 	}
@@ -86,36 +96,6 @@ final class Base
 	    Thread.currentThread().interrupt();
 	    return null;
 	}
-    }
-
-    void done()
-    {
-	this.task = null;
-    }
-
-    boolean activateAccount(Account account)
-    {
-	NullCheck.notNull(account, "account");
-	if (twitter != null)
-	    return false;
-	twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
-				account.accessToken, account.accessTokenSecret);
-	return twitter != null;
-    }
-
-    Twitter getTwitter()
-    {
-	return twitter;
-    }
-
-    boolean isAccountActivated()
-    {
-	return twitter != null;
-    }
-
-    boolean isReadyForQuery()
-    {
-	return isAccountActivated() && !isBusy();
     }
 
     void closeAccount()
@@ -154,28 +134,6 @@ final class Base
 	}
     }
 
-    synchronized void updateHomeTimeline()
-    {
-	NullCheck.notNull(twitter, "twitter");
-	try {
-	    final List<Status> result = twitter.getHomeTimeline();
-	    if (result == null)
-	    {
-		homeTimeline = new Tweet[0];
-		return;
-	    }
-	    final List<Tweet> wrappers = new LinkedList();
-	    for(Status s: result)
-		wrappers.add(new Tweet(s));
-	    homeTimeline = wrappers.toArray(new Tweet[wrappers.size()]);
-	}
-	catch (TwitterException e)
-	{
-	    luwrain.crash(e);
-	    tweets = new Tweet[0];
-	}
-    }
-
     Settings.Account getAccountSettings(String accountName)
     {
 	NullCheck.notEmpty(accountName, "accountName");
@@ -208,6 +166,31 @@ final class Base
 		return a;
 	}
 	return null;
+    }
+
+        boolean isAccountActivated()
+    {
+	return twitter != null;
+    }
+
+        Twitter getTwitter()
+    {
+	return twitter;
+    }
+
+    Auth createAuth() throws TwitterException
+    {
+	return new Auth("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret");
+    }
+
+        boolean activateAccount(Account account)
+    {
+	NullCheck.notNull(account, "account");
+	if (twitter != null)
+	    return false;
+		twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
+				account.accessToken, account.accessTokenSecret);
+	return twitter != null;
     }
 
     private class StatusModel implements ListArea.Model

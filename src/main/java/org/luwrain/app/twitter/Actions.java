@@ -70,10 +70,10 @@ final class Actions
 	    });
     }
 
-    boolean activateAccount(ListArea statusArea, Account account)
+    boolean activateAccount(Account account, Runnable onSuccess)
     {
-	NullCheck.notNull(statusArea, "statusArea");
 	NullCheck.notNull(account, "account");
+	NullCheck.notNull(onSuccess, "onSuccess");
 	if (base.isBusy())
 	    return false;
 	if (base.isAccountActivated())
@@ -84,15 +84,19 @@ final class Actions
 	    return true;
 	}
 	return base.run(()->{
-		base.updateHomeTimeline();
-		luwrain.runUiSafely(()->{
-			statusArea.refresh();
-			luwrain.setActiveArea(statusArea);
-		    });
+		try {
+		    updateHomeTimeline();
+		    done();
+		    luwrain.runUiSafely(onSuccess);
+		}
+		catch(TwitterException e)
+		{
+		    onExceptionBkg(e);
+		}
 	    });
     }
 
-    boolean onShowUserTimeline(Consumer onSuccess)
+    boolean onShowUserTimeline(BiConsumer onSuccess)
     {
 	NullCheck.notNull(onSuccess, "onSuccess");
 	if (base.isBusy())
@@ -104,7 +108,7 @@ final class Actions
 		try {
 		    final TweetsPager pager = new TweetsPager((fromPos,count)->getUserTimeline(userName));
 		    done();
-		    luwrain.runUiSafely(()->onSuccess.accept(pager));
+		    luwrain.runUiSafely(()->onSuccess.accept(userName, pager));
 		}
 		catch(TwitterException e)
 		{
@@ -113,11 +117,11 @@ final class Actions
 	    });
     }
 
-    boolean onUpdateStatus(String[] lines, Runnable onSuccess)
+    boolean onStatusUpdate(String[] lines, Runnable onSuccess)
     {
 	NullCheck.notNullItems(lines, "lines");
 	NullCheck.notNull(onSuccess, "onSuccess");
-	if (!base.isReadyForQuery())
+	if (base.isBusy())
 	    return false;
 	final String text = makeTweetText(lines);
 	if (text.isEmpty())
@@ -132,83 +136,70 @@ final class Actions
 		catch (TwitterException e)
 		{
 		    onExceptionBkg(e);
-		    return;
 		}
 	    });
     }
 
-    boolean onDestroyStatus(Tweet tweet, ListArea area)
+    boolean onStatusDelete(Tweet tweet, Runnable onSuccess)
     {
 	NullCheck.notNull(tweet, "tweet");
-	NullCheck.notNull(area, "area");
-	if (!base.isReadyForQuery())
+	NullCheck.notNull(onSuccess, "onSuccess");
+	if (base.isBusy())
 	    return false;
 	if (!conv.confirmTweetDeleting(tweet))
 	    return true;
-	base.run(()->{
+	return base.run(()->{
 		try {
 		    base.getTwitter().destroyStatus(tweet.tweet.getId());
+		    updateHomeTimeline();
+		    done();
+		    luwrain.runUiSafely(onSuccess);
 		}
 		catch (TwitterException e)
 		{
-		    luwrain.crash(e);
-		    return;
+		    onExceptionBkg(e);
 		}
-		base.updateHomeTimeline();
-		luwrain.runUiSafely(()->{
-			area.refresh();
-			luwrain.playSound(Sounds.DONE);
-		    }); 
 	    });
-	return true;
     }
 
-    boolean onCreateFavourite(Tweet tweet, ListArea area)
+    boolean onCreateFavourite(Tweet tweet, Runnable onSuccess)
     {
 	NullCheck.notNull(tweet, "tweet");
-	NullCheck.notNull(area, "area");
-	if (!base.isReadyForQuery())
+	NullCheck.notNull(onSuccess, "onSuccess");
+	if (base.isBusy())
 	    return false;
-	base.run(()->{
+	return base.run(()->{
 		try {
 		    base.getTwitter().createFavorite(tweet.tweet.getId());
+		    updateHomeTimeline();
+		    done();
+		    luwrain.runUiSafely(onSuccess);
 		}
 		catch (TwitterException e)
 		{
-		    luwrain.crash(e);
-		    return;
+		    onExceptionBkg(e);
 		}
-		base.updateHomeTimeline();
-		luwrain.runUiSafely(()->{
-			area.refresh();
-			luwrain.playSound(Sounds.DONE);
-		    }); 
 	    });
-	return true;
     }
 
-    boolean onRetweetStatus(Tweet tweet, ListArea area)
+    boolean onRetweetStatus(Tweet tweet, Runnable onSuccess)
     {
 	NullCheck.notNull(tweet, "tweet");
-	NullCheck.notNull(area, "area");
-	if (!base.isReadyForQuery())
+	NullCheck.notNull(onSuccess, "onSuccess");
+	if (base.isBusy())
 	    return false;
-	base.run(()->{
+	return base.run(()->{
 		try {
 		    base.getTwitter().retweetStatus(tweet.tweet.getId());
+		    updateHomeTimeline();
+		    done();
+		    luwrain.runUiSafely(onSuccess);
 		}
 		catch (TwitterException e)
 		{
-		    luwrain.crash(e);
-		    return;
+		    onExceptionBkg(e);
 		}
-		base.updateHomeTimeline();
-		luwrain.runUiSafely(()->{
-			area.refresh();
-			luwrain.playSound(Sounds.DONE);
-		    }); 
 	    });
-	return true;
     }
 
     boolean onFollowAuthor(ListArea tweetsArea)
@@ -265,7 +256,7 @@ final class Actions
     boolean onDeleteLike(ListArea listArea)
     {
 	NullCheck.notNull(listArea, "listArea");
-	if (!base.isReadyForQuery())
+	if (base.isBusy())
 	    return false;
 	if (listArea.selected() == null || !(listArea.selected() instanceof Tweet))
 	    return false;
@@ -336,7 +327,19 @@ final class Actions
 
     private String makeTweetText(String[] lines)
     {
-	return "FIXME:";
+	NullCheck.notNullItems(lines, "lines");
+	if (lines.length == 0)
+	    return "";
+	final List<String> validLines = new LinkedList();
+	for(String s: lines)
+	    if (!s.trim().isEmpty())
+		validLines.add(s.trim());
+	if (validLines.isEmpty())
+	    return "";
+	final StringBuilder b = new StringBuilder();
+	for(String s: validLines)
+	    b.append(s).append(" ");
+	return new String(b).toString();
     }
 
     private void done()
@@ -354,6 +357,7 @@ final class Actions
     {
 	NullCheck.notNull(e, "e");
 	luwrain.crash(e);
+	done();
     }
 
     static private void showTweets(Area area, Tweet[] wrappers)

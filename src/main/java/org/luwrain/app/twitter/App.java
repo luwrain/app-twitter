@@ -25,7 +25,7 @@ import org.luwrain.core.queries.*;
 import org.luwrain.controls.*;
 import org.luwrain.popups.*;
 
-final class App implements Application
+final class App implements Application, MonoApp
 {
     private Luwrain luwrain = null;
     private Strings strings = null;
@@ -46,46 +46,34 @@ final class App implements Application
 	final Object o = luwrain.i18n().getStrings(Strings.NAME);
 	if (o == null || !(o instanceof Strings))
 	    return new InitResult(InitResult.Type.NO_STRINGS_OBJ, Strings.NAME);
-	  this.strings = (Strings)o;
+	this.strings = (Strings)o;
 	this.luwrain = luwrain;
 	this.base = new Base(luwrain, strings);
 	this.actions = new Actions(base);
 	createAreas();
-
-
-					final Account account = findInitialAccount();
-					if (account != null)
-					{
-					    actions.activateAccount(account, ()->{
-						    statusArea.refresh();
-						    luwrain.announceActiveArea();
-						});
-
-					    	layout = new AreaLayoutHelper(()->{
-					base.setVisibleAreas(layout.getLayout().getAreas());
-		luwrain.onNewAreaLayout();
-		luwrain.announceActiveArea();
-	    }, new AreaLayout(AreaLayout.TOP_BOTTOM, statusArea, postArea));
-
-
-					} else
-					{
-
-					    	layout = new AreaLayoutHelper(()->{
-					base.setVisibleAreas(layout.getLayout().getAreas());
-		luwrain.onNewAreaLayout();
-		luwrain.announceActiveArea();
-	    }, new AreaLayout(accessTokenForm));
-
-						
-					}
-
-									base.setVisibleAreas(layout.getLayout().getAreas());
-
-
+	final Account account = findInitialAccount();
+	if (account != null)
+	{
+	    actions.activateAccount(account, ()->{
+		    statusArea.refresh();
+		    luwrain.announceActiveArea();
+		});
+	    layout = new AreaLayoutHelper(()->{
+		    base.setVisibleAreas(layout.getLayout().getAreas());
+		    luwrain.onNewAreaLayout();
+		    luwrain.announceActiveArea();
+		}, new AreaLayout(AreaLayout.TOP_BOTTOM, statusArea, postArea));
+	} else
+	{
+	    layout = new AreaLayoutHelper(()->{
+		    base.setVisibleAreas(layout.getLayout().getAreas());
+		    luwrain.onNewAreaLayout();
+		    luwrain.announceActiveArea();
+		}, new AreaLayout(accessTokenForm));
+	}
+	base.setVisibleAreas(layout.getLayout().getAreas());
 	return new InitResult();
     }
-
 
     private void createAreas()
     {
@@ -103,9 +91,9 @@ final class App implements Application
 			{
 			case TAB:
 			    /*
-			    if (!layout.hasAdditionalArea())
-				return false;
-			    luwrain.setActiveArea(layout.getAdditionalArea());
+			      if (!layout.hasAdditionalArea())
+			      return false;
+			      luwrain.setActiveArea(layout.getAdditionalArea());
 			    */
 			    luwrain.setActiveArea(postArea);
 			    return true;
@@ -142,10 +130,15 @@ final class App implements Application
 			    final Object obj = selected();
 			    if (obj == null || !(obj instanceof Tweet))
 				return false;
-			    return actions.onDestroyStatus((Tweet)obj, ()->statusArea.refresh());
+			    return actions.onStatusDelete((Tweet)obj, ()->{
+				    statusArea.refresh();
+				    luwrain.playSound(Sounds.OK);
+				});
 			}
 			if (ActionEvent.isAction(event, "user-timeline"))
-			    return actions.onShowUserTimeline((pager)->{showTweetsArea("FIXME", (TweetsPager)pager);});
+			    return actions.onShowUserTimeline((userName, pager)->{
+				    showTweetsArea(strings.userTimelineAreaName(userName.toString()), (TweetsPager)pager, ()->layout.closeTempLayout());
+				});
 			if (ActionEvent.isAction(event, "show-friends"))
 			    return onShowFriends();
 			if (ActionEvent.isAction(event, "show-likes"))
@@ -162,22 +155,22 @@ final class App implements Application
 			return super.onSystemEvent(event);
 		    }
 		}
-		    @Override public boolean onAreaQuery(AreaQuery query)
-    {
-	NullCheck.notNull(query, "query");
-	switch(query.getQueryCode())
-	{
-	case AreaQuery.BACKGROUND_SOUND:
-	    if (base.isBusy())
-	    {
-		((BackgroundSoundQuery)query).answer(new BackgroundSoundQuery.Answer(BkgSounds.FETCHING));
-		return true;
-	    }
-	    return false;
-	default:
-	    return super.onAreaQuery(query);
-	}
-    }
+		@Override public boolean onAreaQuery(AreaQuery query)
+		{
+		    NullCheck.notNull(query, "query");
+		    switch(query.getQueryCode())
+		    {
+		    case AreaQuery.BACKGROUND_SOUND:
+			if (base.isBusy())
+			{
+			    ((BackgroundSoundQuery)query).answer(new BackgroundSoundQuery.Answer(BkgSounds.FETCHING));
+			    return true;
+			}
+			return false;
+		    default:
+			return super.onAreaQuery(query);
+		    }
+		}
 		@Override public Action[] getAreaActions()
 		{
 		    if (!base.isAccountActivated())
@@ -197,8 +190,11 @@ final class App implements Application
 			switch(event.getSpecial())
 			{
 			case TAB:
-			    luwrain.setActiveArea(statusArea);
+			    {
+								final Area[] areas = layout.getLayout().getAreas();
+			    luwrain.setActiveArea(areas[0]);
 			    return true;
+			    }
 			}
 		    return super.onInputEvent(event);
 		}
@@ -210,17 +206,37 @@ final class App implements Application
 		    switch(event.getCode())
 		    {
 		    case OK:
-			return actions.onUpdateStatus(getLines(), ()->statusArea.refresh());
+			return actions.onStatusUpdate(getLines(), ()->{
+				luwrain.playSound(Sounds.OK);
+				statusArea.refresh();
+				postArea.clear();
+			    });
 		    case CLOSE:
 			closeApp();
 			return true;
 		    default:
-		    return super.onSystemEvent(event);
+			return super.onSystemEvent(event);
+		    }
+		}
+				@Override public boolean onAreaQuery(AreaQuery query)
+		{
+		    NullCheck.notNull(query, "query");
+		    switch(query.getQueryCode())
+		    {
+		    case AreaQuery.BACKGROUND_SOUND:
+			if (base.isBusy())
+			{
+			    ((BackgroundSoundQuery)query).answer(new BackgroundSoundQuery.Answer(BkgSounds.FETCHING));
+			    return true;
+			}
+			return false;
+		    default:
+			return super.onAreaQuery(query);
 		    }
 		}
 	    };
 
-	accessTokenForm = new AccessTokenForm(luwrain, this, strings, base) {
+	this.accessTokenForm = new AccessTokenForm(luwrain, this, strings, base) {
 		@Override public boolean onSystemEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -240,7 +256,7 @@ final class App implements Application
 
     private Account findInitialAccount()
     {
-		final Settings.Main sett = Settings.createMain(luwrain.getRegistry());
+	final Settings.Main sett = Settings.createMain(luwrain.getRegistry());
 	final String defaultAccountName = sett.getDefaultAccount("");
 	if (!defaultAccountName.trim().isEmpty())
 	{
@@ -254,7 +270,6 @@ final class App implements Application
 		return a;
 	return null;
     }
-
 
     private boolean onChangeAccount()
     {
@@ -270,15 +285,16 @@ final class App implements Application
 	return true;
     }
 
-	    void showTweetsArea(String title, TweetsPager pager)
+    private void showTweetsArea(String name, TweetsPager pager, Runnable closing)
     {
-	NullCheck.notEmpty(title, "title");
+	NullCheck.notEmpty(name, "name");
 	NullCheck.notNull(pager, "pager");
+	NullCheck.notNull(closing, "closing");
 	final ListArea.Params tweetsParams = new ListArea.Params();
 	tweetsParams.context = new DefaultControlEnvironment(luwrain);
 	tweetsParams.model = new ListUtils.FixedModel(pager.getTweets());
 	tweetsParams.appearance = new TweetsAppearance(luwrain, strings);
-	tweetsParams.name = title;
+	tweetsParams.name = name;
 	final ListArea area = new ListArea(tweetsParams) {
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
@@ -287,7 +303,7 @@ final class App implements Application
 			switch(event.getSpecial())
 			{
 			case ESCAPE:
-			    layout.closeTempLayout();
+			    closing.run();
 			    return true;
 			case TAB:
 			    luwrain.setActiveArea(statusArea);
@@ -308,7 +324,7 @@ final class App implements Application
 			if (ActionEvent.isAction(event, "search"))
 			    return actions.search(/*App.this*/null);
 			if (ActionEvent.isAction(event, "user-timeline"))
-			    return actions.onShowUserTimeline((pager)->{/*FIXME*/});
+			    return actions.onShowUserTimeline((userName,pager)->{/*FIXME*/});
 			return false;
 		    case CLOSE:
 			closeApp();
@@ -324,10 +340,9 @@ final class App implements Application
 		    return ActionLists.getTweetsActions();
 		}
 	    };
-	layout.openTempLayout(new AreaLayout(AreaLayout.LEFT_TOP_BOTTOM, statusArea, postArea, area));
+	layout.openTempLayout(new AreaLayout(AreaLayout.LEFT_TOP_BOTTOM, area, statusArea, postArea));
 	luwrain.setActiveArea(area);
     }
-
 
     private boolean onShowFriends()
     {
@@ -479,8 +494,6 @@ return ActionLists.getLikesActions(selected());
 	return true;
     }
 
-
-
     private boolean startAccountAuth(Account account)
     {
 	NullCheck.notNull(account, "account");
@@ -528,5 +541,11 @@ return ActionLists.getLikesActions(selected());
     @Override public String getAppName()
     {
 	return strings.appName();
+    }
+
+    @Override public MonoApp.Result onMonoAppSecondInstance(Application app)
+    {
+	NullCheck.notNull(app, "app");
+	return MonoApp.Result.BRING_FOREGROUND;
     }
 }

@@ -47,5 +47,6 @@ public interface Strings
     String searchPopupName();
     String searchPopupPrefix();
     String statusAreaName();
+    String userTimelineAreaName(String userName);
     String youShouldConnect();
 }
