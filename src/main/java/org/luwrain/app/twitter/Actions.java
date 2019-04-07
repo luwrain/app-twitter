@@ -17,6 +17,8 @@
 package org.luwrain.app.twitter;
 
 import java.util.*;
+import java.util.function.*;
+
 import twitter4j.*;
 
 import org.luwrain.core.*;
@@ -24,29 +26,27 @@ import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.popups.Popups;
 
-class Actions
+final class Actions
 {
     static final int MAX_TWEET_LEN = 140;
 
     private final Luwrain luwrain;
-    private final Base base;
     private final Strings strings;
+    private final Base base;
     final Conversations conv;
 
-    Actions(Luwrain luwrain, Base base, Strings strings)
+    Actions(Base base)
     {
-	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notNull(base, "base");
-	NullCheck.notNull(strings, "strings");
-	this.luwrain = luwrain;
+	this.luwrain = base.luwrain;
+	this.strings = base.strings;
 	this.base = base;
-	this.strings = strings;
 	this.conv = new Conversations(luwrain, base, strings);
     }
 
-    boolean search(Area destArea)
+    boolean search(Consumer onSuccess)
     {
-	NullCheck.notNull(destArea, "destArea");
+	NullCheck.notNull(onSuccess, "onSuccess");
 	if (base.isBusy())
 	    return false;
 	if (!base.isAccountActivated())
@@ -58,22 +58,19 @@ class Actions
 	if (query == null || query.trim().isEmpty())
 	    return true;
 	return base.run(()->{
-		final Tweet[] wrappers = base.searchTweets(query, 10);
-		if (wrappers == null)
-		{
-		    luwrain.runUiSafely(()->luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR));
-		    return;
+		try {
+		    final TweetsPager pager = new TweetsPager((fromPos,count)->searchTweets(query, 1));
+		    done();
+		    luwrain.runUiSafely(()->onSuccess.accept(pager));
 		}
-		if (wrappers.length <= 0)
+		catch(TwitterException e)
 		{
-		    luwrain.runUiSafely(()->luwrain.message(strings.nothingFound(), Luwrain.MessageType.ERROR));
-		    return;
+		    onExceptionBkg(e);
 		}
-		luwrain.runUiSafely(()->showTweets(destArea, wrappers));
 	    });
     }
 
-    boolean activateAccount(StatusArea statusArea, Account account)
+    boolean activateAccount(ListArea statusArea, Account account)
     {
 	NullCheck.notNull(statusArea, "statusArea");
 	NullCheck.notNull(account, "account");
@@ -89,85 +86,58 @@ class Actions
 	return base.run(()->{
 		base.updateHomeTimeline();
 		luwrain.runUiSafely(()->{
-			statusArea.setInputPrefix(account.name + ">");
 			statusArea.refresh();
 			luwrain.setActiveArea(statusArea);
 		    });
 	    });
     }
 
-    boolean onShowUserTimeline(App app)
+    boolean onShowUserTimeline(Consumer onSuccess)
     {
-	NullCheck.notNull(app, "app");
+	NullCheck.notNull(onSuccess, "onSuccess");
 	if (base.isBusy())
 	    return false;
 	final String userName = conv.askUserNameToShowTimeline();
 	if (userName == null || userName.trim().isEmpty())
 	    return true;
 	return base.run(()->{
-		final Tweet[] wrappers = base.getUserTimeline(userName);
-		if (wrappers == null)
-		{
-		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
-		    return;
+		try {
+		    final TweetsPager pager = new TweetsPager((fromPos,count)->getUserTimeline(userName));
+		    done();
+		    luwrain.runUiSafely(()->onSuccess.accept(pager));
 		}
-		luwrain.runUiSafely(()->{
-			app.showTweetsArea("Твиты пользователя \"" + userName + "\"", wrappers);
-		    });
+		catch(TwitterException e)
+		{
+		    onExceptionBkg(e);
+		}
 	    });
     }
 
-    boolean onSearch(App app)
+    boolean onUpdateStatus(String[] lines, Runnable onSuccess)
     {
-	NullCheck.notNull(app, "app");
-	if (base.isBusy())
+	NullCheck.notNullItems(lines, "lines");
+	NullCheck.notNull(onSuccess, "onSuccess");
+	if (!base.isReadyForQuery())
 	    return false;
-	final String query = conv.askSearchQuery();
-	if (query == null)
-	    return true;
+	final String text = makeTweetText(lines);
+	if (text.isEmpty())
+	    return false;
 	return base.run(()->{
-		final Tweet[] wrappers = base.searchTweets(query, 1);
-		if (wrappers == null)
-		{
-		    luwrain.message(strings.requestProblem(), Luwrain.MessageType.ERROR);
-		    return;
-		}
-		luwrain.runUiSafely(()->{
-			app.showTweetsArea("Результаты поиска по фразе \"" + query + "\"", wrappers);
-		    });
-	    });
-    }
-
-    ConsoleArea2.InputHandler.Result onUpdateStatus(String text, ConsoleArea2 area)
-    {
-	NullCheck.notNull(text, "text");
-	NullCheck.notNull(area, "area");
-	if (text.isEmpty() || !base.isReadyForQuery())
-	    return ConsoleArea2.InputHandler.Result.REJECTED;
-	if (text.length() > MAX_TWEET_LEN)
-	{
-	    luwrain.message("Слишком длинный твит", Luwrain.MessageType.ERROR);
-	    return ConsoleArea2.InputHandler.Result.OK;
-	}
-	base.run(()->{
 		try {
 		    base.getTwitter().updateStatus(text);
+		    updateHomeTimeline();
+		    done();
+		    luwrain.runUiSafely(onSuccess);
 		}
 		catch (TwitterException e)
 		{
-		    luwrain.crash(e);
+		    onExceptionBkg(e);
 		    return;
 		}
-		base.updateHomeTimeline();
-		luwrain.runUiSafely(()->{
-			area.refresh();
-			luwrain.playSound(Sounds.DONE);
-		    }); 
 	    });
-	return ConsoleArea2.InputHandler.Result.CLEAR_INPUT;
     }
 
-    boolean onDestroyStatus(Tweet tweet, ConsoleArea2 area)
+    boolean onDestroyStatus(Tweet tweet, ListArea area)
     {
 	NullCheck.notNull(tweet, "tweet");
 	NullCheck.notNull(area, "area");
@@ -193,7 +163,7 @@ class Actions
 	return true;
     }
 
-    boolean onCreateFavourite(Tweet tweet, ConsoleArea2 area)
+    boolean onCreateFavourite(Tweet tweet, ListArea area)
     {
 	NullCheck.notNull(tweet, "tweet");
 	NullCheck.notNull(area, "area");
@@ -217,7 +187,7 @@ class Actions
 	return true;
     }
 
-    boolean onRetweetStatus(Tweet tweet, ConsoleArea2 area)
+    boolean onRetweetStatus(Tweet tweet, ListArea area)
     {
 	NullCheck.notNull(tweet, "tweet");
 	NullCheck.notNull(area, "area");
@@ -311,12 +281,79 @@ class Actions
 		    luwrain.crash(e);
 		    return;
 		}
-		    luwrain.runUiSafely(()->{
-			    luwrain.playSound(Sounds.DONE);
-			    listArea.refresh();
-			});
+		luwrain.runUiSafely(()->{
+			luwrain.playSound(Sounds.DONE);
+			listArea.refresh();
+		    });
 	    });
 	return true;
+    }
+
+    void updateHomeTimeline() throws TwitterException
+    {
+	final List<Status> result = base.getTwitter().getHomeTimeline();
+	if (result == null)
+	{
+	    base.homeTimeline = new Tweet[0];
+	    return;
+	}
+	final List<Tweet> tweets = new LinkedList();
+	for(Status s: result)
+	    tweets.add(new Tweet(s));
+	base.homeTimeline = tweets.toArray(new Tweet[tweets.size()]);
+    }
+
+    Tweet[] getUserTimeline(String user) throws TwitterException
+    {
+	NullCheck.notEmpty(user, "user");
+	final List<Status> result = base.getTwitter().getUserTimeline(user);
+	if (result == null)
+	    return new Tweet[0];
+	final List<Tweet> tweets = new LinkedList();
+	for(Status s: result)
+	    tweets.add(new Tweet(s));
+	return tweets.toArray(new Tweet[tweets.size()]);
+    }
+
+    private Tweet[] searchTweets(String text, int pageCount) throws TwitterException
+    {
+	NullCheck.notEmpty(text, "text");
+	final List<Tweet> tweets = new LinkedList();
+	Query query = new Query(text);
+	QueryResult result;
+	int pageNum = 1;
+	do {
+	    result = base.getTwitter().search(query);
+	    List<Status> statuses = result.getTweets();
+	    for (Status tweet : statuses) 
+		tweets.add(new Tweet(tweet));
+	    if (pageNum >= pageCount)
+		return tweets.toArray(new Tweet[tweets.size()]);
+	    ++pageNum;
+	} while ((query = result.nextQuery()) != null);
+	return tweets.toArray(new Tweet[tweets.size()]);
+    }
+
+    private String makeTweetText(String[] lines)
+    {
+	return "FIXME:";
+    }
+
+    private void done()
+    {
+	luwrain.runUiSafely(()->base.done());
+    }
+
+    private void onExceptionBkg(Exception e)
+    {
+	NullCheck.notNull(e, "e");
+	luwrain.runUiSafely(()->onException(e));
+    }
+
+    private void onException(Exception e)
+    {
+	NullCheck.notNull(e, "e");
+	luwrain.crash(e);
     }
 
     static private void showTweets(Area area, Tweet[] wrappers)

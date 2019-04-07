@@ -1,7 +1,7 @@
 /*
    Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-   This file is part of LUWRAIN.
+s   This file is part of LUWRAIN.
 
    LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
@@ -25,21 +25,25 @@ import twitter4j.conf.ConfigurationLuwrain;
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
-class Base
+final class Base
 {
     private final Executor executor = Executors.newSingleThreadExecutor();
 
-    private final Luwrain luwrain;
+    final Luwrain luwrain;
+    final Strings strings;
     private Twitter twitter = null;
     final StatusModel statusModel;
 
+    Tweet[] homeTimeline = new Tweet[0];
     private Tweet[] tweets = new Tweet[0];
     private FutureTask task = null;
 
-    Base(Luwrain luwrain)
+    Base(Luwrain luwrain, Strings strings)
     {
 	NullCheck.notNull(luwrain, "luwrain");
+	NullCheck.notNull(strings, "strings");
 	this.luwrain = luwrain;
+	this.strings = strings;
 	this.statusModel = new StatusModel();
     }
 
@@ -59,7 +63,7 @@ class Base
 	if (isBusy())
 	    return false;
 	task = new FutureTask(runnable, null);
-	executor.execute(task);
+	luwrain.executeBkg(task);
 	return true;
     }
 
@@ -84,6 +88,11 @@ class Base
 	}
     }
 
+    void done()
+    {
+	this.task = null;
+    }
+
     boolean activateAccount(Account account)
     {
 	NullCheck.notNull(account, "account");
@@ -92,6 +101,11 @@ class Base
 	twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
 				account.accessToken, account.accessTokenSecret);
 	return twitter != null;
+    }
+
+    Twitter getTwitter()
+    {
+	return twitter;
     }
 
     boolean isAccountActivated()
@@ -109,24 +123,8 @@ class Base
 	twitter = null;
     }
 
-    Tweet[] getUserTimeline(String user)
-    {
-	NullCheck.notNull(user, "user");
-	if (twitter == null)
-	    return null;
-	return userTimeline(twitter, user);
-    }
-
-    Tweet[] searchTweets(String query, int numPages)
-    {
-	NullCheck.notNull(query, "query");
-	if (twitter == null)
-	    return null;
-	return search(twitter, query, numPages);
-    }
-
     static private Twitter createTwitter(String consumerKey, String consumerSecret,
-			  String accessToken, String accessTokenSecret)
+					 String accessToken, String accessTokenSecret)
     {
 	final ConfigurationLuwrain conf = new ConfigurationLuwrain(consumerKey, consumerSecret, accessToken, accessTokenSecret);
 	final Twitter twitter = new TwitterFactory(conf).getInstance();
@@ -138,36 +136,6 @@ class Base
 	    return null;
 	}
 	return twitter;
-    }
-
-    static private Tweet[] search(Twitter twitter, String text, int numPages)
-    {
-	NullCheck.notNull(twitter, "twitter");
-	NullCheck.notEmpty(text, "text");
-	if (numPages < 1)
-	    throw new IllegalArgumentException("numPages must be greater than zero");
-	final List<Tweet> wrappers = new LinkedList();
-	try {
-	    Query query = new Query(text);
-            QueryResult result;
-	    int pageNum = 1;
-            do {
-                result = twitter.search(query);
-                List<Status> tweets = result.getTweets();
-		System.out.println("" + tweets.size());
-                for (Status tweet : tweets) 
-		    wrappers.add(new Tweet(tweet));
-		if (pageNum >= numPages)
-		    return wrappers.toArray(new Tweet[wrappers.size()]);
-		++pageNum;
-            } while ((query = result.nextQuery()) != null);
-	    } 
-	catch (TwitterException e) 
-	{
-            e.printStackTrace();
-	    return null;
-        }
-	return wrappers.toArray(new Tweet[wrappers.size()]);
     }
 
     static boolean updateStatusImpl(Twitter twitter, String tweet)
@@ -193,38 +161,18 @@ class Base
 	    final List<Status> result = twitter.getHomeTimeline();
 	    if (result == null)
 	    {
-		tweets = new Tweet[0];
+		homeTimeline = new Tweet[0];
 		return;
 	    }
 	    final List<Tweet> wrappers = new LinkedList();
 	    for(Status s: result)
 		wrappers.add(new Tweet(s));
-tweets = wrappers.toArray(new Tweet[wrappers.size()]);
+	    homeTimeline = wrappers.toArray(new Tweet[wrappers.size()]);
 	}
 	catch (TwitterException e)
 	{
 	    luwrain.crash(e);
 	    tweets = new Tweet[0];
-	}
-    }
-
-    static private Tweet[] userTimeline(Twitter twitter, String user)
-    {
-	NullCheck.notNull(twitter, "twitter");
-	NullCheck.notEmpty(user, "user");
-	try {
-	    final List<Status> result = twitter.getUserTimeline(user);
-	    if (result == null)
-		return null;
-	    final List<Tweet> wrappers = new LinkedList();
-	    for(Status s: result)
-		wrappers.add(new Tweet(s));
-	    return wrappers.toArray(new Tweet[wrappers.size()]);
-	}
-	catch (TwitterException e)
-	{
-	    e.printStackTrace();
-	    return null;
 	}
     }
 
@@ -250,11 +198,6 @@ tweets = wrappers.toArray(new Tweet[wrappers.size()]);
 	return res.toArray(new Account[res.size()]);
     }
 
-    Twitter getTwitter()
-    {
-	return twitter;
-    }
-
     static Account findAccount(Account[] accounts, String name)
     {
 	NullCheck.notNullItems(accounts, "accounts");
@@ -267,18 +210,18 @@ tweets = wrappers.toArray(new Tweet[wrappers.size()]);
 	return null;
     }
 
-    private class StatusModel implements ConsoleArea2.Model
-{
-    @Override public int getConsoleItemCount()
+    private class StatusModel implements ListArea.Model
     {
-	return tweets.length;
+	@Override public int getItemCount()
+	{
+	    return homeTimeline.length;
+	}
+	@Override public Object getItem(int index)
+	{
+	    return homeTimeline[index];
+	}
+	@Override public void refresh()
+	{
+	}
     }
-
-    @Override public Object getConsoleItem(int index)
-    {
-	if (index < 0 || index >= tweets.length)
-	    throw new IllegalArgumentException("Illegal index value (" + index + ")");
-	return tweets[index];
-    }
-}
 }

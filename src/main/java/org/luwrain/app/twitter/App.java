@@ -31,7 +31,7 @@ final class App implements Application
     private Base base = null;
     private Actions actions = null;
 
-    private StatusArea statusArea = null;
+    private ListArea statusArea = null;
     private EditArea postArea = null;
     private AreaLayoutHelper layout = null;
 
@@ -50,8 +50,8 @@ final class App implements Application
 	*/
 	strings = new Strings();
 	this.luwrain = luwrain;
-	this.base = new Base(luwrain);
-	this.actions = new Actions(luwrain, base, strings);
+	this.base = new Base(luwrain, strings);
+	this.actions = new Actions(base);
 	createAreas();
 	layout = new AreaLayoutHelper(()->{
 		luwrain.onNewAreaLayout();
@@ -80,11 +80,12 @@ final class App implements Application
 
     private void createAreas()
     {
-	final ConsoleArea2.ClickHandler clickHandler = (area,index,obj)->{
-	    return false;
-	};
-	final ConsoleArea2.InputHandler inputHandler = (area,text)->actions.onUpdateStatus(text, area);
-	statusArea = new StatusArea(new DefaultControlContext(luwrain), base.statusModel, clickHandler, inputHandler) {
+	final ListArea.Params statusParams = new ListArea.Params();
+	statusParams.context = new DefaultControlContext(luwrain);
+	statusParams.model = base.statusModel;
+	statusParams.appearance = new ListUtils.DefaultAppearance(statusParams.context);
+	statusParams.name = strings.statusAreaName();
+	this.statusArea = new ListArea(statusParams){
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -92,9 +93,12 @@ final class App implements Application
 			switch(event.getSpecial())
 			{
 			case TAB:
+			    /*
 			    if (!layout.hasAdditionalArea())
 				return false;
 			    luwrain.setActiveArea(layout.getAdditionalArea());
+			    */
+			    luwrain.setActiveArea(postArea);
 			    return true;
 			case ESCAPE:
 			    closeApp();
@@ -132,13 +136,13 @@ final class App implements Application
 			    return actions.onDestroyStatus((Tweet)obj, this);
 			}
 			if (ActionEvent.isAction(event, "user-timeline"))
-			    return actions.onShowUserTimeline(App.this);
+			    return actions.onShowUserTimeline((pager)->{showTweetsArea("FIXME", (TweetsPager)pager);});
 			if (ActionEvent.isAction(event, "show-friends"))
 			    return onShowFriends();
 			if (ActionEvent.isAction(event, "show-likes"))
 			    return onShowLikes();
 			if (ActionEvent.isAction(event, "search"))
-			    return actions.onSearch(App.this);
+			    return actions.search(/*App.this*/null);
 			if (ActionEvent.isAction(event, "change-account"))
 			    return onChangeAccount();
 			return false;
@@ -160,7 +164,6 @@ final class App implements Application
 	final EditArea.Params postParams = new EditArea.Params();
 	postParams.context = new DefaultControlContext(luwrain);
 	postParams.name = "Новый твит";
-
 	this.postArea = new EditArea(postParams){
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
@@ -177,7 +180,18 @@ final class App implements Application
 		@Override public boolean onSystemEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onSystemEvent(event);
+		    switch(event.getCode())
+		    {
+		    case OK:
+			return actions.onUpdateStatus(getLines(), ()->statusArea.refresh());
+		    case CLOSE:
+			closeApp();
+			return true;
+		    default:
 		    return super.onSystemEvent(event);
+		    }
 		}
 	    };
 
@@ -210,13 +224,13 @@ final class App implements Application
 	return true;
     }
 
-    void showTweetsArea(String title, Tweet[] wrappers)
+	    void showTweetsArea(String title, TweetsPager pager)
     {
 	NullCheck.notEmpty(title, "title");
-	NullCheck.notNullItems(wrappers, "wrappers");
+	NullCheck.notNull(pager, "pager");
 	final ListArea.Params tweetsParams = new ListArea.Params();
 	tweetsParams.context = new DefaultControlEnvironment(luwrain);
-	tweetsParams.model = new ListUtils.FixedModel(wrappers);
+	tweetsParams.model = new ListUtils.FixedModel(pager.getTweets());
 	tweetsParams.appearance = new TweetsAppearance(luwrain, strings);
 	tweetsParams.name = title;
 	final ListArea area = new ListArea(tweetsParams) {
@@ -227,7 +241,7 @@ final class App implements Application
 			switch(event.getSpecial())
 			{
 			case ESCAPE:
-			    layout.closeAdditionalArea();
+			    layout.closeTempLayout();
 			    return true;
 			case TAB:
 			    luwrain.setActiveArea(statusArea);
@@ -246,9 +260,9 @@ final class App implements Application
 			if (ActionEvent.isAction(event, "follow-author"))
 			    return actions.onFollowAuthor(this);
 			if (ActionEvent.isAction(event, "search"))
-			    return actions.onSearch(App.this);
+			    return actions.search(/*App.this*/null);
 			if (ActionEvent.isAction(event, "user-timeline"))
-			    return actions.onShowUserTimeline(App.this);
+			    return actions.onShowUserTimeline((pager)->{/*FIXME*/});
 			return false;
 		    case CLOSE:
 			closeApp();
@@ -264,9 +278,10 @@ final class App implements Application
 		    return ActionLists.getTweetsActions();
 		}
 	    };
-	layout.openAdditionalArea(area, AreaLayoutHelper.Position.BOTTOM);
+	layout.openTempLayout(new AreaLayout(AreaLayout.LEFT_TOP_BOTTOM, statusArea, postArea, area));
 	luwrain.setActiveArea(area);
     }
+
 
     private boolean onShowFriends()
     {
