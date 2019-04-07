@@ -21,6 +21,7 @@ import twitter4j.*;
 
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
+import org.luwrain.core.queries.*;
 import org.luwrain.controls.*;
 import org.luwrain.popups.*;
 
@@ -42,41 +43,49 @@ final class App implements Application
     @Override public InitResult onLaunchApp(Luwrain luwrain)
     {
 	NullCheck.notNull(luwrain, "luwrain");
-	/*
-	  final Object o = luwrain.i18n().getStrings(Strings.NAME);
-	  if (o == null || !(o instanceof Strings))
-	  return false;
-	  strings = (Strings)o;
-	*/
-	strings = new Strings();
+	final Object o = luwrain.i18n().getStrings(Strings.NAME);
+	if (o == null || !(o instanceof Strings))
+	    return new InitResult(InitResult.Type.NO_STRINGS_OBJ, Strings.NAME);
+	  this.strings = (Strings)o;
 	this.luwrain = luwrain;
 	this.base = new Base(luwrain, strings);
 	this.actions = new Actions(base);
 	createAreas();
-	layout = new AreaLayoutHelper(()->{
+
+
+					final Account account = findInitialAccount();
+					if (account != null)
+					{
+					    actions.activateAccount(account, ()->{
+						    statusArea.refresh();
+						    luwrain.announceActiveArea();
+						});
+
+					    	layout = new AreaLayoutHelper(()->{
+					base.setVisibleAreas(layout.getLayout().getAreas());
 		luwrain.onNewAreaLayout();
 		luwrain.announceActiveArea();
-	    }, new AreaLayout(AreaLayout.TOP_BOTTOM, postArea, statusArea));
-	final Settings.Main sett = Settings.createMain(luwrain.getRegistry());
-	final String defaultAccountName = sett.getDefaultAccount("");
-	if (!defaultAccountName.trim().isEmpty())
-	{
-	    final Account defaultAccount = base.findAccount(base.getAccounts(), defaultAccountName);
-	    if (defaultAccount != null && defaultAccount.isReadyToConnect())
-		actions.activateAccount(statusArea, defaultAccount); else
-		tryToConnectFirstAccount();
-	} else
-	    tryToConnectFirstAccount();
+	    }, new AreaLayout(AreaLayout.TOP_BOTTOM, statusArea, postArea));
+
+
+					} else
+					{
+
+					    	layout = new AreaLayoutHelper(()->{
+					base.setVisibleAreas(layout.getLayout().getAreas());
+		luwrain.onNewAreaLayout();
+		luwrain.announceActiveArea();
+	    }, new AreaLayout(accessTokenForm));
+
+						
+					}
+
+									base.setVisibleAreas(layout.getLayout().getAreas());
+
+
 	return new InitResult();
     }
 
-    private void tryToConnectFirstAccount()
-    {
-	final Account[] accounts = base.getAccounts();
-	for(Account a: accounts)
-	    if (a.isReadyToConnect() && actions.activateAccount(statusArea, a))
-		return;
-    }
 
     private void createAreas()
     {
@@ -119,21 +128,21 @@ final class App implements Application
 			    final Object obj = selected();
 			    if (obj == null || !(obj instanceof Tweet))
 				return false;
-			    return actions.onRetweetStatus((Tweet)obj, this);
+			    return actions.onRetweetStatus((Tweet)obj, ()->statusArea.refresh());
 			}
 			if (ActionEvent.isAction(event, "like"))
 			{
 			    final Object obj = selected();
 			    if (obj == null || !(obj instanceof Tweet))
 				return false;
-			    return actions.onCreateFavourite((Tweet)obj, this);
+			    return actions.onCreateFavourite((Tweet)obj, ()->statusArea.refresh());
 			}
 			if (ActionEvent.isAction(event, "delete-tweet"))
 			{
 			    final Object obj = selected();
 			    if (obj == null || !(obj instanceof Tweet))
 				return false;
-			    return actions.onDestroyStatus((Tweet)obj, this);
+			    return actions.onDestroyStatus((Tweet)obj, ()->statusArea.refresh());
 			}
 			if (ActionEvent.isAction(event, "user-timeline"))
 			    return actions.onShowUserTimeline((pager)->{showTweetsArea("FIXME", (TweetsPager)pager);});
@@ -153,6 +162,22 @@ final class App implements Application
 			return super.onSystemEvent(event);
 		    }
 		}
+		    @Override public boolean onAreaQuery(AreaQuery query)
+    {
+	NullCheck.notNull(query, "query");
+	switch(query.getQueryCode())
+	{
+	case AreaQuery.BACKGROUND_SOUND:
+	    if (base.isBusy())
+	    {
+		((BackgroundSoundQuery)query).answer(new BackgroundSoundQuery.Answer(BkgSounds.FETCHING));
+		return true;
+	    }
+	    return false;
+	default:
+	    return super.onAreaQuery(query);
+	}
+    }
 		@Override public Action[] getAreaActions()
 		{
 		    if (!base.isAccountActivated())
@@ -213,6 +238,24 @@ final class App implements Application
 	    };
     }
 
+    private Account findInitialAccount()
+    {
+		final Settings.Main sett = Settings.createMain(luwrain.getRegistry());
+	final String defaultAccountName = sett.getDefaultAccount("");
+	if (!defaultAccountName.trim().isEmpty())
+	{
+	    final Account defaultAccount = base.findAccount(base.getAccounts(), defaultAccountName);
+	    if (defaultAccount != null && defaultAccount.isReadyToConnect())
+		return defaultAccount;
+	}
+	final Account[] accounts = base.getAccounts();
+	for(Account a: accounts)
+	    if (a.isReadyToConnect())
+		return a;
+	return null;
+    }
+
+
     private boolean onChangeAccount()
     {
 	final Account newAccount = actions.conv.chooseAnotherAccount();
@@ -220,7 +263,10 @@ final class App implements Application
 	    return true;
 	if (base.isAccountActivated())
 	    base.closeAccount();
-	actions.activateAccount(statusArea, newAccount);
+	actions.activateAccount(newAccount, ()->{
+		statusArea.refresh();
+		statusArea.reset(false);
+	    });
 	return true;
     }
 
