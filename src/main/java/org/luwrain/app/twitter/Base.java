@@ -25,10 +25,13 @@ import twitter4j.conf.ConfigurationLuwrain;
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
-final class Base
+final class Base extends Tokens
 {
+    static final String LOG_COMPONENT = "twitter";
+
     final Luwrain luwrain;
     final Strings strings;
+    final Watching watching;
     private Twitter twitter = null;
     final StatusModel statusModel;
 
@@ -38,12 +41,13 @@ final class Base
 
     private Area[] visibleAreas = new Area[0];
 
-    Base(Luwrain luwrain, Strings strings)
+    Base(Luwrain luwrain, Strings strings, Watching watching)
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notNull(strings, "strings");
 	this.luwrain = luwrain;
 	this.strings = strings;
+	this.watching = watching;
 	this.statusModel = new StatusModel();
     }
 
@@ -98,25 +102,38 @@ final class Base
 	}
     }
 
+            Twitter getTwitter()
+    {
+	return twitter;
+    }
+
+
+
+
+
+        boolean activateAccount(Account account)
+    {
+	NullCheck.notNull(account, "account");
+	if (twitter != null)
+	    return false;
+	twitter = createTwitter(account);
+	return twitter != null;
+    }
+
+
     void closeAccount()
     {
 	twitter = null;
     }
 
-    static private Twitter createTwitter(String consumerKey, String consumerSecret,
-					 String accessToken, String accessTokenSecret)
+                boolean isAccountActivated()
     {
-	final ConfigurationLuwrain conf = new ConfigurationLuwrain(consumerKey, consumerSecret, accessToken, accessTokenSecret);
-	final Twitter twitter = new TwitterFactory(conf).getInstance();
-	if (twitter == null)
-	    return null;
-	if (!twitter.getAuthorization().isEnabled()) 
-	{
-	    Log.error("twitter", "no enabled authorization");
-	    return null;
-	}
-	return twitter;
+	return twitter != null;
     }
+
+
+
+
 
     static boolean updateStatusImpl(Twitter twitter, String tweet)
     {
@@ -134,8 +151,9 @@ final class Base
 	}
     }
 
-    Settings.Account getAccountSettings(String accountName)
+    static private Settings.Account getAccountSettings(Luwrain luwrain, String accountName)
     {
+	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notEmpty(accountName, "accountName");
 	final Registry registry = luwrain.getRegistry();
 	final String path = Registry.join(Settings.ACCOUNTS_PATH, accountName);
@@ -143,15 +161,15 @@ final class Base
 	return Settings.createAccount(registry, path);
     }
 
-    Account[] getAccounts()
+    static Account[] getAccounts(Luwrain luwrain )
     {
 	final Registry registry = luwrain.getRegistry();
 	final LinkedList<Account> res = new LinkedList<Account>();
 	registry.addDirectory(Settings.ACCOUNTS_PATH);
 	for (String a: registry.getDirectories(Settings.ACCOUNTS_PATH))
 	{
-	    final Settings.Account sett = getAccountSettings(a);
-	    res.add(new Account(a, sett, sett.getAccessToken(""), sett.getAccessTokenSecret("")));
+	    final Settings.Account sett = getAccountSettings(luwrain, a);
+	    res.add(new Account(a, sett));
 	}
 	return res.toArray(new Account[res.size()]);
     }
@@ -168,30 +186,23 @@ final class Base
 	return null;
     }
 
-        boolean isAccountActivated()
-    {
-	return twitter != null;
-    }
 
-        Twitter getTwitter()
+            static Twitter createTwitter(Account account)
     {
+	NullCheck.notNull(account, "account");
+	final Configuration conf = getConfiguration(account);
+	final Twitter twitter = new TwitterFactory(conf).getInstance();
+	if (twitter == null)
+	    return null;
+	if (!twitter.getAuthorization().isEnabled()) 
+	{
+	    Log.error("twitter", "no enabled authorization");
+	    return null;
+	}
 	return twitter;
     }
 
-    Auth createAuth() throws TwitterException
-    {
-	return new Auth("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret");
-    }
 
-        boolean activateAccount(Account account)
-    {
-	NullCheck.notNull(account, "account");
-	if (twitter != null)
-	    return false;
-		twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
-				account.accessToken, account.accessTokenSecret);
-	return twitter != null;
-    }
 
     private class StatusModel implements ListArea.Model
     {
