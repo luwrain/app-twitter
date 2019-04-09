@@ -55,7 +55,7 @@ return res;
 
     Account chooseAnotherAccount()
     {
-	final Object res = Popups.fixedList(luwrain, "Выберите учётную запись:", base.getAccounts());//FIXME:
+	final Object res = Popups.fixedList(luwrain, "Выберите учётную запись:", Base.getAccounts(luwrain));//FIXME:
 	return (Account)res;
     }
 

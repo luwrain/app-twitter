@@ -26,21 +26,32 @@ class Watching
 {
     static private final String LOG_COMPONENT = Base.LOG_COMPONENT;
 
-    final List<AsyncTwitter> twitters = new LinkedList();
+    final TwitterStream twitter;
 
     Watching(Luwrain luwrain)
+    {
+	NullCheck.notNull(luwrain, "luwrain");
+	final Account account = chooseAccount(luwrain);
+	if (account == null)
+	{
+	    Log.warning(LOG_COMPONENT, "no Twitter stream listening, no suitable account");
+	    this.twitter = null;
+	    return;
+	}
+		Log.debug(LOG_COMPONENT, "starting twitter listener for the account \'" + account.name + "\'");
+		final Configuration conf = Base.getConfiguration(account);
+this.twitter = new TwitterStreamFactory(conf).getInstance();
+twitter.addListener(new WatchingListener(luwrain));
+twitter.filter(new FilterQuery(new String[]{"Томск", "Томске", "Томском", "Томска", "luwrain"}));
+    }
+
+    private Account chooseAccount(Luwrain luwrain)
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	final Account[] accounts = Base.getAccounts(luwrain);
 	for(Account a: accounts)
 	    if (a.isReadyToConnect())
-	    {
-		Log.debug(LOG_COMPONENT, "starting twitter listener for the account \'" + a.name);
-		final Configuration conf = Base.getConfiguration(a.accessToken, a.accessTokenSecret);
-final AsyncTwitter twitter = new AsyncTwitterFactory(conf).getInstance();
-twitter.addListener(new WatchingListener(luwrain));
-twitters.add(twitter);
-	    }
-
+		return a;
+	return null;
     }
 }

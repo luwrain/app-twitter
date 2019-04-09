@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import twitter4j.*;
-import twitter4j.conf.ConfigurationLuwrain;
+import twitter4j.conf.*;
 
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
@@ -56,10 +56,10 @@ final class Base extends Tokens
 	return task != null && !task.isDone();
     }
 
-        void done()
+    void done()
     {
 	this.task = null;
-			for(Area a: visibleAreas)
+	for(Area a: visibleAreas)
 	    luwrain.onAreaNewBackgroundSound(a);
     }
 
@@ -76,7 +76,7 @@ final class Base extends Tokens
 	    return false;
 	task = new FutureTask(runnable, null);
 	luwrain.executeBkg(task);
-		for(Area a: visibleAreas)
+	for(Area a: visibleAreas)
 	    luwrain.onAreaNewBackgroundSound(a);
 	return true;
     }
@@ -102,16 +102,12 @@ final class Base extends Tokens
 	}
     }
 
-            Twitter getTwitter()
+    Twitter getTwitter()
     {
 	return twitter;
     }
 
-
-
-
-
-        boolean activateAccount(Account account)
+    boolean activateAccount(Account account)
     {
 	NullCheck.notNull(account, "account");
 	if (twitter != null)
@@ -120,20 +116,15 @@ final class Base extends Tokens
 	return twitter != null;
     }
 
-
     void closeAccount()
     {
 	twitter = null;
     }
 
-                boolean isAccountActivated()
+    boolean isAccountActivated()
     {
 	return twitter != null;
     }
-
-
-
-
 
     static boolean updateStatusImpl(Twitter twitter, String tweet)
     {
@@ -186,8 +177,7 @@ final class Base extends Tokens
 	return null;
     }
 
-
-            static Twitter createTwitter(Account account)
+    static Twitter createTwitter(Account account)
     {
 	NullCheck.notNull(account, "account");
 	final Configuration conf = getConfiguration(account);
@@ -196,13 +186,11 @@ final class Base extends Tokens
 	    return null;
 	if (!twitter.getAuthorization().isEnabled()) 
 	{
-	    Log.error("twitter", "no enabled authorization");
+	    Log.error(LOG_COMPONENT, "no enabled authorization");
 	    return null;
 	}
 	return twitter;
     }
-
-
 
     private class StatusModel implements ListArea.Model
     {

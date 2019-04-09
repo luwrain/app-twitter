@@ -31,6 +31,7 @@ final class App implements Application, MonoApp
     private Strings strings = null;
     private Base base = null;
     private Actions actions = null;
+    private final Watching watching;
 
     private ListArea statusArea = null;
     private EditArea postArea = null;
@@ -40,6 +41,12 @@ final class App implements Application, MonoApp
     private Account accountToAuth = null;
     private AccessTokenForm accessTokenForm;
 
+    App(Watching watching)
+    {
+	NullCheck.notNull(watching, "watching");
+	this.watching = watching;
+    }
+
     @Override public InitResult onLaunchApp(Luwrain luwrain)
     {
 	NullCheck.notNull(luwrain, "luwrain");
@@ -48,7 +55,7 @@ final class App implements Application, MonoApp
 	    return new InitResult(InitResult.Type.NO_STRINGS_OBJ, Strings.NAME);
 	this.strings = (Strings)o;
 	this.luwrain = luwrain;
-	this.base = new Base(luwrain, strings);
+	this.base = new Base(luwrain, strings, watching);
 	this.actions = new Actions(base);
 	createAreas();
 	final Account account = findInitialAccount();
@@ -256,15 +263,15 @@ final class App implements Application, MonoApp
 
     private Account findInitialAccount()
     {
-	final Settings.Main sett = Settings.createMain(luwrain.getRegistry());
+	final Settings sett = Settings.create(luwrain.getRegistry());
 	final String defaultAccountName = sett.getDefaultAccount("");
 	if (!defaultAccountName.trim().isEmpty())
 	{
-	    final Account defaultAccount = base.findAccount(base.getAccounts(), defaultAccountName);
+	    final Account defaultAccount = base.findAccount(base.getAccounts(luwrain), defaultAccountName);
 	    if (defaultAccount != null && defaultAccount.isReadyToConnect())
 		return defaultAccount;
 	}
-	final Account[] accounts = base.getAccounts();
+	final Account[] accounts = base.getAccounts(luwrain);
 	for(Account a: accounts)
 	    if (a.isReadyToConnect())
 		return a;
@@ -519,10 +526,8 @@ return ActionLists.getLikesActions(selected());
 	    return;
 	NullCheck.notNull(accessToken, "accessToken");
 	NullCheck.notNull(accessTokenSecret, "accessTokenSecret");
-	accountToAuth.accessToken = accessToken;
-	accountToAuth.accessTokenSecret = accessTokenSecret;
-	accountToAuth.sett.setAccessToken(accountToAuth.accessToken);
-	accountToAuth.sett.setAccessTokenSecret(accountToAuth.accessTokenSecret);
+	accountToAuth.sett.setAccessToken(accessToken);
+	accountToAuth.sett.setAccessTokenSecret(accessTokenSecret);
 	luwrain.message(strings.accountAuthCompleted (), Luwrain.MessageType.OK);
     }
 

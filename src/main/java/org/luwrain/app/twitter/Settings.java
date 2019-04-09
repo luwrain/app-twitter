@@ -23,19 +23,20 @@ interface Settings
     static final String PATH = "/org/luwrain/app/twitter";
     static final String ACCOUNTS_PATH = "/org/luwrain/app/twitter/accounts";
 
-interface Main
-{
-    String getDefaultAccount(String defValue);
-    void setDefaultAccount(String value);
-}
-
     interface Account
     {
 	String getAccessToken(String defValue);
+		void setAccessToken(String value);
 	String getAccessTokenSecret(String defValue);
-	void setAccessToken(String value);
 	void setAccessTokenSecret(String value);
+	boolean getNotForStreaming(boolean defValue);
+	void setNotForStreaming(boolean value);
     }
+
+    String getDefaultAccount(String defValue);
+    void setDefaultAccount(String value);
+    String getStreamListeningKeywords(String defValue);
+    void setStreamListeningKeywords(String value);
 
     static Account createAccount(Registry registry, String path)
     {
@@ -44,10 +45,9 @@ interface Main
 	return RegistryProxy.create(registry, path, Account.class);
     }
 
-    static Main createMain(Registry registry)
+    static Settings create(Registry registry)
     {
 	NullCheck.notNull(registry, "registry");
-	return RegistryProxy.create(registry, PATH, Main.class);
+	return RegistryProxy.create(registry, PATH, Settings.class);
     }
-
 }
