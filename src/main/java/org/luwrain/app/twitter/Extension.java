@@ -16,26 +16,26 @@
 
 package org.luwrain.app.twitter;
 
+import org.luwrain.base.*;
 import org.luwrain.core.*;
 
-public class Extension extends org.luwrain.core.extensions.EmptyExtension
+public final class Extension extends org.luwrain.core.extensions.EmptyExtension
 {
-    @Override public Command[] getCommands(Luwrain luwrain)
+    private Watching watching = null;
+
+    @Override public String init(Luwrain luwrain)
     {
-	return new Command[]{
-	    new Command(){
-		@Override public String getName()
-		{
-		    return "twitter";
-		}
-		@Override public void onCommand(Luwrain luwrain)
-		{
-		    luwrain.launchApp("twitter");
-		}
-	    }};
+	NullCheck.notNull(luwrain, "luwrain");
+	this.watching = new Watching(luwrain);
+	return null;
     }
 
-    @Override public Shortcut[] getShortcuts(Luwrain luwrain)
+    @Override public Command[] getCommands(Luwrain luwrain)
+    {
+	return new Command[]{new SimpleShortcutCommand("twitter")};
+    }
+
+    @Override public ExtensionObject[] getExtObjects(Luwrain luwrain)
     {
 	return new Shortcut[]{
 	    new Shortcut(){
