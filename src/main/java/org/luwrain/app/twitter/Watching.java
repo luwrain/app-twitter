@@ -25,12 +25,15 @@ import org.luwrain.core.*;
 class Watching
 {
     static private final String LOG_COMPONENT = Base.LOG_COMPONENT;
+    static private final String HOOK_NAME = "luwrain.announcement";
 
-    final TwitterStream twitter;
+    private final Luwrain luwrain;
+    private final TwitterStream twitter;
 
     Watching(Luwrain luwrain)
     {
 	NullCheck.notNull(luwrain, "luwrain");
+	this.luwrain = luwrain;
 	final Account account = chooseAccount(luwrain);
 	if (account == null)
 	{
@@ -38,11 +41,27 @@ class Watching
 	    this.twitter = null;
 	    return;
 	}
-		Log.debug(LOG_COMPONENT, "starting twitter listener for the account \'" + account.name + "\'");
-		final Configuration conf = Base.getConfiguration(account);
-this.twitter = new TwitterStreamFactory(conf).getInstance();
-twitter.addListener(new WatchingListener(luwrain));
-twitter.filter(new FilterQuery(new String[]{"Томск", "Томске", "Томском", "Томска", "luwrain"}));
+	Log.debug(LOG_COMPONENT, "starting twitter listener for the account \'" + account.name + "\'");
+	final Configuration conf = Base.getConfiguration(account);
+	this.twitter = new TwitterStreamFactory(conf).getInstance();
+	final Settings sett = Settings.create(luwrain.getRegistry());
+	final String[] keywords = Settings.decodeKeywords(sett.getStreamListeningKeywords(""));
+	if (keywords.length > 0)
+	{
+	    twitter.addListener(new StatusAdapter() {
+		    @Override public void onStatus(Status status)
+		    {
+			luwrain.runUiSafely(()->runHook(status));
+		    }
+		});
+	    twitter.filter(new FilterQuery(keywords));
+	}
+    }
+
+    private void runHook(Status status)
+    {
+	NullCheck.notNull(status, "status");
+	luwrain.xRunHooks(HOOK_NAME, new Object[]{status.getText()}, Luwrain.HookStrategy.ALL);
     }
 
     private Account chooseAccount(Luwrain luwrain)

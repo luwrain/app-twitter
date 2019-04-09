@@ -16,6 +16,8 @@
 
 package org.luwrain.app.twitter;
 
+import java.util.*;
+
 import org.luwrain.core.*;
 
 interface Settings
@@ -49,5 +51,17 @@ interface Settings
     {
 	NullCheck.notNull(registry, "registry");
 	return RegistryProxy.create(registry, PATH, Settings.class);
+    }
+
+    static String[] decodeKeywords(String value)
+    {
+	NullCheck.notNull(value, "value");
+	if (value.trim().isEmpty())
+	    return new String[0];
+	final List<String> res = new LinkedList();
+	for(String s: value.split(" ", -1))
+	    if (!s.trim().isEmpty())
+		res.add(s.trim());
+	return res.toArray(new String[res.size()]);
     }
 }
