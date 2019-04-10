@@ -32,6 +32,7 @@ final class Base extends Tokens
     final Luwrain luwrain;
     final Strings strings;
     final Watching watching;
+    final Settings sett;
     private Twitter twitter = null;
     final StatusModel statusModel;
 
@@ -48,6 +49,7 @@ final class Base extends Tokens
 	this.luwrain = luwrain;
 	this.strings = strings;
 	this.watching = watching;
+	this.sett = Settings.create(luwrain.getRegistry());
 	this.statusModel = new StatusModel();
     }
 
