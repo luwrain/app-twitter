@@ -117,6 +117,26 @@ final class Actions
 	    });
     }
 
+        boolean onShowFriends(Consumer onSuccess)
+    {
+	NullCheck.notNull(onSuccess, "onSuccess");
+	if (base.isBusy())
+	    return false;
+	return base.run(()->{
+		try {
+		    	    final List<User> friends = base.getTwitter().getFriendsList(base.getTwitter().getId(), -1);
+			    //FIXME:something like pager
+		    luwrain.runUiSafely(()->onSuccess.accept(friends.toArray(new User[friends.size()])));
+		    		    done();
+		}
+		catch(TwitterException e)
+		{
+		    onExceptionBkg(e);
+		}
+	    });
+    }
+
+
     boolean onStatusUpdate(String[] lines, Runnable onSuccess)
     {
 	NullCheck.notNullItems(lines, "lines");

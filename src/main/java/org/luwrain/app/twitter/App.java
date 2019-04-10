@@ -97,11 +97,6 @@ final class App implements Application, MonoApp
 			switch(event.getSpecial())
 			{
 			case TAB:
-			    /*
-			      if (!layout.hasAdditionalArea())
-			      return false;
-			      luwrain.setActiveArea(layout.getAdditionalArea());
-			    */
 			    luwrain.setActiveArea(postArea);
 			    return true;
 			case ESCAPE:
@@ -118,6 +113,13 @@ final class App implements Application, MonoApp
 		    switch (event.getCode())
 		    {
 		    case ACTION:
+						if (ActionEvent.isAction(event, "watching"))
+						{
+						    showWatchingSettings(()->{
+							    layout.closeTempLayout();
+							});
+						    return true;
+						}
 			if (ActionEvent.isAction(event, "retweet"))
 			{
 			    final Object obj = selected();
@@ -146,8 +148,8 @@ final class App implements Application, MonoApp
 			    return actions.onShowUserTimeline((userName, pager)->{
 				    showTweetsArea(strings.userTimelineAreaName(userName.toString()), (TweetsPager)pager, ()->layout.closeTempLayout());
 				});
-			if (ActionEvent.isAction(event, "show-friends"))
-			    return onShowFriends();
+			if (ActionEvent.isAction(event, "friends"))
+			    return actions.onShowFriends((friends)->showUsersArea("Подписки", (User[])friends, ()->layout.closeTempLayout()));//FIXME:
 			if (ActionEvent.isAction(event, "show-likes"))
 			    return onShowLikes();
 			if (ActionEvent.isAction(event, "search"))
@@ -351,27 +353,61 @@ final class App implements Application, MonoApp
 	luwrain.setActiveArea(area);
     }
 
-    private boolean onShowFriends()
+	    private void showWatchingSettings(Runnable closing)
     {
-	final List<User> friends;
-	try {
-	    friends = (List)base.call(()->base.getTwitter().getFriendsList(base.getTwitter().getId(), -1));
-	}
-	catch(java.util.concurrent.ExecutionException e)
-	{
-	    luwrain.crash(e);
-	    return true;
-	}
-	final ListArea.Params params = new ListArea.Params();
-	params.context = new DefaultControlEnvironment(luwrain);
-	params.model = new ListUtils.FixedModel(UserWrapper.create(friends)){
-		@Override public void refresh()
+	NullCheck.notNull(closing, "closing");
+	final FormArea area = new FormArea(new DefaultControlContext(luwrain), "Управление уведомлениями") { //FIXME:
+		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
-		    //FIXME:
+		    NullCheck.notNull(event, "event");
+		    if (event.isSpecial() && !event.isModified())
+			switch(event.getSpecial())
+			{
+			case ESCAPE:
+			    closing.run();
+			    return true;
+			case TAB:
+			    luwrain.setActiveArea(statusArea);
+			    return true;
+			}
+		    return super.onInputEvent(event);
+		}
+		@Override public boolean onSystemEvent(EnvironmentEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.getType() != EnvironmentEvent.Type.REGULAR)
+			return super.onSystemEvent(event);
+		    switch(event.getCode())
+		    {
+		    case OK:
+			base.sett.setStreamListeningKeywords(getEnteredText("keywords"));
+			base.watching.update();
+			closing.run();
+			return true;
+		    case CLOSE:
+			closeApp();
+			return true;
+		    default:
+			return super.onSystemEvent(event);
+		    }
 		}
 	    };
+	area.addEdit("keywords", "Ключевые слова:", base.sett.getStreamListeningKeywords(""));//FIXME:
+	layout.openTempLayout(new AreaLayout(AreaLayout.LEFT_TOP_BOTTOM, area, statusArea, postArea));
+	luwrain.setActiveArea(area);
+    }
+
+
+    private void showUsersArea(String name, User[] users, Runnable closing)
+    {
+	NullCheck.notEmpty(name, "name");
+	NullCheck.notNullItems(users, "users");
+	NullCheck.notNull(closing, "closing");
+	final ListArea.Params params = new ListArea.Params();
+	params.context = new DefaultControlContext(luwrain);
+	params.model = new ListUtils.FixedModel(UserWrapper.create(users));
 	params.appearance = new ListUtils.DefaultAppearance(params.context);
-	params.name = "Друзья";//FIXME:
+	params.name = name;
 	final ListArea area = new ListArea(params) {
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
@@ -380,10 +416,9 @@ final class App implements Application, MonoApp
 			switch(event.getSpecial())
 			{
 			case ESCAPE:
-			    layout.closeAdditionalArea();
+			    closing.run();
 			    return true;
 			case TAB:
-			case BACKSPACE:
 			    luwrain.setActiveArea(statusArea);
 			    return true;
 			}
@@ -397,8 +432,6 @@ final class App implements Application, MonoApp
 		    switch(event.getCode())
 		    {
 		    case ACTION:
-			if (ActionEvent.isAction(event, "delete-friendship"))
-			    return actions.onDeleteFriendship(this);
 			return false;
 		    case CLOSE:
 			closeApp();
@@ -407,14 +440,9 @@ final class App implements Application, MonoApp
 			return super.onSystemEvent(event);
 		    }
 		}
-		@Override public Action[] getAreaActions()
-		{
-		    return ActionLists.getFriendsActions(selected());
-		}
 	    };
-	layout.openAdditionalArea(area, AreaLayoutHelper.Position.BOTTOM);
+	layout.openTempLayout(new AreaLayout(AreaLayout.LEFT_TOP_BOTTOM, area, statusArea, postArea));
 	luwrain.setActiveArea(area);
-	return true;
     }
 
     private boolean onShowLikes()
@@ -433,7 +461,6 @@ final class App implements Application, MonoApp
 	params.model = new ListUtils.FixedModel(Tweet.create(likes)){
 		@Override public void refresh()
 		{
-
 	final List<Status> l;
 	try {
 	    l = (List)base.call(()->base.getTwitter().getFavorites(new Paging()));
@@ -448,10 +475,6 @@ final class App implements Application, MonoApp
 	    wrappers.add(new Tweet(s));
 	clear();
 	addAll(wrappers);
-
-
-
-
 		}
 	    };
 	params.appearance = new ListUtils.DefaultAppearance(params.context);

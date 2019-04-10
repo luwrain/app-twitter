@@ -44,10 +44,21 @@ class Watching
 	Log.debug(LOG_COMPONENT, "starting twitter listener for the account \'" + account.name + "\'");
 	final Configuration conf = Base.getConfiguration(account);
 	this.twitter = new TwitterStreamFactory(conf).getInstance();
-	final Settings sett = Settings.create(luwrain.getRegistry());
+	loadKeywords();
+    }
+
+    void update()
+    {
+	loadKeywords();
+    }
+
+    private void loadKeywords()
+    {
+	twitter.cleanUp();
+		final Settings sett = Settings.create(luwrain.getRegistry());
 	final String[] keywords = Settings.decodeKeywords(sett.getStreamListeningKeywords(""));
-	if (keywords.length > 0)
-	{
+	if (keywords.length == 0)
+	    return;
 	    twitter.addListener(new StatusAdapter() {
 		    @Override public void onStatus(Status status)
 		    {
@@ -55,7 +66,6 @@ class Watching
 		    }
 		});
 	    twitter.filter(new FilterQuery(keywords));
-	}
     }
 
     private void runHook(Status status)

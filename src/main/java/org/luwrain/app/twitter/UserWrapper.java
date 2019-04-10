@@ -44,4 +44,14 @@ final User user;
 	    wrappers.add(new UserWrapper(u));
 	return wrappers.toArray(new UserWrapper[wrappers.size()]);
     }
+
+        static UserWrapper[] create(User[] users)
+    {
+	NullCheck.notNullItems(users, "users");
+	final List<UserWrapper> wrappers = new LinkedList<UserWrapper>();
+	for(User u: users)
+	    wrappers.add(new UserWrapper(u));
+	return wrappers.toArray(new UserWrapper[wrappers.size()]);
+    }
+
 }
