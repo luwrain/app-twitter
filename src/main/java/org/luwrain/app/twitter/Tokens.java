@@ -28,10 +28,10 @@ Auth createAuth() throws TwitterException
 	return new Auth("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret");
     }
 
-        static private twitter4j.conf.Configuration getConfiguration(String accessToken, String accessTokenSecret)
+    static private twitter4j.conf.Configuration getConfiguration(String accessToken, String accessTokenSecret)
     {
-	twitter = createTwitter("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
-				accessToken, accessTokenSecret);
+	return new ConfigurationLuwrain("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
+					accessToken, accessTokenSecret);
     }
 
     static twitter4j.conf.Configuration getConfiguration(Account account)
