@@ -30,6 +30,8 @@ class Watching
     private final Luwrain luwrain;
     private final TwitterStream twitter;
 
+    private final Set<String> statuses = new TreeSet();
+
     Watching(Luwrain luwrain)
     {
 	NullCheck.notNull(luwrain, "luwrain");
@@ -60,8 +62,12 @@ class Watching
 	if (keywords.length == 0)
 	    return;
 	    twitter.addListener(new StatusAdapter() {
-		    @Override public void onStatus(Status status)
+		    @Override public synchronized void onStatus(Status status)
 		    {
+			final Tweet tweet = new Tweet(status);
+			if (statuses.contains(tweet.getBasicText()))
+			    return;
+			statuses.add(tweet.getBasicText());
 			luwrain.runUiSafely(()->runHook(status));
 		    }
 		});

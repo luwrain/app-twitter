@@ -36,7 +36,7 @@ class AccessTokenForm extends FormArea
     AccessTokenForm(Luwrain luwrain, App app, 
 		    Strings strings, Base base)
     {
-	super(new DefaultControlEnvironment(luwrain), strings.accessTokenFormName());
+	super(new DefaultControlContext(luwrain), strings.accessTokenFormName());
 	NullCheck.notNull(luwrain, "luwrain");
 	NullCheck.notNull(app, "app");
 	NullCheck.notNull(strings, "strings");

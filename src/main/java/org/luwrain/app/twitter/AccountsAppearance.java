@@ -45,12 +45,12 @@ class AccountsAppearance implements ListArea.Appearance
 	    luwrain.playSound(Sounds.LIST_ITEM);
 	    final Account account = (Account)item;
 	    if (account.connected)
-		luwrain.say(strings.connectedAccount() + " " + account.name); else
-		luwrain.say(strings.account() + " " + account.name);
+		luwrain.speak(strings.connectedAccount() + " " + account.name); else
+		luwrain.speak(strings.account() + " " + account.name);
 	    return;
 	}
 	luwrain.playSound(Sounds.LIST_ITEM);
-	luwrain.say(item.toString());
+	luwrain.speak(item.toString());
     }
 
     @Override public String getScreenAppearance(Object item, Set<Flags> flags)

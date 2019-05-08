@@ -23,9 +23,9 @@ import org.luwrain.core.events.*;
 import org.luwrain.core.queries.*;
 import org.luwrain.controls.*;
 
-class StatusArea extends ConsoleArea2
+class StatusArea extends ConsoleArea
 {
-    StatusArea(ControlEnvironment context, Model model, ClickHandler clickHandler, InputHandler inputHandler)
+    StatusArea(ControlContext context, Model model, ClickHandler clickHandler, InputHandler inputHandler)
     {
 	super(createParams(context, model, clickHandler, inputHandler));
     }
@@ -35,7 +35,7 @@ class StatusArea extends ConsoleArea2
 	NullCheck.notNullItems(tweets, "tweets");
     }
 
-    static private Params createParams(ControlEnvironment context, Model model, ClickHandler clickHandler, InputHandler inputHandler)
+    static private Params createParams(ControlContext context, Model model, ClickHandler clickHandler, InputHandler inputHandler)
     {
 	NullCheck.notNull(context, "context");
 	NullCheck.notNull(model, "model");
@@ -52,10 +52,10 @@ params.inputPos = InputPos.TOP;
 	return params;
     }
 
-static private class StatusAppearance implements ConsoleArea2.Appearance
+static private class StatusAppearance implements ConsoleArea.Appearance
 {
-    private final ControlEnvironment context;
-    StatusAppearance(ControlEnvironment context)
+    private final ControlContext context;
+    StatusAppearance(ControlContext context)
     {
 	NullCheck.notNull(context, "context");
 	this.context = context;

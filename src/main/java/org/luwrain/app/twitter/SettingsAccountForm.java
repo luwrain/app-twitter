@@ -32,7 +32,7 @@ class SettingsAccountForm extends FormArea implements SectionArea
 
     SettingsAccountForm(ControlPanel controlPanel, Settings.Account account, String title)
     {
-	super(new DefaultControlEnvironment(controlPanel.getCoreInterface()), title);
+	super(new DefaultControlContext(controlPanel.getCoreInterface()), title);
 	NullCheck.notNull(controlPanel, "controlPanel");
 	NullCheck.notNull(account, "account");
 	this.controlPanel = controlPanel;

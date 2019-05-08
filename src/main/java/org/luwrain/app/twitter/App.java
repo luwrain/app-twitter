@@ -300,7 +300,7 @@ final class App implements Application, MonoApp
 	NullCheck.notNull(pager, "pager");
 	NullCheck.notNull(closing, "closing");
 	final ListArea.Params tweetsParams = new ListArea.Params();
-	tweetsParams.context = new DefaultControlEnvironment(luwrain);
+	tweetsParams.context = new DefaultControlContext(luwrain);
 	tweetsParams.model = new ListUtils.FixedModel(pager.getTweets());
 	tweetsParams.appearance = new TweetsAppearance(luwrain, strings);
 	tweetsParams.name = name;
@@ -457,7 +457,7 @@ final class App implements Application, MonoApp
 	    return true;
 	}
 	final ListArea.Params params = new ListArea.Params();
-	params.context = new DefaultControlEnvironment(luwrain);
+	params.context = new DefaultControlContext(luwrain);
 	params.model = new ListUtils.FixedModel(Tweet.create(likes)){
 		@Override public void refresh()
 		{

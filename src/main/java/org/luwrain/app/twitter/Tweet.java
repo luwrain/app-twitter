@@ -36,6 +36,13 @@ final Status tweet;
 	return tweet.getText().replaceAll("\n", " ");
     }
 
+    String getBasicText()
+    {
+	return getText();
+    }
+
+    
+
     String getUserName()
     {
 	return tweet.getUser().getName();
