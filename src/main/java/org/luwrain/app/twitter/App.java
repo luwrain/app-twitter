@@ -34,7 +34,7 @@ final class App implements Application, MonoApp
     private final Watching watching;
 
     private ListArea statusArea = null;
-    private EditArea postArea = null;
+    private EditAreaOld postArea = null;
     private AreaLayoutHelper layout = null;
 
     //For account auth procedure
@@ -188,10 +188,10 @@ final class App implements Application, MonoApp
 		}
 	    };
 
-	final EditArea.Params postParams = new EditArea.Params();
+	final EditAreaOld.Params postParams = new EditAreaOld.Params();
 	postParams.context = new DefaultControlContext(luwrain);
 	postParams.name = "Новый твит";
-	this.postArea = new EditArea(postParams){
+	this.postArea = new EditAreaOld(postParams){
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
