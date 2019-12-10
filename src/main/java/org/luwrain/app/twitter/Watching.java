@@ -68,16 +68,10 @@ class Watching
 			if (statuses.contains(tweet.getBasicText()))
 			    return;
 			statuses.add(tweet.getBasicText());
-			luwrain.runUiSafely(()->runHook(status));
+			luwrain.announcement(status.getText(), "social_networks", "twitter");
 		    }
 		});
 	    twitter.filter(new FilterQuery(keywords));
-    }
-
-    private void runHook(Status status)
-    {
-	NullCheck.notNull(status, "status");
-	luwrain.xRunHooks(HOOK_NAME, new Object[]{status.getText()}, Luwrain.HookStrategy.ALL);
     }
 
     private Account chooseAccount(Luwrain luwrain)
