@@ -53,6 +53,32 @@ final class Base extends Tokens
 	this.statusModel = new StatusModel();
     }
 
+    EditArea.Params createPostEditParams()
+    {
+
+		final EditArea.Params params = new EditArea.Params();
+		params.context = new DefaultControlContext(luwrain);
+		params.appearance = new EditUtils.DefaultEditAreaAppearance(params.context);
+		params.name = strings.postAreaName();
+		return params;
+    }
+
+    ListArea.Params createStatusListParams()
+    {
+		final ListArea.Params params = new ListArea.Params();
+params.context = new DefaultControlContext(luwrain);
+params.model = statusModel;
+params.appearance = new ListUtils.DefaultAppearance(params.context){
+	@Override public void announceItem(Object obj, Set<Flags> flags)
+	{
+	    NullCheck.notNull(obj, "obj");
+	    luwrain.setEventResponse(DefaultEventResponse.listItem(luwrain.getSpeakableText(obj.toString(), Luwrain.SpeakableTextType.NATURAL)));
+	}
+    };
+params.name = strings.statusAreaName();
+return params;
+    }
+
     boolean isBusy()
     {
 	return task != null && !task.isDone();

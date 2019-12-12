@@ -84,12 +84,7 @@ final class App implements Application, MonoApp
 
     private void createAreas()
     {
-	final ListArea.Params statusParams = new ListArea.Params();
-	statusParams.context = new DefaultControlContext(luwrain);
-	statusParams.model = base.statusModel;
-	statusParams.appearance = new ListUtils.DefaultAppearance(statusParams.context);
-	statusParams.name = strings.statusAreaName();
-	this.statusArea = new ListArea(statusParams){
+	this.statusArea = new ListArea(base.createStatusListParams()){
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");
@@ -188,10 +183,7 @@ final class App implements Application, MonoApp
 		}
 	    };
 
-	final EditArea.Params postParams = new EditArea.Params();
-	postParams.context = new DefaultControlContext(luwrain);
-	postParams.name = "Новый твит";
-	this.postArea = new EditArea(postParams){
+	this.postArea = new EditArea(base.createPostEditParams()){
 		@Override public boolean onInputEvent(KeyboardEvent event)
 		{
 		    NullCheck.notNull(event, "event");

@@ -49,4 +49,6 @@ public interface Strings
     String statusAreaName();
     String userTimelineAreaName(String userName);
     String youShouldConnect();
+
+    String postAreaName();
 }
