@@ -14,9 +14,12 @@ import org.luwrain.template.*;
 
 final class App2 extends AppBase<Strings> implements MonoApp
 {
+    private Conversations conv = null;
     private Twitter twitter = null;
     private final Watching watching;
+
     private MainLayout mainLayout = null;
+    private FollowingLayout followingLayout = null;
 
     App2(Watching watching)
     {
@@ -27,6 +30,7 @@ final class App2 extends AppBase<Strings> implements MonoApp
 
     @Override public boolean onAppInit()
     {
+	this.conv = new Conversations(this);
 	final Account initialAccount = findInitialAccount();
 	if (initialAccount == null)
 	    return false;
@@ -34,6 +38,7 @@ final class App2 extends AppBase<Strings> implements MonoApp
 	if (this.twitter == null)
 	    return false;
 	this.mainLayout = new MainLayout(this);
+	this.followingLayout = new FollowingLayout(this);
 	setAppName(getStrings().appName());
 	this.mainLayout.updateHomeTimelineBkg();
 	return true;
@@ -96,6 +101,56 @@ final class App2 extends AppBase<Strings> implements MonoApp
     Twitter getTwitter()
     {
 	return this.twitter;
+    }
+
+    boolean onInputEvent(Area area, KeyboardEvent event, Runnable closing)
+    {
+	NullCheck.notNull(area, "area");
+	NullCheck.notNull(event, "event");
+	if (super.onInputEvent(area, event))
+	    return true;
+	if (event.isSpecial())
+	    switch(event.getSpecial())
+	    {
+	    case ESCAPE:
+		if (closing != null)
+		    closing.run(); else
+		closeApp();
+		return true;
+	    }
+	return false;
+    }
+
+    Conversations conv()
+    {
+	return this.conv;
+    }
+
+    @Override public boolean onInputEvent(Area area, KeyboardEvent event)
+    {
+	NullCheck.notNull(area, "area");
+	NullCheck.notNull(event, "event");
+	return onInputEvent(area, event, null);
+    }
+
+    Layouts layouts()
+    {
+	return new Layouts(){
+	    @Override public void main()
+	    {
+		getLayout().setBasicLayout(mainLayout.getLayout());
+	    }
+	    @Override public void following()
+	    {
+				getLayout().setBasicLayout(followingLayout.getLayout());
+				followingLayout.updateFollowing();
+	    }
+	    	    @Override public void custom(AreaLayout layout)
+	    {
+		NullCheck.notNull(layout, "layout");
+				getLayout().setBasicLayout(layout);
+	    }
+	};
     }
 
     @Override public AreaLayout getDefaultAreaLayout()
