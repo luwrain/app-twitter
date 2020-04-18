@@ -24,18 +24,16 @@ public interface Strings
 
     String accessTokenFormGreeting();
     String accessTokenFormName();
-    String accessTokenFormOpenUrl();
     String accessTokenFormPin();
-    String accessTokenFormYouMustEnterPin();
     String account();
     String accountAddedSuccessfully(String accountName);
     String accountAlreadyExists(String name);
-    String accountAuthCompleted();
-    String accountAuthPopupName();
-    String accountAuthPopupText(String accountName);
     String accountDeletedSuccessfully(String accountName);
     String actionAddAccount();
     String actionDeleteAccount();
+    String actionDeleteTweet();
+    String actionSearch();
+    String actionSearchUsers();
     String addAccountPopupName();
     String addAccountPopupPrefix();
     String appName();
@@ -43,14 +41,10 @@ public interface Strings
     String deleteAccountPopupName();
     String deleteAccountPopupText(String accountName);
     String invalidAccountName();
-    String problemConnecting();
-    String statusAreaName();
-    String userTimelineAreaName(String userName);
-    String youShouldConnect();
-
     String postAreaName();
-    String actionDeleteTweet();
-    String actionSearch();
     String search();
     String searchAreaName();
+    String searchUsersAreaName();
+    String searchUsersInputPrefix();
+    String statusAreaName();
 }
