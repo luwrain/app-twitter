@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
 
    This file is part of LUWRAIN.
 
@@ -21,15 +21,17 @@ import twitter4j.conf.*;
 
 import org.luwrain.core.*;
 
-class Tokens
+final class Tokens
 {
-Auth createAuth() throws TwitterException
+    static Auth createAuth() throws TwitterException
     {
 	return new Auth("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret");
     }
 
     static private twitter4j.conf.Configuration getConfiguration(String accessToken, String accessTokenSecret)
     {
+	NullCheck.notEmpty(accessToken, "accessToken");
+	NullCheck.notNull(accessTokenSecret, "accessTokenSecret");
 	return new ConfigurationLuwrain("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
 					accessToken, accessTokenSecret);
     }
