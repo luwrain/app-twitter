@@ -56,7 +56,7 @@ class SettingsFactory implements org.luwrain.cpanel.Factory
 	for(String p: registry.getDirectories(Settings.ACCOUNTS_PATH))
 	{
 	    final String path = Registry.join(Settings.ACCOUNTS_PATH, p);
-	    final Settings.Account account = Settings.createAccount(registry, path);
+	    final Settings.Account account = Settings.createAccountByPath(registry, path);
 	    res.add(new SettingsAccountElement(parent, account, p));
 	}
 	return res.toArray(new Element[res.size()]);

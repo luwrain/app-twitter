@@ -1,18 +1,3 @@
-/*
-   Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
-
-   This file is part of LUWRAIN.
-
-   LUWRAIN is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public
-   License as published by the Free Software Foundation; either
-   version 3 of the License, or (at your option) any later version.
-
-   LUWRAIN is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   General Public License for more details.
-*/
 
 package org.luwrain.app.twitter;
 
@@ -25,7 +10,7 @@ import twitter4j.conf.*;
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
-final class Base extends Tokens
+final class Base
 {
     static final String LOG_COMPONENT = "twitter";
 
@@ -51,32 +36,6 @@ final class Base extends Tokens
 	this.watching = watching;
 	this.sett = Settings.create(luwrain.getRegistry());
 	this.statusModel = new StatusModel();
-    }
-
-    EditArea.Params createPostEditParams()
-    {
-
-		final EditArea.Params params = new EditArea.Params();
-		params.context = new DefaultControlContext(luwrain);
-		params.appearance = new EditUtils.DefaultEditAreaAppearance(params.context);
-		params.name = strings.postAreaName();
-		return params;
-    }
-
-    ListArea.Params createStatusListParams()
-    {
-		final ListArea.Params params = new ListArea.Params();
-params.context = new DefaultControlContext(luwrain);
-params.model = statusModel;
-params.appearance = new ListUtils.DefaultAppearance(params.context){
-	@Override public void announceItem(Object obj, Set<Flags> flags)
-	{
-	    NullCheck.notNull(obj, "obj");
-	    luwrain.setEventResponse(DefaultEventResponse.listItem(luwrain.getSpeakableText(obj.toString(), Luwrain.SpeakableTextType.NATURAL)));
-	}
-    };
-params.name = strings.statusAreaName();
-return params;
     }
 
     boolean isBusy()
@@ -135,6 +94,7 @@ return params;
 	return twitter;
     }
 
+    /*
     boolean activateAccount(Account account)
     {
 	NullCheck.notNull(account, "account");
@@ -143,6 +103,7 @@ return params;
 	twitter = createTwitter(account);
 	return twitter != null;
     }
+    */
 
     void closeAccount()
     {
@@ -177,7 +138,7 @@ return params;
 	final Registry registry = luwrain.getRegistry();
 	final String path = Registry.join(Settings.ACCOUNTS_PATH, accountName);
 	registry.addDirectory(path);
-	return Settings.createAccount(registry, path);
+	return Settings.createAccountByPath(registry, path);
     }
 
     static Account[] getAccounts(Luwrain luwrain )
@@ -205,6 +166,7 @@ return params;
 	return null;
     }
 
+    /*
     static Twitter createTwitter(Account account)
     {
 	NullCheck.notNull(account, "account");
@@ -219,6 +181,7 @@ return params;
 	}
 	return twitter;
     }
+    */
 
     private class StatusModel implements ListArea.Model
     {

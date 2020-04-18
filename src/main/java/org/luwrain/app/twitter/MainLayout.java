@@ -4,6 +4,8 @@ package org.luwrain.app.twitter;
 import java.util.*;
 import twitter4j.*;
 
+import twitter4j.*;
+
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
@@ -11,19 +13,20 @@ import org.luwrain.template.*;
 
 final class MainLayout extends LayoutBase
 {
-    private final App2 app;
+    private final App app;
     private final ListArea statusArea;
     private final EditArea postArea;
 
     private Tweet[] homeTimeline = new Tweet[0];
 
-    MainLayout(App2 app)
+    MainLayout(App app)
     {
 	NullCheck.notNull(app, "app");
 	this.app = app;
 	this.statusArea = new ListArea(createStatusListParams()){
 		private final Actions actions = actions(
-							action("following", "Подписки и подписчики", new KeyboardEvent(KeyboardEvent.Special.F5), MainLayout.this::actFollowing),
+							action("search", app.getStrings().actionSearch(), new KeyboardEvent(KeyboardEvent.Special.F5), MainLayout.this::actSearch),
+							action("following", "Подписки и подписчики", new KeyboardEvent(KeyboardEvent.Special.F9), MainLayout.this::actFollowing),
 							action("delete-tweet", app.getStrings().actionDeleteTweet(), new KeyboardEvent(KeyboardEvent.Special.DELETE), MainLayout.this::actDelete)
 							);
 		@Override public boolean onInputEvent(KeyboardEvent event)
@@ -88,7 +91,7 @@ final class MainLayout extends LayoutBase
 	if (app.isBusy())
 	    return false;
 	final AppBase.TaskId taskId = app.newTaskId();
-	return app.runTask(()->{
+	return app.runTask(taskId, ()->{
 		final Tweet[] result;
 		try {
 		    result = Tweet.create(app.getTwitter().getHomeTimeline());
@@ -113,8 +116,8 @@ final class MainLayout extends LayoutBase
 	final String text = makeTweetText(postArea.getLines());
 	if (text.isEmpty())
 	    return false;
-	final App2.TaskId taskId = app.newTaskId();
-	return app.runTask(()->{
+	final App.TaskId taskId = app.newTaskId();
+	return app.runTask(taskId, ()->{
 		final Tweet[] result;
 		try {
 		    app.getTwitter().updateStatus(text);
@@ -129,7 +132,8 @@ final class MainLayout extends LayoutBase
 			homeTimeline = result;
 			statusArea.reset(false);
 			statusArea.refresh();
-			app.getLuwrain().playSound(Sounds.DONE);
+						postArea.clear();
+						app.getLuwrain().setActiveArea(statusArea);
 		    });
 	    });
 	    }
@@ -161,8 +165,8 @@ final class MainLayout extends LayoutBase
 	    return false;
 	if (!app.conv().confirmTweetDeleting(tweet))
 	    return true;
-	final App2.TaskId taskId = app.newTaskId();
-	return app.runTask(()->{
+	final App.TaskId taskId = app.newTaskId();
+	return app.runTask(taskId, ()->{
 		final Tweet[] result;
 		try {
 		    app.getTwitter().destroyStatus(tweet.tweet.getId());
@@ -181,10 +185,15 @@ final class MainLayout extends LayoutBase
 	    });
 	    }
 
-
     private boolean actFollowing()
     {
 	app.layouts().following();
+	return true;
+    }
+
+        private boolean actSearch()
+    {
+	app.layouts().search();
 	return true;
     }
 
@@ -193,13 +202,7 @@ final class MainLayout extends LayoutBase
 	final ListArea.Params params = new ListArea.Params();
 	params.context = new DefaultControlContext(app.getLuwrain());
 	params.model = new StatusModel();
-	params.appearance = new ListUtils.DefaultAppearance(params.context){
-		@Override public void announceItem(Object obj, Set<Flags> flags)
-		{
-		    NullCheck.notNull(obj, "obj");
-		    app.getLuwrain().setEventResponse(DefaultEventResponse.listItem(app.getLuwrain().getSpeakableText(obj.toString(), Luwrain.SpeakableTextType.NATURAL)));
-		}
-	    };
+	params.appearance = new TweetListAppearance(app.getLuwrain(), app.getStrings());
 	params.name = app.getStrings().statusAreaName();
 	return params;
     }
@@ -216,6 +219,11 @@ final class MainLayout extends LayoutBase
     AreaLayout getLayout()
     {
 	return new AreaLayout(AreaLayout.TOP_BOTTOM, statusArea, postArea);
+    }
+
+    void onActivation()
+    {
+	app.getLuwrain().setActiveArea(statusArea);
     }
 
     private class StatusModel implements ListArea.Model

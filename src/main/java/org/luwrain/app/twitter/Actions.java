@@ -1,18 +1,3 @@
-/*
-   Copyright 2012-2019 Michael Pozhidaev <michael.pozhidaev@gmail.com>
-
-   This file is part of LUWRAIN.
-
-   LUWRAIN is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public
-   License as published by the Free Software Foundation; either
-   version 3 of the License, or (at your option) any later version.
-
-   LUWRAIN is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   General Public License for more details.
-*/
 
 package org.luwrain.app.twitter;
 
@@ -41,35 +26,11 @@ final class Actions
 	this.luwrain = base.luwrain;
 	this.strings = base.strings;
 	this.base = base;
-	this.conv = new Conversations(luwrain, base, strings);
+	this.conv = null;
     }
 
-    boolean search(Consumer onSuccess)
-    {
-	NullCheck.notNull(onSuccess, "onSuccess");
-	if (base.isBusy())
-	    return false;
-	if (!base.isAccountActivated())
-	{
-	    luwrain.message(strings.youShouldConnect(), Luwrain.MessageType.ERROR);
-	    return true;
-	}
-	final String query = Popups.simple(luwrain, strings.searchPopupName(), strings.searchPopupPrefix(), "");
-	if (query == null || query.trim().isEmpty())
-	    return true;
-	return base.run(()->{
-		try {
-		    final TweetsPager pager = new TweetsPager((fromPos,count)->searchTweets(query, 1));
-		    done();
-		    luwrain.runUiSafely(()->onSuccess.accept(pager));
-		}
-		catch(TwitterException e)
-		{
-		    onExceptionBkg(e);
-		}
-	    });
-    }
 
+    /*
     boolean activateAccount(Account account, Runnable onSuccess)
     {
 	NullCheck.notNull(account, "account");
@@ -95,92 +56,11 @@ final class Actions
 		}
 	    });
     }
-
-    boolean onShowUserTimeline(BiConsumer onSuccess)
-    {
-	NullCheck.notNull(onSuccess, "onSuccess");
-	if (base.isBusy())
-	    return false;
-	final String userName = conv.askUserNameToShowTimeline();
-	if (userName == null || userName.trim().isEmpty())
-	    return true;
-	return base.run(()->{
-		try {
-		    final TweetsPager pager = new TweetsPager((fromPos,count)->getUserTimeline(userName));
-		    done();
-		    luwrain.runUiSafely(()->onSuccess.accept(userName, pager));
-		}
-		catch(TwitterException e)
-		{
-		    onExceptionBkg(e);
-		}
-	    });
-    }
-
-        boolean onShowFriends(Consumer onSuccess)
-    {
-	NullCheck.notNull(onSuccess, "onSuccess");
-	if (base.isBusy())
-	    return false;
-	return base.run(()->{
-		try {
-		    	    final List<User> friends = base.getTwitter().getFriendsList(base.getTwitter().getId(), -1);
-			    //FIXME:something like pager
-		    luwrain.runUiSafely(()->onSuccess.accept(friends.toArray(new User[friends.size()])));
-		    		    done();
-		}
-		catch(TwitterException e)
-		{
-		    onExceptionBkg(e);
-		}
-	    });
-    }
+    */
 
 
-    boolean onStatusUpdate(String[] lines, Runnable onSuccess)
-    {
-	NullCheck.notNullItems(lines, "lines");
-	NullCheck.notNull(onSuccess, "onSuccess");
-	if (base.isBusy())
-	    return false;
-	final String text = makeTweetText(lines);
-	if (text.isEmpty())
-	    return false;
-	return base.run(()->{
-		try {
-		    base.getTwitter().updateStatus(text);
-		    updateHomeTimeline();
-		    done();
-		    luwrain.runUiSafely(onSuccess);
-		}
-		catch (TwitterException e)
-		{
-		    onExceptionBkg(e);
-		}
-	    });
-    }
 
-    boolean onStatusDelete(Tweet tweet, Runnable onSuccess)
-    {
-	NullCheck.notNull(tweet, "tweet");
-	NullCheck.notNull(onSuccess, "onSuccess");
-	if (base.isBusy())
-	    return false;
-	if (!conv.confirmTweetDeleting(tweet))
-	    return true;
-	return base.run(()->{
-		try {
-		    base.getTwitter().destroyStatus(tweet.tweet.getId());
-		    updateHomeTimeline();
-		    done();
-		    luwrain.runUiSafely(onSuccess);
-		}
-		catch (TwitterException e)
-		{
-		    onExceptionBkg(e);
-		}
-	    });
-    }
+
 
     boolean onCreateFavourite(Tweet tweet, Runnable onSuccess)
     {
@@ -314,53 +194,8 @@ final class Actions
 	base.homeTimeline = tweets.toArray(new Tweet[tweets.size()]);
     }
 
-    Tweet[] getUserTimeline(String user) throws TwitterException
-    {
-	NullCheck.notEmpty(user, "user");
-	final List<Status> result = base.getTwitter().getUserTimeline(user);
-	if (result == null)
-	    return new Tweet[0];
-	final List<Tweet> tweets = new LinkedList();
-	for(Status s: result)
-	    tweets.add(new Tweet(s));
-	return tweets.toArray(new Tweet[tweets.size()]);
-    }
 
-    private Tweet[] searchTweets(String text, int pageCount) throws TwitterException
-    {
-	NullCheck.notEmpty(text, "text");
-	final List<Tweet> tweets = new LinkedList();
-	Query query = new Query(text);
-	QueryResult result;
-	int pageNum = 1;
-	do {
-	    result = base.getTwitter().search(query);
-	    List<Status> statuses = result.getTweets();
-	    for (Status tweet : statuses) 
-		tweets.add(new Tweet(tweet));
-	    if (pageNum >= pageCount)
-		return tweets.toArray(new Tweet[tweets.size()]);
-	    ++pageNum;
-	} while ((query = result.nextQuery()) != null);
-	return tweets.toArray(new Tweet[tweets.size()]);
-    }
 
-    private String makeTweetText(String[] lines)
-    {
-	NullCheck.notNullItems(lines, "lines");
-	if (lines.length == 0)
-	    return "";
-	final List<String> validLines = new LinkedList();
-	for(String s: lines)
-	    if (!s.trim().isEmpty())
-		validLines.add(s.trim());
-	if (validLines.isEmpty())
-	    return "";
-	final StringBuilder b = new StringBuilder();
-	for(String s: validLines)
-	    b.append(s).append(" ");
-	return new String(b).toString();
-    }
 
     private void done()
     {

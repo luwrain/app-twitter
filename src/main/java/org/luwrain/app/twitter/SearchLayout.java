@@ -28,12 +28,12 @@ import org.luwrain.template.*;
 
 final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler, ConsoleArea.InputHandler
 {
-    private final App2 app;
+    private final App app;
     private final ConsoleArea searchArea;
-
+    
     private Tweet[] tweets = new Tweet[0];
 
-    SearchLayout(App2 app)
+    SearchLayout(App app)
     {
 	NullCheck.notNull(app, "aapp");
 	this.app = app;
@@ -53,7 +53,7 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
 			return true;
 		    return super.onSystemEvent(event);
 		}
-				@Override public boolean onAreaQuery(AreaQuery query)
+		@Override public boolean onAreaQuery(AreaQuery query)
 		{
 		    NullCheck.notNull(query, "query");
 		    if (app.onAreaQuery(this, query))
@@ -61,19 +61,19 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
 		    return super.onAreaQuery(query);
 		}
 	    };
-		searchArea.setConsoleInputHandler(this);
-		searchArea.setConsoleInputHandler(this);
+	searchArea.setConsoleInputHandler(this);
+	searchArea.setConsoleInputHandler(this);
     }
 
-        boolean search(String query)
+    boolean search(String query)
     {
 	NullCheck.notNull(query, "query");
 	if (app.isBusy())
 	    return false;
 	if (query.trim().isEmpty())
 	    return false;
-	final App2.TaskId taskId = app.newTaskId();
-	return app.runTask(()->{
+	final App.TaskId taskId = app.newTaskId();
+	return app.runTask(taskId, ()->{
 		final Tweet[] res;
 		try {
 		    res = searchQuery(query, 1);
@@ -89,20 +89,27 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
 			app.getLuwrain().playSound(Sounds.OK);
 		    });
 	    });
-	    }
+    }
 
-	    private Tweet[] searchQuery(String text, int pageCount) throws TwitterException
+    private Tweet[] searchQuery(String text, int pageCount) throws TwitterException
     {
 	NullCheck.notEmpty(text, "text");
 	final List<Tweet> tweets = new LinkedList();
+	final Set<String> texts = new HashSet();
 	Query query = new Query(text);
 	QueryResult result;
 	int pageNum = 1;
 	do {
 	    result = app.getTwitter().search(query);
 	    List<Status> statuses = result.getTweets();
-	    for (Status tweet : statuses) 
-		tweets.add(new Tweet(tweet));
+	    for (Status tw : statuses)
+	    {
+		final Tweet tweet = new Tweet(tw);
+		if (texts.contains(tweet.getReducedText().toUpperCase()))
+		    continue;
+		tweets.add(tweet);
+		texts.add(tweet.getReducedText().toUpperCase());
+	    }
 	    if (pageNum >= pageCount)
 		return tweets.toArray(new Tweet[tweets.size()]);
 	    ++pageNum;
@@ -110,16 +117,15 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
 	return tweets.toArray(new Tweet[tweets.size()]);
     }
 
-
-@Override public boolean onConsoleClick(ConsoleArea area, int index, Object obj)
+    @Override public boolean onConsoleClick(ConsoleArea area, int index, Object obj)
     {
-			    return false;
-	    }
+	return false;
+    }
 
-@Override public ConsoleArea.InputHandler.Result onConsoleInput(ConsoleArea area, String text)
+    @Override public ConsoleArea.InputHandler.Result onConsoleInput(ConsoleArea area, String text)
     {
-		NullCheck.notNull(text, "text");
-		    return search(text)?ConsoleArea.InputHandler.Result.OK:ConsoleArea.InputHandler.Result.REJECTED;
+	NullCheck.notNull(text, "text");
+	return search(text)?ConsoleArea.InputHandler.Result.OK:ConsoleArea.InputHandler.Result.REJECTED;
     }
 
     ConsoleArea.Params getSearchAreaParams()
@@ -149,7 +155,19 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
 	@Override public void announceItem(Object item)
 	{
 	    NullCheck.notNull(item, "item");
+	    if (!(item instanceof Tweet))
+	    {
 	    app.getLuwrain().setEventResponse(DefaultEventResponse.text(item.toString()));
+	    return;
+	    }
+	    final Tweet tweet = (Tweet)item;
+	    final StringBuilder b = new StringBuilder();
+	    b.append(app.getLuwrain().getSpeakableText(tweet.getReducedText(), Luwrain.SpeakableTextType.NATURAL))
+	    .append(", ")
+	    .append(tweet.getTimeMark(app.getI18n()))
+	    .append(", ")
+	    .append(tweet.getUserName());
+	    app.getLuwrain().setEventResponse(DefaultEventResponse.text(new String(b)));
 	}
 	@Override public String getTextAppearance(Object item)
 	{

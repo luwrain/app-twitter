@@ -23,17 +23,13 @@ import org.luwrain.popups.Popups;
 class Conversations
 {
     private final Luwrain luwrain;
-    private final Base base;
     private final Strings strings;
 
-    Conversations(Luwrain luwrain, Base base, Strings strings)
+    Conversations(App app)
     {
-	NullCheck.notNull(luwrain, "luwrain");
-	NullCheck.notNull(base, "base");
-	NullCheck.notNull(strings, "strings");
-	this.luwrain = luwrain;
-	this.base = base;
-	this.strings = strings;
+	NullCheck.notNull(app, "app");
+	this.luwrain = app.getLuwrain();
+	this.strings = app.getStrings();
     }
 
     String askUserNameToShowTimeline()
