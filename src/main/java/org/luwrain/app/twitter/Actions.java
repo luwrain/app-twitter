@@ -30,19 +30,10 @@ final class Actions
 {
     static final int MAX_TWEET_LEN = 140;
 
-    private final Luwrain luwrain;
-    private final Strings strings;
-    private final Base base;
-    final Conversations conv;
+    private final Luwrain luwrain = null;
+    private final Strings strings = null;
+    final Conversations conv = null;
 
-    Actions(Base base)
-    {
-	NullCheck.notNull(base, "base");
-	this.luwrain = base.luwrain;
-	this.strings = base.strings;
-	this.base = base;
-	this.conv = null;
-    }
 
 
     /*
@@ -81,11 +72,10 @@ final class Actions
     {
 	NullCheck.notNull(tweet, "tweet");
 	NullCheck.notNull(onSuccess, "onSuccess");
-	if (base.isBusy())
-	    return false;
+	/*
 	return base.run(()->{
 		try {
-		    base.getTwitter().createFavorite(tweet.tweet.getId());
+		    //base.getTwitter().createFavorite(tweet.tweet.getId());
 		    updateHomeTimeline();
 		    done();
 		    luwrain.runUiSafely(onSuccess);
@@ -95,17 +85,18 @@ final class Actions
 		    onExceptionBkg(e);
 		}
 	    });
+	*/
+	return false;
     }
 
     boolean onRetweetStatus(Tweet tweet, Runnable onSuccess)
     {
 	NullCheck.notNull(tweet, "tweet");
 	NullCheck.notNull(onSuccess, "onSuccess");
-	if (base.isBusy())
-	    return false;
+	/*
 	return base.run(()->{
 		try {
-		    base.getTwitter().retweetStatus(tweet.tweet.getId());
+		    //base.getTwitter().retweetStatus(tweet.tweet.getId());
 		    updateHomeTimeline();
 		    done();
 		    luwrain.runUiSafely(onSuccess);
@@ -115,22 +106,23 @@ final class Actions
 		    onExceptionBkg(e);
 		}
 	    });
+	*/
+	return true;
     }
 
     boolean onFollowAuthor(ListArea tweetsArea)
     {
 	NullCheck.notNull(tweetsArea, "tweetsArea");
-	if (base.isBusy() || !base.isAccountActivated())
-	    return false;
+	/*
 	final Object obj = tweetsArea.selected();
 	if (obj == null || !(obj instanceof Tweet))
 	    return false;
 	final Tweet wrapper = (Tweet)obj;
 	base.run(()->{
 		try {
-		    base.getTwitter().createFriendship(wrapper.getAuthorId(), true);
+		    //base.getTwitter().createFriendship(wrapper.getAuthorId(), true);
 		}
-		catch(TwitterException e)
+		catch(Exception e)
 		{
 		    luwrain.crash(e);
 		    return;
@@ -140,11 +132,14 @@ final class Actions
 		    }); 
 	    });
 	return true;
+	*/
+	return false;
     }
 
     boolean onDeleteFriendship(ListArea listArea)
     {
 	NullCheck.notNull(listArea, "listArea");
+	/*
 	if (base.isBusy())
 	    return false;
 	if (listArea.selected() == null || !(listArea.selected() instanceof UserWrapper))
@@ -154,23 +149,26 @@ final class Actions
 	    return true;
 	base.run(()->{
 		try {
-		    base.getTwitter().destroyFriendship(userWrapper.user.getId());
+		    //base.getTwitter().destroyFriendship(userWrapper.user.getId());
 		    luwrain.runUiSafely(()->{
 			    luwrain.playSound(Sounds.DONE);
 			    listArea.refresh();
 			});
 		}
-		catch(TwitterException e)
+		catch(Exception e)
 		{
 		    luwrain.crash(e);
 		}
 	    });
+	return true;
+	*/
 	return true;
     }
 
     boolean onDeleteLike(ListArea listArea)
     {
 	NullCheck.notNull(listArea, "listArea");
+	/*
 	if (base.isBusy())
 	    return false;
 	if (listArea.selected() == null || !(listArea.selected() instanceof Tweet))
@@ -180,9 +178,9 @@ final class Actions
 	    return true;
 	base.run(()->{
 		try {
-		    base.getTwitter().destroyFavorite(tweetWrapper.tweet.getId());
+		    //base.getTwitter().destroyFavorite(tweetWrapper.tweet.getId());
 		}
-		catch(TwitterException e)
+		catch(Exception e)
 		{
 		    luwrain.crash(e);
 		    return;
@@ -193,11 +191,14 @@ final class Actions
 		    });
 	    });
 	return true;
+	*/
+	return false;
     }
 
     void updateHomeTimeline() throws TwitterException
     {
-	final List<Status> result = base.getTwitter().getHomeTimeline();
+	/*
+	final List<Status> result = new LinkedList();//base.getTwitter().getHomeTimeline();
 	if (result == null)
 	{
 	    base.homeTimeline = new Tweet[0];
@@ -207,28 +208,12 @@ final class Actions
 	for(Status s: result)
 	    tweets.add(new Tweet(s));
 	base.homeTimeline = tweets.toArray(new Tweet[tweets.size()]);
+	*/
     }
 
 
 
 
-    private void done()
-    {
-	luwrain.runUiSafely(()->base.done());
-    }
-
-    private void onExceptionBkg(Exception e)
-    {
-	NullCheck.notNull(e, "e");
-	luwrain.runUiSafely(()->onException(e));
-    }
-
-    private void onException(Exception e)
-    {
-	NullCheck.notNull(e, "e");
-	luwrain.crash(e);
-	done();
-    }
 
     static private void showTweets(Area area, Tweet[] wrappers)
     {

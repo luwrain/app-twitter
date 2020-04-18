@@ -20,14 +20,16 @@ import org.luwrain.core.*;
 import org.luwrain.controls.*;
 import org.luwrain.popups.Popups;
 
-class Conversations
+final class Conversations
 {
+    private final App app;
     private final Luwrain luwrain;
     private final Strings strings;
 
     Conversations(App app)
     {
 	NullCheck.notNull(app, "app");
+	this.app = app;
 	this.luwrain = app.getLuwrain();
 	this.strings = app.getStrings();
     }
@@ -51,7 +53,7 @@ return res;
 
     Account chooseAnotherAccount()
     {
-	final Object res = Popups.fixedList(luwrain, "Выберите учётную запись:", Base.getAccounts(luwrain));//FIXME:
+	final Object res = Popups.fixedList(luwrain, "Выберите учётную запись:", app.getAccounts());//FIXME:
 	return (Account)res;
     }
 

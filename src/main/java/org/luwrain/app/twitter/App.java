@@ -72,7 +72,7 @@ final class App extends AppBase<Strings> implements MonoApp
     {
 	NullCheck.notNull(luwrain, "luwrain");
 	final Registry registry = luwrain.getRegistry();
-	final LinkedList<Account> res = new LinkedList<Account>();
+	final List<Account> res = new LinkedList<Account>();
 	registry.addDirectory(Settings.ACCOUNTS_PATH);
 	for (String a: registry.getDirectories(Settings.ACCOUNTS_PATH))
 	{
