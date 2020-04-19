@@ -30,7 +30,7 @@ import org.luwrain.template.*;
 final class App extends AppBase<Strings> implements MonoApp
 {
     static final String LOG_COMPONENT = "twitter";
-    
+
     private Conversations conv = null;
     private Twitter twitter = null;
     private final Watching watching;
@@ -38,6 +38,7 @@ final class App extends AppBase<Strings> implements MonoApp
     private MainLayout mainLayout = null;
     private FollowingLayout followingLayout = null;
     private SearchLayout searchLayout = null;
+    private SearchUsersLayout searchUsersLayout = null;
 
     App(Watching watching)
     {
@@ -58,6 +59,7 @@ final class App extends AppBase<Strings> implements MonoApp
 	this.mainLayout = new MainLayout(this);
 	this.followingLayout = new FollowingLayout(this);
 	this.searchLayout = new SearchLayout(this);
+		this.searchUsersLayout = new SearchUsersLayout(this);
 	setAppName(getStrings().appName());
 	this.mainLayout.updateHomeTimelineBkg();
 	return true;
@@ -175,6 +177,11 @@ final class App extends AppBase<Strings> implements MonoApp
 	    {
 				getLayout().setBasicLayout(searchLayout.getLayout());
 				searchLayout.onActivation();
+	    }
+	    	    	    @Override public void searchUsers()
+	    {
+				getLayout().setBasicLayout(searchUsersLayout.getLayout());
+				searchUsersLayout.onActivation();
 	    }
 	    	    @Override public void custom(AreaLayout layout)
 	    {

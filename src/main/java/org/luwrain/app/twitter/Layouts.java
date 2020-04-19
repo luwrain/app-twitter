@@ -23,5 +23,6 @@ interface Layouts
     void main();
     void following();
     void search();
+    void searchUsers();
     void custom(AreaLayout layout);
 }

@@ -53,5 +53,4 @@ final User user;
 	    wrappers.add(new UserWrapper(u));
 	return wrappers.toArray(new UserWrapper[wrappers.size()]);
     }
-
 }

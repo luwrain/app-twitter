@@ -110,31 +110,6 @@ final class Actions
 	return true;
     }
 
-    boolean onFollowAuthor(ListArea tweetsArea)
-    {
-	NullCheck.notNull(tweetsArea, "tweetsArea");
-	/*
-	final Object obj = tweetsArea.selected();
-	if (obj == null || !(obj instanceof Tweet))
-	    return false;
-	final Tweet wrapper = (Tweet)obj;
-	base.run(()->{
-		try {
-		    //base.getTwitter().createFriendship(wrapper.getAuthorId(), true);
-		}
-		catch(Exception e)
-		{
-		    luwrain.crash(e);
-		    return;
-		}
-		luwrain.runUiSafely(()->{
-			luwrain.playSound(Sounds.DONE);
-		    }); 
-	    });
-	return true;
-	*/
-	return false;
-    }
 
     boolean onDeleteFriendship(ListArea listArea)
     {

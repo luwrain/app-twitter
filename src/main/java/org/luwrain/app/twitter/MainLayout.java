@@ -41,6 +41,7 @@ final class MainLayout extends LayoutBase
 	this.statusArea = new ListArea(createStatusListParams()){
 		private final Actions actions = actions(
 							action("search", app.getStrings().actionSearch(), new KeyboardEvent(KeyboardEvent.Special.F5), MainLayout.this::actSearch),
+							action("search-users", app.getStrings().actionSearchUsers(), new KeyboardEvent(KeyboardEvent.Special.F6), MainLayout.this::actSearchUsers),
 							action("following", "Подписки и подписчики", new KeyboardEvent(KeyboardEvent.Special.F9), MainLayout.this::actFollowing),
 							action("delete-tweet", app.getStrings().actionDeleteTweet(), new KeyboardEvent(KeyboardEvent.Special.DELETE), MainLayout.this::actDelete)
 							);
@@ -209,6 +210,12 @@ final class MainLayout extends LayoutBase
         private boolean actSearch()
     {
 	app.layouts().search();
+	return true;
+    }
+
+            private boolean actSearchUsers()
+    {
+	app.layouts().searchUsers();
 	return true;
     }
 

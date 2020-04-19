@@ -114,7 +114,16 @@ result = app.getTwitter().searchUsers(query, pageNum);
 
     @Override public boolean onConsoleClick(ConsoleArea area, int index, Object obj)
     {
-	return false;
+	if (obj == null || !(obj instanceof UserWrapper))
+	    return false;
+	final UserWrapper user = (UserWrapper)obj;
+	final UserLayout userLayout = new UserLayout(app, user.user.getScreenName(), ()->{
+		app.layouts().custom(this.getLayout());
+		app.getLuwrain().setActiveArea(searchArea);
+	    });
+		app.layouts().custom(userLayout.getLayout());
+			userLayout.update();
+	return true;
     }
 
     @Override public ConsoleArea.InputHandler.Result onConsoleInput(ConsoleArea area, String text)
@@ -132,6 +141,7 @@ result = app.getTwitter().searchUsers(query, pageNum);
 	params.areaName = app.getStrings().searchUsersAreaName();
 	params.inputPos = ConsoleArea.InputPos.TOP;
 	params.inputPrefix = app.getStrings().searchUsersInputPrefix() + ">";
+	params.clickHandler = this;
 	return params;
     }
 
