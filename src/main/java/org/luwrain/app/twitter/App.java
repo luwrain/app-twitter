@@ -30,11 +30,13 @@ import org.luwrain.template.*;
 final class App extends AppBase<Strings> implements MonoApp
 {
     static final String LOG_COMPONENT = "twitter";
+    static private final String NEW_ACCOUNT_NAME = "Initial";
 
     private Conversations conv = null;
     private Twitter twitter = null;
     private final Watching watching;
 
+    private AuthLayout authLayout = null;
     private MainLayout mainLayout = null;
     private FollowingLayout followingLayout = null;
     private SearchLayout searchLayout = null;
@@ -47,22 +49,35 @@ final class App extends AppBase<Strings> implements MonoApp
 	this.watching = watching;
     }
 
-    @Override public boolean onAppInit()
+    @Override public boolean onAppInit() throws TwitterException
     {
 	this.conv = new Conversations(this);
 	final Account initialAccount = findInitialAccount();
 	if (initialAccount == null)
-	    return false;
+	    	this.authLayout = new AuthLayout(this); else
 	this.twitter = createTwitter(initialAccount);
-	if (this.twitter == null)
-	    return false;
 	this.mainLayout = new MainLayout(this);
 	this.followingLayout = new FollowingLayout(this);
 	this.searchLayout = new SearchLayout(this);
 		this.searchUsersLayout = new SearchUsersLayout(this);
 	setAppName(getStrings().appName());
-	this.mainLayout.updateHomeTimelineBkg();
+	if (twitter != null)
+	    this.mainLayout.updateHomeTimelineBkg();
 	return true;
+    }
+
+    void authCompleted(String accessToken, String accessTokenSecret)
+    {
+	NullCheck.notNull(accessToken, "accessToekn");
+	NullCheck.notNull(accessTokenSecret, "accessToeknSecret");
+	final Settings.Account sett = Settings.createAccountByName(getLuwrain().getRegistry(), NEW_ACCOUNT_NAME);
+	sett.setAccessToken(accessToken);
+	sett.setAccessTokenSecret(accessTokenSecret);
+	final Account a = new Account(NEW_ACCOUNT_NAME, sett);
+	this.twitter = createTwitter(a);
+	this.authLayout = null;
+	getLayout().setBasicLayout(this.mainLayout.getLayout());
+		    this.mainLayout.updateHomeTimelineBkg();
     }
 
     Account[] getAccounts()
@@ -148,17 +163,18 @@ final class App extends AppBase<Strings> implements MonoApp
 	return false;
     }
 
-    Conversations conv()
-    {
-	return this.conv;
-    }
-
     @Override public boolean onInputEvent(Area area, KeyboardEvent event)
     {
 	NullCheck.notNull(area, "area");
 	NullCheck.notNull(event, "event");
 	return onInputEvent(area, event, null);
     }
+
+        Conversations conv()
+    {
+	return this.conv;
+    }
+
 
     Layouts layouts()
     {
@@ -193,6 +209,8 @@ final class App extends AppBase<Strings> implements MonoApp
 
     @Override public AreaLayout getDefaultAreaLayout()
     {
+	if (this.authLayout != null)
+	    return this.authLayout.getLayout();
 	return this.mainLayout.getLayout();
     }
 
