@@ -33,6 +33,7 @@ public interface Strings
     String actionDeleteAccount();
     String actionDeleteTweet();
     String actionFollow();
+    String actionLike();
     String actionSearch();
     String actionSearchUsers();
     String addAccountPopupName();

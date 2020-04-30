@@ -43,6 +43,7 @@ final class MainLayout extends LayoutBase
 							action("search", app.getStrings().actionSearch(), new KeyboardEvent(KeyboardEvent.Special.F5), MainLayout.this::actSearch),
 							action("search-users", app.getStrings().actionSearchUsers(), new KeyboardEvent(KeyboardEvent.Special.F6), MainLayout.this::actSearchUsers),
 							action("following", "Подписки и подписчики", new KeyboardEvent(KeyboardEvent.Special.F9), MainLayout.this::actFollowing),
+							action("like", app.getStrings().actionLike(), MainLayout.this::actLike),
 							action("delete-tweet", app.getStrings().actionDeleteTweet(), new KeyboardEvent(KeyboardEvent.Special.DELETE), MainLayout.this::actDelete)
 							);
 		@Override public boolean onInputEvent(KeyboardEvent event)
@@ -55,6 +56,12 @@ final class MainLayout extends LayoutBase
 		@Override public boolean onSystemEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
+		    if (event.getType() == EnvironmentEvent.Type.REGULAR)
+			switch(event.getCode())
+			{
+			case SAVE:
+			    return actLike();
+			}
 		    if (app.onSystemEvent(this, event, actions))
 			return true;
 		    return super.onSystemEvent(event);
@@ -218,6 +225,28 @@ final class MainLayout extends LayoutBase
 	app.layouts().searchUsers();
 	return true;
     }
+
+    private boolean actLike()
+    {
+	if (app.isBusy())
+	    return false;
+	final Object obj = statusArea.selected();
+	if (obj == null || !(obj instanceof Tweet))
+	    return false;
+	final Tweet tweet = (Tweet)obj;
+	final App.TaskId taskId = app.newTaskId();
+	return app.runTask(taskId, ()->{
+		try {
+app.getTwitter().createFavorite(tweet.tweet.getId());
+		}
+		catch(TwitterException e)
+		{
+		    app.getLuwrain().crash(e);
+		    return;
+		}
+app.finishedTask(taskId, ()->app.getLuwrain().playSound(Sounds.DONE));
+	    });
+	        }
 
     private ListArea.Params createStatusListParams()
     {
