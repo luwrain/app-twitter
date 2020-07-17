@@ -39,7 +39,7 @@ final class AuthLayout extends LayoutBase
 	this.app = app;
 	this.auth = Tokens.createAuth();
 	this.formArea = new FormArea(new DefaultControlContext(app.getLuwrain()), app.getStrings().appName()){
-		@Override public boolean onInputEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(InputEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (event.isSpecial() && !event.isModified())
@@ -52,10 +52,10 @@ final class AuthLayout extends LayoutBase
 			return true;
 		    return super.onInputEvent(event);
 		}
-		@Override public boolean onSystemEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(SystemEvent event)
 		{
 		    NullCheck.notNull(event, "event");
-		    if (event.getType() == EnvironmentEvent.Type.REGULAR)
+		    if (event.getType() == SystemEvent.Type.REGULAR)
 			switch(event.getCode())
 			{
 			case OK:

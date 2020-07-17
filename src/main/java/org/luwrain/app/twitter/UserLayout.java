@@ -41,19 +41,19 @@ final class UserLayout extends LayoutBase
 	this.app = app;
 	this.userName = userName;
 	this.closing = closing;
-	final ActionInfo follow = action("follow", app.getStrings().actionFollow(), new KeyboardEvent(KeyboardEvent.Special.F5, EnumSet.of(KeyboardEvent.Modifiers.SHIFT)), UserLayout.this::actFollow);
+	final ActionInfo follow = action("follow", app.getStrings().actionFollow(), new InputEvent(InputEvent.Special.F5, EnumSet.of(InputEvent.Modifiers.SHIFT)), UserLayout.this::actFollow);
 	this.tweetsArea = new ListArea(createTweetsAreaParams()) {
 		final Actions actions = actions(
 						follow
 						);
-		@Override public boolean onInputEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(InputEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onInputEvent(this, event, closing))
 			return true;
 		    return super.onInputEvent(event);
 		}
-		@Override public boolean onSystemEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(SystemEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onSystemEvent(this, event, actions))

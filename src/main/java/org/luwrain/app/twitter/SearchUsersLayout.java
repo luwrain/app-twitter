@@ -39,14 +39,14 @@ final class SearchUsersLayout extends LayoutBase implements ConsoleArea.ClickHan
 	this.app = app;
 	final Runnable closing = ()->app.layouts().main();
 	this.searchArea = new ConsoleArea(getSearchAreaParams()){
-		@Override public boolean onInputEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(InputEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onInputEvent(this, event, closing))
 			return true;
 		    return super.onInputEvent(event);
 		}
-		@Override public boolean onSystemEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(SystemEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onSystemEvent(this, event))
@@ -138,7 +138,7 @@ result = app.getTwitter().searchUsers(query, pageNum);
 	params.context = new DefaultControlContext(app.getLuwrain());
 	params.model = new SearchAreaModel();
 	params.appearance = new SearchAreaAppearance();
-	params.areaName = app.getStrings().searchUsersAreaName();
+	params.name = app.getStrings().searchUsersAreaName();
 	params.inputPos = ConsoleArea.InputPos.TOP;
 	params.inputPrefix = app.getStrings().searchUsersInputPrefix() + ">";
 	params.clickHandler = this;
@@ -189,11 +189,11 @@ result = app.getTwitter().searchUsers(query, pageNum);
 
     private final class SearchAreaModel implements ConsoleArea.Model
     {
-        @Override public int getConsoleItemCount()
+        @Override public int getItemCount()
 	{
 	    return users.length;
 	}
-	@Override public Object getConsoleItem(int index)
+	@Override public Object getItem(int index)
 	{
 	    if (index < 0 || index >= users.length)
 		throw new IllegalArgumentException("index (" + index + ") must be greater or equal to zero and less than " + String.valueOf(users.length));

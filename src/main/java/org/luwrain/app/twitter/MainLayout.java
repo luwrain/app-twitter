@@ -40,23 +40,23 @@ final class MainLayout extends LayoutBase
 	this.app = app;
 	this.statusArea = new ListArea(createStatusListParams()){
 		private final Actions actions = actions(
-							action("search", app.getStrings().actionSearch(), new KeyboardEvent(KeyboardEvent.Special.F5), MainLayout.this::actSearch),
-							action("search-users", app.getStrings().actionSearchUsers(), new KeyboardEvent(KeyboardEvent.Special.F6), MainLayout.this::actSearchUsers),
-							action("following", "Подписки и подписчики", new KeyboardEvent(KeyboardEvent.Special.F9), MainLayout.this::actFollowing),
+							action("search", app.getStrings().actionSearch(), new InputEvent(InputEvent.Special.F5), MainLayout.this::actSearch),
+							action("search-users", app.getStrings().actionSearchUsers(), new InputEvent(InputEvent.Special.F6), MainLayout.this::actSearchUsers),
+							action("following", "Подписки и подписчики", new InputEvent(InputEvent.Special.F9), MainLayout.this::actFollowing),
 							action("like", app.getStrings().actionLike(), MainLayout.this::actLike),
-							action("delete-tweet", app.getStrings().actionDeleteTweet(), new KeyboardEvent(KeyboardEvent.Special.DELETE), MainLayout.this::actDelete)
+							action("delete-tweet", app.getStrings().actionDeleteTweet(), new InputEvent(InputEvent.Special.DELETE), MainLayout.this::actDelete)
 							);
-		@Override public boolean onInputEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(InputEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onInputEvent(this, event))
 			return true;
 		    return super.onInputEvent(event);
 		}
-		@Override public boolean onSystemEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(SystemEvent event)
 		{
 		    NullCheck.notNull(event, "event");
-		    if (event.getType() == EnvironmentEvent.Type.REGULAR)
+		    if (event.getType() == SystemEvent.Type.REGULAR)
 			switch(event.getCode())
 			{
 			case SAVE:
@@ -79,19 +79,19 @@ final class MainLayout extends LayoutBase
 		}
 	    };
 	this.postArea = new EditArea(createPostEditParams()){
-		@Override public boolean onInputEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(InputEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onInputEvent(this, event))
 			return true;
 		    return super.onInputEvent(event);
 		}
-		@Override public boolean onSystemEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(SystemEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onSystemEvent(this, event))
 			return true;
-		    if (event.getType() == EnvironmentEvent.Type.REGULAR)
+		    if (event.getType() == SystemEvent.Type.REGULAR)
 			switch(event.getCode())
 			{
 			case OK:

@@ -53,7 +53,7 @@ class SettingsAccountForm extends FormArea implements SectionArea
 	return true;
     }
 
-    @Override public boolean onInputEvent(KeyboardEvent event)
+    @Override public boolean onInputEvent(InputEvent event)
     {
 	NullCheck.notNull(event, "event");
 	if (controlPanel.onInputEvent(event))
@@ -61,7 +61,7 @@ class SettingsAccountForm extends FormArea implements SectionArea
 	return super.onInputEvent(event);
     }
 
-    @Override public boolean onSystemEvent(EnvironmentEvent event)
+    @Override public boolean onSystemEvent(SystemEvent event)
     {
 	NullCheck.notNull(event, "event");
 	if (controlPanel.onSystemEvent(event))

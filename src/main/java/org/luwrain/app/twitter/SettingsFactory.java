@@ -68,15 +68,15 @@ class SettingsFactory implements org.luwrain.cpanel.Factory
 	if (el.equals(twitterElement))
 	    return new SimpleSection(twitterElement, "Твиттер", null,
 				     new Action[]{
-					 new Action("add-twitter-account", strings.actionAddAccount(), new KeyboardEvent(KeyboardEvent.Special.INSERT)),
+					 new Action("add-twitter-account", strings.actionAddAccount(), new InputEvent(InputEvent.Special.INSERT)),
 				     }, (controlPanel, event)->onActionEvent(controlPanel, event, ""));
 	if (el instanceof SettingsAccountElement)
 	{
 	    final SettingsAccountElement accountEl = (SettingsAccountElement)el;
 	    return new SimpleSection(el, accountEl.getTitle(), (controlPanel)->SettingsAccountForm.create(controlPanel, accountEl.getAccount(), accountEl.getTitle()),
 				     new Action[]{
-					 new Action("add-twitter-account", strings.actionAddAccount(), new KeyboardEvent(KeyboardEvent.Special.INSERT)),
-					 new Action("delete-twitter-account", strings.actionDeleteAccount(), new KeyboardEvent(KeyboardEvent.Special.DELETE)),
+					 new Action("add-twitter-account", strings.actionAddAccount(), new InputEvent(InputEvent.Special.INSERT)),
+					 new Action("delete-twitter-account", strings.actionDeleteAccount(), new InputEvent(InputEvent.Special.DELETE)),
 				     }, (controlPanel, event)->onActionEvent(controlPanel, event, accountEl.getTitle()));
 	}
 	return null;

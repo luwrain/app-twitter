@@ -39,14 +39,14 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
 	this.app = app;
 	final Runnable closing = ()->app.layouts().main();
 	this.searchArea = new ConsoleArea(getSearchAreaParams()){
-		@Override public boolean onInputEvent(KeyboardEvent event)
+		@Override public boolean onInputEvent(InputEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onInputEvent(this, event, closing))
 			return true;
 		    return super.onInputEvent(event);
 		}
-		@Override public boolean onSystemEvent(EnvironmentEvent event)
+		@Override public boolean onSystemEvent(SystemEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    if (app.onSystemEvent(this, event))
@@ -134,7 +134,7 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
 	params.context = new DefaultControlContext(app.getLuwrain());
 	params.model = new SearchAreaModel();
 	params.appearance = new SearchAreaAppearance();
-	params.areaName = app.getStrings().searchAreaName();
+	params.name = app.getStrings().searchAreaName();
 	params.inputPos = ConsoleArea.InputPos.TOP;
 	params.inputPrefix = app.getStrings().search() + ">";
 	return params;
@@ -178,11 +178,11 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
 
     private final class SearchAreaModel implements ConsoleArea.Model
     {
-        @Override public int getConsoleItemCount()
+        @Override public int getItemCount()
 	{
 	    return tweets.length;
 	}
-	@Override public Object getConsoleItem(int index)
+	@Override public Object getItem(int index)
 	{
 	    if (index < 0 || index >= tweets.length)
 		throw new IllegalArgumentException("index (" + index + ") must be greater or equal to zero and less than " + String.valueOf(tweets.length));
