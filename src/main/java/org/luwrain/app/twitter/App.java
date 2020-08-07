@@ -25,7 +25,7 @@ import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.core.queries.*;
 import org.luwrain.controls.*;
-import org.luwrain.template.*;
+import org.luwrain.app.base.*;
 
 final class App extends AppBase<Strings> implements MonoApp
 {
@@ -44,7 +44,7 @@ final class App extends AppBase<Strings> implements MonoApp
 
     App(Watching watching)
     {
-	super(Strings.NAME, Strings.class);
+	super(Strings.NAME, Strings.class, "luwrain.twitter");
 	NullCheck.notNull(watching, "watching");
 	this.watching = watching;
     }

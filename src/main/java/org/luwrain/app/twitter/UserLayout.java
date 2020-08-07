@@ -22,7 +22,7 @@ import twitter4j.*;
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
-import org.luwrain.template.*;
+import org.luwrain.app.base.*;
 
 final class UserLayout extends LayoutBase
 {

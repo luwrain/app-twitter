@@ -25,14 +25,16 @@ final class Tokens
 {
     static Auth createAuth() throws TwitterException
     {
-	return new Auth("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret");
+	//return new Auth("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret");
+	return new Auth("yW4K8p8gvNRlTt1awqAeuf9xg", "iEluaqwNYdpHviiqOVcisgIxeJCPAXNb5ChGUtiWy8c586KKSR");
     }
 
     static private twitter4j.conf.Configuration getConfiguration(String accessToken, String accessTokenSecret)
     {
 	NullCheck.notEmpty(accessToken, "accessToken");
 	NullCheck.notNull(accessTokenSecret, "accessTokenSecret");
-	return new ConfigurationLuwrain("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
+	//return new ConfigurationLuwrain("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
+	return new ConfigurationLuwrain("yW4K8p8gvNRlTt1awqAeuf9xg", "iEluaqwNYdpHviiqOVcisgIxeJCPAXNb5ChGUtiWy8c586KKSR",
 					accessToken, accessTokenSecret);
     }
 
