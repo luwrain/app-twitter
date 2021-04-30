@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
+   Copyright 2012-2021 Michael Pozhidaev <msp@luwrain.org>
 
    This file is part of LUWRAIN.
 
@@ -27,63 +27,66 @@ import org.luwrain.app.base.*;
 final class FollowingLayout extends LayoutBase
 {
     private final App app;
-    private final ListArea followingsArea;
-    private ListArea followersArea;
+    final ListArea followingsArea;
+    ListArea followersArea;
 
     private UserWrapper[] followings = new UserWrapper[0];
     private UserWrapper[] followers = new UserWrapper[0];
 
     FollowingLayout(App app)
     {
-	NullCheck.notNull(app, "app");
+	super(app);
 	this.app = app;
-	final Runnable closing = ()->app.layouts().main();
-	this.followingsArea = new ListArea(createFollowingsAreaParams()) {
-		@Override public boolean onInputEvent(InputEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (app.onInputEvent(this, event, closing))
-			return true;
-		    return super.onInputEvent(event);
-		}
-		@Override public boolean onSystemEvent(SystemEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (app.onSystemEvent(this, event))
-			return true;
-		    return super.onSystemEvent(event);
-		}
-		@Override public boolean onAreaQuery(AreaQuery query)
-		{
-		    NullCheck.notNull(query, "query");
-		    if (app.onAreaQuery(this, query))
-			return true;
-		    return super.onAreaQuery(query);
-		}
+	setCloseHandler(()-> {app.layouts().main(); return true; });
+
+	{
+	    final ListArea.Params params = new ListArea.Params();
+	    params.context = getControlContext();
+	    params.model = new ListUtils.ArrayModel(()->{ return followings; });
+	    params.appearance = new ListUtils.DefaultAppearance(params.context);
+	    params.name = "Последователи";
+	    params.clickHandler = (area, index, obj)->{
+		if (obj == null || !(obj instanceof UserWrapper))
+		    return false;
+		final UserWrapper user = (UserWrapper)obj;
+		return showUserLayout(user.user.getScreenName());
 	    };
-	this.followersArea = new ListArea(createFollowersAreaParams()) {
-		@Override public boolean onInputEvent(InputEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (app.onInputEvent(this, event, closing))
-			return true;
-		    return super.onInputEvent(event);
+	    this.followingsArea = new ListArea(params);
+	}
+	final Actions followingActions = actions(
+						 action("delete-following", app.getStrings().actionDeleteFollowing(), new InputEvent(InputEvent.Special.DELETE), FollowingLayout.this::actDeleteFollowing)
+						 );
+
+	{
+	    final ListArea.Params params = new ListArea.Params();
+	    params.context = getControlContext();
+	    params.model = new ListUtils.FixedModel();
+	    params.appearance = new ListUtils.DefaultAppearance(params.context);
+	    params.name = "Другие последователи";
+	    this.followersArea = new ListArea(params);
+	}
+	final Actions followersActions = actions();
+	setAreaLayout(AreaLayout.LEFT_RIGHT, followingsArea, followingActions, followersArea, followersActions);
+    }
+
+    private boolean actDeleteFollowing()
+    {
+	final Object obj = followingsArea.selected();
+	if (obj == null || !(obj instanceof UserWrapper))
+	    return false;
+	app.getLuwrain().message(obj.getClass().getName());
+	final UserWrapper user = (UserWrapper)obj;
+	final App.TaskId taskId = app.newTaskId();
+	return app.runTask(taskId, ()->{
+		try {
+		    app.getTwitter().destroyFriendship(user.getName());
 		}
-		@Override public boolean onSystemEvent(SystemEvent event)
+		catch(TwitterException e)
 		{
-		    NullCheck.notNull(event, "event");
-		    if (app.onSystemEvent(this, event))
-			return true;
-		    return super.onSystemEvent(event);
+		    app.getLuwrain().crash(e);
+		    return;
 		}
-		@Override public boolean onAreaQuery(AreaQuery query)
-		{
-		    NullCheck.notNull(query, "query");
-		    if (app.onAreaQuery(this, query))
-			return true;
-		    return super.onAreaQuery(query);
-		}
-	    };
+	    });
     }
 
     boolean updateFollowing()
@@ -94,7 +97,7 @@ final class FollowingLayout extends LayoutBase
 	return app.runTask(taskId, ()->{
 		final List<User> followingsList;
 		try {
-		    followingsList = app.getTwitter().getFriendsList(app.getTwitter().getId(), -1);
+		    followingsList = app.getTwitter().getFriendsList(app.getTwitter().getId(), -1, 100);
 		}
 		catch(TwitterException e)
 		{
@@ -112,74 +115,12 @@ final class FollowingLayout extends LayoutBase
     private boolean showUserLayout(String userName)
     {
 	NullCheck.notEmpty(userName, "userName");
-			final UserLayout userLayout = new UserLayout(app, userName, ()->{
-				app.layouts().custom(this.getLayout());
-				app.getLuwrain().setActiveArea(followingsArea);
-		    });
-		app.layouts().custom(userLayout.getLayout());
-		userLayout.update();
-		return true;
-    }
-
-    private ListArea.Params createFollowingsAreaParams()
-    {
-	final ListArea.Params params = new ListArea.Params();
-	params.context = new DefaultControlContext(app.getLuwrain());
-	params.model = new FollowingsModel();
-	params.appearance = new ListUtils.DefaultAppearance(params.context);
-	params.name = "Последователи";
-params.clickHandler = (area, index, obj)->{
-    if (obj == null || !(obj instanceof UserWrapper))
-	return false;
-    final UserWrapper user = (UserWrapper)obj;
-    return showUserLayout(user.user.getScreenName());
-	    };
-
-	return params;
-    }
-
-    private ListArea.Params createFollowersAreaParams()
-    {
-	final ListArea.Params params = new ListArea.Params();
-	params.context = new DefaultControlContext(app.getLuwrain());
-	params.model = new ListUtils.FixedModel();
-	params.appearance = new ListUtils.DefaultAppearance(params.context);
-	params.name = "Другие последователи";
-	return params;
-    }
-
-    AreaLayout getLayout()
-    {
-	return new AreaLayout(AreaLayout.LEFT_RIGHT, followingsArea, followersArea);
-    }
-
-    private final class FollowingsModel implements ListArea.Model
-    {
-	@Override public int getItemCount()
-	{
-	    return followings.length;
-	}
-	@Override public Object getItem(int index)
-	{
-	    return followings[index];
-	}
-	@Override public void refresh()
-	{
-	}
-    }
-
-    private final class Followers implements ListArea.Model
-    {
-	@Override public int getItemCount()
-	{
-	    return followers.length;
-	}
-	@Override public Object getItem(int index)
-	{
-	    return followers[index];
-	}
-	@Override public void refresh()
-	{
-	}
+	final UserLayout userLayout = new UserLayout(app, userName, ()->{
+		app.layouts().custom(this.getAreaLayout());
+		app.getLuwrain().setActiveArea(followingsArea);
+	    });
+	app.layouts().custom(userLayout.getLayout());
+	userLayout.update();
+	return true;
     }
 }

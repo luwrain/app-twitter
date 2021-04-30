@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
+   Copyright 2012-2021 Michael Pozhidaev <msp@luwrain.org>
 
    This file is part of LUWRAIN.
 
@@ -25,14 +25,16 @@ final class Tokens
 {
     static Auth createAuth() throws TwitterException
     {
-	return new Auth("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret");
+	//return new Auth("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret");
+	return new Auth("8Vlk6igxfuWP1uKRkil4EAWQG", "upuNPVSc5J5Ulqut2AJGFzrpueCYaxLRgra05o3ugG28H8LHKG");
     }
 
     static private twitter4j.conf.Configuration getConfiguration(String accessToken, String accessTokenSecret)
     {
 	NullCheck.notEmpty(accessToken, "accessToken");
 	NullCheck.notNull(accessTokenSecret, "accessTokenSecret");
-	return new ConfigurationLuwrain("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
+	//return new ConfigurationLuwrain("luwrain-twitter-consumer-key", "luwrain-twitter-consumer-secret",
+	return new ConfigurationLuwrain("8Vlk6igxfuWP1uKRkil4EAWQG", "upuNPVSc5J5Ulqut2AJGFzrpueCYaxLRgra05o3ugG28H8LHKG",
 					accessToken, accessTokenSecret);
     }
 

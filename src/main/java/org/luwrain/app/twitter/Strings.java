@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
+   Copyright 2012-2021 Michael Pozhidaev <msp@luwrain.org>
 
    This file is part of LUWRAIN.
 
@@ -49,4 +49,6 @@ public interface Strings
     String searchUsersAreaName();
     String searchUsersInputPrefix();
     String statusAreaName();
+
+    String actionDeleteFollowing();
 }

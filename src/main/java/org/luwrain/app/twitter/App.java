@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
+   Copyright 2012-2021 Michael Pozhidaev <msp@luwrain.org>
 
    This file is part of LUWRAIN.
 
@@ -49,7 +49,7 @@ final class App extends AppBase<Strings> implements MonoApp
 	this.watching = watching;
     }
 
-    @Override public boolean onAppInit() throws TwitterException
+    @Override public AreaLayout onAppInit() throws TwitterException
     {
 	this.conv = new Conversations(this);
 	final Account initialAccount = findInitialAccount();
@@ -63,7 +63,9 @@ final class App extends AppBase<Strings> implements MonoApp
 	setAppName(getStrings().appName());
 	if (twitter != null)
 	    this.mainLayout.updateHomeTimelineBkg();
-	return true;
+		if (this.authLayout != null)
+	    return this.authLayout.getLayout();
+	return this.mainLayout.getLayout();
     }
 
     void authCompleted(String accessToken, String accessTokenSecret)
@@ -161,7 +163,7 @@ final class App extends AppBase<Strings> implements MonoApp
 	    }
 	    @Override public void following()
 	    {
-				getLayout().setBasicLayout(followingLayout.getLayout());
+		setAreaLayout(followingLayout);
 				followingLayout.updateFollowing();
 	    }
 	    	    @Override public void search()
@@ -182,11 +184,11 @@ final class App extends AppBase<Strings> implements MonoApp
 	};
     }
 
-    @Override public AreaLayout getDefaultAreaLayout()
+    @Override public boolean onEscape(InputEvent event)
     {
-	if (this.authLayout != null)
-	    return this.authLayout.getLayout();
-	return this.mainLayout.getLayout();
+	NullCheck.notNull(event, "event");
+	closeApp();
+	return true;
     }
 
     @Override public MonoApp.Result onMonoAppSecondInstance(Application app)
