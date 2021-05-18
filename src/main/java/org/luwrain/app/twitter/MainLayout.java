@@ -29,84 +29,63 @@ import org.luwrain.app.base.*;
 final class MainLayout extends LayoutBase
 {
     private final App app;
-    private final ListArea statusArea;
-    private final EditArea postArea;
+    final ListArea statusArea;
+    final EditArea postArea;
 
     private Tweet[] homeTimeline = new Tweet[0];
 
     MainLayout(App app)
     {
-	NullCheck.notNull(app, "app");
+	super(app);
 	this.app = app;
-	this.statusArea = new ListArea(createStatusListParams()){
-		private final Actions actions = actions(
-							action("search", app.getStrings().actionSearch(), new InputEvent(InputEvent.Special.F5), MainLayout.this::actSearch),
-							action("search-users", app.getStrings().actionSearchUsers(), new InputEvent(InputEvent.Special.F6), MainLayout.this::actSearchUsers),
-							action("following", "Подписки и подписчики", new InputEvent(InputEvent.Special.F9), MainLayout.this::actFollowing),
-							action("like", app.getStrings().actionLike(), MainLayout.this::actLike),
-							action("delete-tweet", app.getStrings().actionDeleteTweet(), new InputEvent(InputEvent.Special.DELETE), MainLayout.this::actDelete)
-							);
-		@Override public boolean onInputEvent(InputEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (app.onInputEvent(this, event))
-			return true;
-		    return super.onInputEvent(event);
-		}
-		@Override public boolean onSystemEvent(SystemEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (event.getType() == SystemEvent.Type.REGULAR)
-			switch(event.getCode())
-			{
-			case SAVE:
-			    return actLike();
-			}
-		    if (app.onSystemEvent(this, event, actions))
-			return true;
-		    return super.onSystemEvent(event);
-		}
-		@Override public boolean onAreaQuery(AreaQuery query)
-		{
-		    NullCheck.notNull(query, "query");
-		    if (app.onAreaQuery(this, query))
-			return true;
-		    return super.onAreaQuery(query);
-		}
-		@Override public Action[] getAreaActions()
-		{
-		    return actions.getAreaActions();
-		}
-	    };
-	this.postArea = new EditArea(createPostEditParams()){
-		@Override public boolean onInputEvent(InputEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (app.onInputEvent(this, event))
-			return true;
-		    return super.onInputEvent(event);
-		}
-		@Override public boolean onSystemEvent(SystemEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (app.onSystemEvent(this, event))
-			return true;
-		    if (event.getType() == SystemEvent.Type.REGULAR)
-			switch(event.getCode())
-			{
-			case OK:
-			    return actPost();
-			}
-		    return super.onSystemEvent(event);
-		}
-		@Override public boolean onAreaQuery(AreaQuery query)
-		{
-		    NullCheck.notNull(query, "query");
-		    if (app.onAreaQuery(this, query))
-			return true;
-		    return super.onAreaQuery(query);
-		}
-	    };
+	{
+	    final ListArea.Params params = new ListArea.Params();
+	    params.context = getControlContext();
+	    params.model = new ListUtils.ArrayModel(()->{ return homeTimeline; });
+	    params.appearance = new TweetListAppearance(app.getLuwrain(), app.getStrings());
+	    params.name = app.getStrings().statusAreaName();
+	    this.statusArea = new ListArea(params){
+		    @Override public boolean onSystemEvent(SystemEvent event)
+		    {
+			NullCheck.notNull(event, "event");
+			if (event.getType() == SystemEvent.Type.REGULAR)
+			    switch(event.getCode())
+			    {
+			    case SAVE:
+				return actLike();
+			    }
+			return super.onSystemEvent(event);
+		    }
+		};
+	}
+	final Actions statusActions = actions(
+					      action("search", app.getStrings().actionSearch(), new InputEvent(InputEvent.Special.F5), MainLayout.this::actSearch),
+					      action("search-users", app.getStrings().actionSearchUsers(), new InputEvent(InputEvent.Special.F6), MainLayout.this::actSearchUsers),
+					      action("following", "Подписки и подписчики", new InputEvent(InputEvent.Special.F9), MainLayout.this::actFollowing),
+					      action("like", app.getStrings().actionLike(), MainLayout.this::actLike),
+					      action("delete-tweet", app.getStrings().actionDeleteTweet(), new InputEvent(InputEvent.Special.DELETE), MainLayout.this::actDelete)
+					      );
+	{
+	    final EditArea.Params params = new EditArea.Params();
+	    params.context = getControlContext();
+	    params.appearance = new EditUtils.DefaultEditAreaAppearance(params.context);
+	    params.name = app.getStrings().postAreaName();
+	    this.postArea = new EditArea(params){
+		    @Override public boolean onSystemEvent(SystemEvent event)
+		    {
+			NullCheck.notNull(event, "event");
+			if (event.getType() == SystemEvent.Type.REGULAR)
+			    switch(event.getCode())
+			    {
+			    case OK:
+				return actPost();
+			    }
+			return super.onSystemEvent(event);
+		    }
+		};
+	}
+	final Actions postActions = actions();
+	setAreaLayout(AreaLayout.TOP_BOTTOM, statusArea, statusActions, postArea, postActions);
     }
 
     boolean updateHomeTimelineBkg()
@@ -247,48 +226,4 @@ app.getTwitter().createFavorite(tweet.tweet.getId());
 app.finishedTask(taskId, ()->app.getLuwrain().playSound(Sounds.DONE));
 	    });
 	        }
-
-    private ListArea.Params createStatusListParams()
-    {
-	final ListArea.Params params = new ListArea.Params();
-	params.context = new DefaultControlContext(app.getLuwrain());
-	params.model = new StatusModel();
-	params.appearance = new TweetListAppearance(app.getLuwrain(), app.getStrings());
-	params.name = app.getStrings().statusAreaName();
-	return params;
-    }
-
-    private EditArea.Params createPostEditParams()
-    {
-	final EditArea.Params params = new EditArea.Params();
-	params.context = new DefaultControlContext(app.getLuwrain());
-	params.appearance = new EditUtils.DefaultEditAreaAppearance(params.context);
-	params.name = app.getStrings().postAreaName();
-	return params;
-    }
-
-    AreaLayout getLayout()
-    {
-	return new AreaLayout(AreaLayout.TOP_BOTTOM, statusArea, postArea);
-    }
-
-    void onActivation()
-    {
-	app.getLuwrain().setActiveArea(statusArea);
-    }
-
-    private class StatusModel implements ListArea.Model
-    {
-	@Override public int getItemCount()
-	{
-	    return homeTimeline.length;
-	}
-	@Override public Object getItem(int index)
-	{
-	    return homeTimeline[index];
-	}
-	@Override public void refresh()
-	{
-	}
-    }
 }

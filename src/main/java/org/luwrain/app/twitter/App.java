@@ -65,7 +65,7 @@ final class App extends AppBase<Strings> implements MonoApp
 	    this.mainLayout.updateHomeTimelineBkg();
 		if (this.authLayout != null)
 	    return this.authLayout.getLayout();
-	return this.mainLayout.getLayout();
+	return this.mainLayout.getAreaLayout();
     }
 
     void authCompleted(String accessToken, String accessTokenSecret)
@@ -78,7 +78,7 @@ final class App extends AppBase<Strings> implements MonoApp
 	final Account a = new Account(NEW_ACCOUNT_NAME, sett);
 	this.twitter = createTwitter(a);
 	this.authLayout = null;
-	getLayout().setBasicLayout(this.mainLayout.getLayout());
+	setAreaLayout(mainLayout);
 		    this.mainLayout.updateHomeTimelineBkg();
     }
 
@@ -158,8 +158,8 @@ final class App extends AppBase<Strings> implements MonoApp
 	return new Layouts(){
 	    @Override public void main()
 	    {
-		getLayout().setBasicLayout(mainLayout.getLayout());
-		mainLayout.onActivation();
+		setAreaLayout(mainLayout);
+		mainLayout.setActiveArea(mainLayout.statusArea);
 	    }
 	    @Override public void following()
 	    {
