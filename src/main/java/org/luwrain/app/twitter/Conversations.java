@@ -36,7 +36,7 @@ final class Conversations
 
     String askUserNameToShowTimeline()
     {
-final String res = Popups.simple(luwrain, "Просмотр твитов пользователя", "Имя пользователя для просмотра твитов:", "");
+final String res = Popups.text(luwrain, "Просмотр твитов пользователя", "Имя пользователя для просмотра твитов:", "");
 if (res == null || res.isEmpty())
     return null;
 return res;
@@ -44,7 +44,7 @@ return res;
 
     String askSearchQuery()
     {
-	final String res = Popups.simple(luwrain, "Поиск твитов", "Выражение для поиска:", "");
+	final String res = Popups.text(luwrain, "Поиск твитов", "Выражение для поиска:", "");
 if (res == null || res.isEmpty())
     return null;
 return res;

@@ -88,7 +88,7 @@ class SettingsFactory implements org.luwrain.cpanel.Factory
 	NullCheck.notNull(event, "event");
 	if (ActionEvent.isAction(event, "add-twitter-account"))
 	{
-	    final String name = Popups.simple(luwrain, strings.addAccountPopupName(), strings.addAccountPopupPrefix(), "");
+	    final String name = Popups.text(luwrain, strings.addAccountPopupName(), strings.addAccountPopupPrefix(), "");
 	    if (name == null || name.trim().isEmpty())
 		return true;
 	    if (name.indexOf("/") >= 0)
