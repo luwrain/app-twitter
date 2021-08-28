@@ -94,7 +94,7 @@ final class SearchUsersLayout extends LayoutBase implements ConsoleArea.ClickHan
     private UserWrapper[] searchQuery(String query, int pageCount) throws TwitterException
     {
 	NullCheck.notEmpty(query, "query");
-	final List<UserWrapper> users = new LinkedList();
+	final List<UserWrapper> users = new ArrayList<>();
 	//	Query query = new Query(text);
 	//		QueryResult result;
 ResponseList<User> result = null;	

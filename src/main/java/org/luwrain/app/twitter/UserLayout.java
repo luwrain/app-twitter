@@ -103,7 +103,7 @@ final class UserLayout extends LayoutBase
 	final List<Status> result = app.getTwitter().getUserTimeline(userName);
 	if (result == null)
 	    return new Tweet[0];
-	final List<Tweet> tweets = new LinkedList();
+	final List<Tweet> tweets = new ArrayList<>();
 	for(Status s: result)
 	    tweets.add(new Tweet(s));
 	return tweets.toArray(new Tweet[tweets.size()]);

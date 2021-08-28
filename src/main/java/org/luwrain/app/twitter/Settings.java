@@ -67,7 +67,7 @@ interface Settings
 	NullCheck.notNull(value, "value");
 	if (value.trim().isEmpty())
 	    return new String[0];
-	final List<String> res = new LinkedList();
+	final List<String> res = new ArrayList<>();
 	for(String s: value.split(" ", -1))
 	    if (!s.trim().isEmpty())
 		res.add(s.trim());

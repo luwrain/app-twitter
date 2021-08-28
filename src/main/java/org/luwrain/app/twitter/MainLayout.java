@@ -115,7 +115,7 @@ final class MainLayout extends LayoutBase
     {
 	if (app.isBusy())
 	    return false;
-	final String text = makeTweetText(postArea.getLines());
+	final String text = makeTweetText(postArea.getText());
 	if (text.isEmpty())
 	    return false;
 	final App.TaskId taskId = app.newTaskId();
@@ -145,7 +145,7 @@ final class MainLayout extends LayoutBase
 	NullCheck.notNullItems(lines, "lines");
 	if (lines.length == 0)
 	    return "";
-	final List<String> validLines = new LinkedList();
+	final List<String> validLines = new ArrayList<>();
 	for(String s: lines)
 	    if (!s.trim().isEmpty())
 		validLines.add(s.trim());

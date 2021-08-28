@@ -30,7 +30,7 @@ final class Watching
     private final Luwrain luwrain;
     private final TwitterStream twitter;
 
-    private final Set<String> statuses = new TreeSet();
+    private final Set<String> statuses = new TreeSet<>();
 
     Watching(Luwrain luwrain)
     {

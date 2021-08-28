@@ -94,8 +94,8 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
     private Tweet[] searchQuery(String text, int pageCount) throws TwitterException
     {
 	NullCheck.notEmpty(text, "text");
-	final List<Tweet> tweets = new LinkedList();
-	final Set<String> texts = new HashSet();
+	final List<Tweet> tweets = new ArrayList<>();
+	final Set<String> texts = new HashSet<>();
 	Query query = new Query(text);
 	QueryResult result;
 	int pageNum = 1;

@@ -95,7 +95,7 @@ final Status tweet;
     {
 	if (tweets == null)
 	    return new Tweet[0];
-	final List<Tweet> wrappers = new LinkedList();
+	final List<Tweet> wrappers = new ArrayList<>();
 	for(Status s: tweets)
 	    wrappers.add(new Tweet(s));
 	return wrappers.toArray(new Tweet[wrappers.size()]);
