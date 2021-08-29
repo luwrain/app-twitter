@@ -26,6 +26,9 @@ import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.app.base.*;
 
+import static org.luwrain.controls.EditUtils.*;
+import static org.luwrain.controls.ListUtils.*;
+
 final class MainLayout extends LayoutBase
 {
     private final App app;
@@ -38,53 +41,51 @@ final class MainLayout extends LayoutBase
     {
 	super(app);
 	this.app = app;
-	{
-	    final ListArea.Params params = new ListArea.Params();
-	    params.context = getControlContext();
-	    params.model = new ListUtils.ArrayModel(()->{ return homeTimeline; });
-	    params.appearance = new TweetListAppearance(app.getLuwrain(), app.getStrings());
-	    params.name = app.getStrings().statusAreaName();
-	    this.statusArea = new ListArea(params){
-		    @Override public boolean onSystemEvent(SystemEvent event)
-		    {
-			NullCheck.notNull(event, "event");
-			if (event.getType() == SystemEvent.Type.REGULAR)
-			    switch(event.getCode())
-			    {
-			    case SAVE:
-				return actLike();
-			    }
-			return super.onSystemEvent(event);
-		    }
-		};
-	}
+	this.statusArea = new ListArea(listParams((params)->{
+		    params.model = new ArrayModel(()->{ return homeTimeline; });
+		    params.appearance = new TweetListAppearance(app.getLuwrain(), app.getStrings());
+		    params.name = app.getStrings().statusAreaName();
+		})){
+		@Override public boolean onSystemEvent(SystemEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.getType() == SystemEvent.Type.REGULAR)
+			switch(event.getCode())
+			{
+			case SAVE:
+			    return actLike();
+			}
+		    return super.onSystemEvent(event);
+		}
+	    };
 	final Actions statusActions = actions(
-					      action("search", app.getStrings().actionSearch(), new InputEvent(InputEvent.Special.F5), MainLayout.this::actSearch),
-					      action("search-users", app.getStrings().actionSearchUsers(), new InputEvent(InputEvent.Special.F6), MainLayout.this::actSearchUsers),
-					      action("following", "Подписки и подписчики", new InputEvent(InputEvent.Special.F9), MainLayout.this::actFollowing),
-					      action("like", app.getStrings().actionLike(), MainLayout.this::actLike),
-					      action("delete-tweet", app.getStrings().actionDeleteTweet(), new InputEvent(InputEvent.Special.DELETE), MainLayout.this::actDelete)
+					      action("like", app.getStrings().actionLike(), this::actLike),
+					      action("delete-tweet", app.getStrings().actionDeleteTweet(), new InputEvent(InputEvent.Special.DELETE), this::actDelete),
+					      action("search", app.getStrings().actionSearch(), App.HOTKEY_SEARCH, app.layouts()::search),
+					      action("search-users", app.getStrings().actionSearchUsers(), App.HOTKEY_SEARCH_USERS, app.layouts()::searchUsers),
+					      action("following", "Подписки и подписчики", App.HOTKEY_FOLLOWING, app.layouts()::following)
 					      );
-	{
-	    final EditArea.Params params = new EditArea.Params();
-	    params.context = getControlContext();
-	    params.appearance = new EditUtils.DefaultEditAreaAppearance(params.context);
-	    params.name = app.getStrings().postAreaName();
-	    this.postArea = new EditArea(params){
-		    @Override public boolean onSystemEvent(SystemEvent event)
-		    {
-			NullCheck.notNull(event, "event");
-			if (event.getType() == SystemEvent.Type.REGULAR)
-			    switch(event.getCode())
-			    {
-			    case OK:
-				return actPost();
-			    }
-			return super.onSystemEvent(event);
-		    }
-		};
-	}
-	final Actions postActions = actions();
+	this.postArea = new EditArea(editParams((params)->{
+		    params.appearance = new DefaultEditAreaAppearance(getControlContext(), Luwrain.SpeakableTextType.PROGRAMMING);
+		    params.name = app.getStrings().postAreaName();
+		})){
+		@Override public boolean onSystemEvent(SystemEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.getType() == SystemEvent.Type.REGULAR)
+			switch(event.getCode())
+			{
+			case OK:
+			    return actPost();
+			}
+		    return super.onSystemEvent(event);
+		}
+	    };
+	final Actions postActions = actions(
+					    action("search", app.getStrings().actionSearch(), App.HOTKEY_SEARCH, app.layouts()::search),
+					    action("search-users", app.getStrings().actionSearchUsers(), App.HOTKEY_SEARCH_USERS, app.layouts()::searchUsers),
+					    action("following", "Подписки и подписчики", App.HOTKEY_FOLLOWING, app.layouts()::following)
+					    );
 	setAreaLayout(AreaLayout.TOP_BOTTOM, statusArea, statusActions, postArea, postActions);
     }
 
@@ -186,24 +187,6 @@ final class MainLayout extends LayoutBase
 		    });
 	    });
 	    }
-
-    private boolean actFollowing()
-    {
-	app.layouts().following();
-	return true;
-    }
-
-        private boolean actSearch()
-    {
-	app.layouts().search();
-	return true;
-    }
-
-            private boolean actSearchUsers()
-    {
-	app.layouts().searchUsers();
-	return true;
-    }
 
     private boolean actLike()
     {

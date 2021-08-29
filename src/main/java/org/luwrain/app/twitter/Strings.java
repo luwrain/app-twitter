@@ -51,4 +51,5 @@ public interface Strings
     String statusAreaName();
 
     String actionDeleteFollowing();
+    String actionStatus();
 }

@@ -26,43 +26,35 @@ import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
 import org.luwrain.app.base.*;
 
+import static org.luwrain.controls.ConsoleUtils.*;
+
 final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler, ConsoleArea.InputHandler
 {
     private final App app;
-    private final ConsoleArea searchArea;
-    
-    private Tweet[] tweets = new Tweet[0];
+    final ConsoleArea searchArea;
+    private List<Tweet> tweets = new ArrayList<>();
 
     SearchLayout(App app)
     {
-	NullCheck.notNull(app, "aapp");
+	super(app);
 	this.app = app;
-	final Runnable closing = ()->app.layouts().main();
-	this.searchArea = new ConsoleArea(getSearchAreaParams()){
-		@Override public boolean onInputEvent(InputEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (app.onInputEvent(this, event, closing))
-			return true;
-		    return super.onInputEvent(event);
-		}
-		@Override public boolean onSystemEvent(SystemEvent event)
-		{
-		    NullCheck.notNull(event, "event");
-		    if (app.onSystemEvent(this, event))
-			return true;
-		    return super.onSystemEvent(event);
-		}
-		@Override public boolean onAreaQuery(AreaQuery query)
-		{
-		    NullCheck.notNull(query, "query");
-		    if (app.onAreaQuery(this, query))
-			return true;
-		    return super.onAreaQuery(query);
-		}
-	    };
+	this.searchArea = new ConsoleArea(consoleParams((params)->{
+		    params.context = new DefaultControlContext(app.getLuwrain());
+		    params.model = new ListModel(tweets);
+		    params.appearance = new SearchAreaAppearance();
+		    params.name = app.getStrings().searchAreaName();
+		    params.inputPos = ConsoleArea.InputPos.TOP;
+		    params.inputPrefix = app.getStrings().search() + ">";
+		}));
 	searchArea.setConsoleInputHandler(this);
 	searchArea.setConsoleInputHandler(this);
+	final Actions searchActions = actions(
+					      action("status", app.getStrings().actionStatus(), App.HOTKEY_MAIN, app.layouts()::main),
+					      action("search", app.getStrings().actionSearch(), App.HOTKEY_SEARCH, app.layouts()::search),
+					      action("search-users", app.getStrings().actionSearchUsers(), App.HOTKEY_SEARCH_USERS, app.layouts()::searchUsers),
+					      action("following", "Подписки и подписчики", App.HOTKEY_FOLLOWING, app.layouts()::following)
+					      );
+	setAreaLayout(searchArea, searchActions);
     }
 
     boolean search(String query)
@@ -84,7 +76,8 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
 		    return;
 		}
 		app.finishedTask(taskId, ()->{
-			tweets = res;
+			tweets.clear();
+			tweets.addAll(Arrays.asList(res));
 			searchArea.refresh();
 			app.getLuwrain().playSound(Sounds.OK);
 		    });
@@ -128,23 +121,6 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
 	return search(text)?ConsoleArea.InputHandler.Result.OK:ConsoleArea.InputHandler.Result.REJECTED;
     }
 
-    ConsoleArea.Params getSearchAreaParams()
-    {
-	final ConsoleArea.Params params = new ConsoleArea.Params();
-	params.context = new DefaultControlContext(app.getLuwrain());
-	params.model = new SearchAreaModel();
-	params.appearance = new SearchAreaAppearance();
-	params.name = app.getStrings().searchAreaName();
-	params.inputPos = ConsoleArea.InputPos.TOP;
-	params.inputPrefix = app.getStrings().search() + ">";
-	return params;
-    }
-
-    AreaLayout getLayout()
-    {
-	return new AreaLayout(searchArea);
-    }
-
     void onActivation()
     {
 	app.getLuwrain().setActiveArea(searchArea);
@@ -173,20 +149,6 @@ final class SearchLayout extends LayoutBase implements ConsoleArea.ClickHandler,
 	{
 	    NullCheck.notNull(item, "item");
 	    return item.toString();
-	}
-    }
-
-    private final class SearchAreaModel implements ConsoleArea.Model
-    {
-        @Override public int getItemCount()
-	{
-	    return tweets.length;
-	}
-	@Override public Object getItem(int index)
-	{
-	    if (index < 0 || index >= tweets.length)
-		throw new IllegalArgumentException("index (" + index + ") must be greater or equal to zero and less than " + String.valueOf(tweets.length));
-	    return tweets[index];
 	}
     }
 }

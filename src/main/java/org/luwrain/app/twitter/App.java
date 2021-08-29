@@ -32,6 +32,12 @@ final class App extends AppBase<Strings> implements MonoApp
     static final String LOG_COMPONENT = "twitter";
     static private final String NEW_ACCOUNT_NAME = "Initial";
 
+    static final InputEvent
+		HOTKEY_MAIN = new InputEvent(InputEvent.Special.F5),
+	HOTKEY_SEARCH = new InputEvent(InputEvent.Special.F6),
+	HOTKEY_SEARCH_USERS = new InputEvent(InputEvent.Special.F7),
+	HOTKEY_FOLLOWING = new InputEvent(InputEvent.Special.F8);
+
     private Conversations conv = null;
     private Twitter twitter = null;
     private final Watching watching;
@@ -156,25 +162,29 @@ final class App extends AppBase<Strings> implements MonoApp
     Layouts layouts()
     {
 	return new Layouts(){
-	    @Override public void main()
+	    @Override public boolean main()
 	    {
 		setAreaLayout(mainLayout);
 		mainLayout.setActiveArea(mainLayout.statusArea);
+		return true;
 	    }
-	    @Override public void following()
+	    @Override public boolean following()
 	    {
 		setAreaLayout(followingLayout);
 				followingLayout.updateFollowing();
+				return true;
 	    }
-	    	    @Override public void search()
+	    	    @Override public boolean search()
 	    {
-				getLayout().setBasicLayout(searchLayout.getLayout());
+		setAreaLayout(searchLayout);
 				searchLayout.onActivation();
+				return true;
 	    }
-	    	    	    @Override public void searchUsers()
+	    	    	    @Override public boolean searchUsers()
 	    {
 				getLayout().setBasicLayout(searchUsersLayout.getLayout());
 				searchUsersLayout.onActivation();
+				return true;
 	    }
 	    	    @Override public void custom(AreaLayout layout)
 	    {
@@ -194,5 +204,14 @@ final class App extends AppBase<Strings> implements MonoApp
     {
 	NullCheck.notNull(app, "app");
 	return MonoApp.Result.BRING_FOREGROUND;
+    }
+
+    interface Layouts
+    {
+	boolean main();
+	boolean following();
+	boolean search();
+	boolean searchUsers();
+	void custom(AreaLayout layout);
     }
 }
