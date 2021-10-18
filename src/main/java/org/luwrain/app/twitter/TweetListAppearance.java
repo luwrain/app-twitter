@@ -21,7 +21,7 @@ import java.util.*;
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
-class TweetListAppearance implements ListArea.Appearance
+class TweetListAppearance implements ListArea.Appearance<Object>
 {
     private final Luwrain luwrain;
     private final Strings strings;

@@ -21,7 +21,7 @@ import java.util.*;
 import org.luwrain.core.*;
 import org.luwrain.controls.*;
 
-class AccountsAppearance implements ListArea.Appearance
+class AccountsAppearance implements ListArea.Appearance<Object>
 {
     private Luwrain luwrain;
     private Strings strings;
